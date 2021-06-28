@@ -1,0 +1,25 @@
+{{template "header" .}}
+    <h3>Please login to your account</h3>
+    <br>
+    <form method="post" class="input-group">
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon1">Username: </span>
+            </div>
+            <input type="text" name="username" class="form-control" placeholder="Username" aria-label="Username" >
+        </div>
+
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon2">Password: </span>
+            </div>
+            <input type="password" name="password" class="form-control" placeholder="Password" aria-label="Password" >
+        </div>
+        
+        <input type="submit">
+    </form>
+<div>
+<br>
+<br>
+<h4>Or <a href="/signup">Sign Up</a> if you do not have an account</h4>
+{{template "footer"}}

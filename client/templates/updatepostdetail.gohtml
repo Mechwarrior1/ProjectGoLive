@@ -1,0 +1,30 @@
+{{template "header" .PersistInfo}}
+    <h1>Course Details</h1>
+    <br>
+    {{ $courseInfo := .CourseInfo}}
+    <form method="post">
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon1">Course Name: </span>
+            </div>
+            <input type="text" name="CourseName" class="form-control" id="CourseName" readonly="readonly" value="{{$courseInfo.CourseName}}"><br>
+        </div>
+
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon2">Course Title: </span>
+            </div>
+            <input type="text" name="CourseTitle" class="form-control" id="CourseTitle" readonly="readonly" value="{{$courseInfo.CourseTitle}}"><br>
+        </div>
+        
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon3">Course Desciption:</span>
+            </div>
+            <textarea rows="2" cols="50" name="CourseDesc" class="form-control" aria-label="With textarea" readonly="readonly">{{$courseInfo.CourseDesc}}</textarea>
+        </div>
+
+        <br>
+    </form>
+  </div>
+{{template "footer"}}

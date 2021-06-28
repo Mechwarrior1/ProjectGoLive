@@ -1,0 +1,23 @@
+{{template "header" .}}
+        <h3>Create New Account</h3>
+        <h3>Enter the following to create a new account</h3>
+        <br>
+        <form method="post" class="input-group">
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon1">Username: </span>
+                </div>
+                <input type="text" name="username" class="form-control" placeholder="Username" aria-label="Username" >
+            </div>
+
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon2">Password: </span>
+                </div>
+                <input type="text" name="password" class="form-control" placeholder="Password" aria-label="Password" >
+            </div>
+            
+            <input type="submit">
+        </form>
+    <div>
+{{template "footer"}}

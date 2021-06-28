@@ -1,0 +1,194 @@
+// this file manages the sessions and user information.
+package main
+
+import (
+	"errors"
+	"log"
+	"net/http"
+	"os"
+	"time"
+
+	uuid "github.com/satori/go.uuid"
+)
+
+type (
+	// persistInfo is mainly to let the server give user feedback, based on their input in different pages.
+	// keeps tracks of the activity of the session.
+	persistInfo struct {
+		// gives a green highlighted msg on html if "true".
+		Success string
+
+		//the msg to be printed if Success is "true".
+		SuccessMsg string
+
+		// gives a red highlighted msg on html if "true".
+		Error string
+
+		// the msg to be printed if Error is "true".
+		ErrorMsg string
+
+		// a variable to keep tract of user's last active time.
+		LastActive int64
+	}
+
+	// struct to manage the sessions
+	sessionManager struct {
+		mapPersistInfo *map[string]persistInfo // takes in ID as string and maps to their session.
+	}
+
+	logger struct {
+		c1 chan string
+		c2 chan string
+	}
+)
+
+// function attached to logger struct, uses the saved channel variables and pass values to the channels
+func (logger logger) logTrace(logType string, msg string) {
+	logger.c1 <- logType
+	logger.c2 <- msg
+}
+
+// function deletes the session, based on the session id string.
+func (s *sessionManager) deleteSession(id string) error {
+	_, ok1 := (*s.mapPersistInfo)[id]
+	if ok1 {
+		delete(*s.mapPersistInfo, id)
+		return nil
+	}
+	return errors.New("Session not found for id: " + id)
+}
+
+// function runs as a go routine, runs an infinite for loop that check sessions once every 5 mins.
+// it loop through all the sessions and checks its LastActive int variable.
+// if it was last active was 30mins ago, it deletes the session.
+func (s *sessionManager) pruneOldSessions() { // intended to run concurrently, go pruneOldSessions().
+	for {
+		time.Sleep(300 * time.Second) //checks and prune every 5 mins.
+		timeNow := time.Now().Unix()
+		for k, sessions := range *(s).mapPersistInfo { //k = uuid.
+			if (timeNow - sessions.LastActive) > (60 * 30) {
+				// if sessions' last active was 30mins (30 * 60 seconds) ago, delete session.
+				logger1.logTrace("TRACE", k+" session expired")
+				s.deleteSession(k)
+			}
+		}
+	}
+}
+
+// a function that returns the session id (uuid) from the browser cookie.
+// generates a new session id (uuid) if no cookie is found.
+func (s *sessionManager) getId(res http.ResponseWriter, req *http.Request) (string, error) { //set new cookie if cookie is not found.
+	theBlueCookie, err := req.Cookie("theBlueCookie")
+	if err != nil {
+		newId := uuid.NewV4()
+		return newId.String(), errors.New("id not found, generated new")
+	}
+	return theBlueCookie.Value, nil
+}
+
+// a function that returns the id and session info (persistInfo) for the particular id.
+// uses getId() to retrieve id first.
+func (s *sessionManager) getIdPersistInfo(res http.ResponseWriter, req *http.Request) (string, persistInfo) {
+	id, err := s.getId(res, req)
+	var persistInfo1 persistInfo
+	ok := false
+	if err == nil {
+		persistInfo1, ok = (*s.mapPersistInfo)[id]
+	}
+	if !ok {
+		// uuid has expired, generate new
+		persistInfo1 = persistInfo{
+			Success:    "false",
+			SuccessMsg: "None",
+			Error:      "false",
+			ErrorMsg:   "None",
+			LastActive: time.Now().Unix(),
+		}
+		s.newCookieAndSet("None", res, req, id)
+		(*s.mapPersistInfo)[id] = persistInfo1
+		return id, persistInfo1
+	} else {
+		persistInfo1.LastActive = time.Now().Unix() //update last active when accessed
+		(*s.mapPersistInfo)[id] = persistInfo1
+		return id, persistInfo1
+	}
+}
+
+// a function to update the session information for the target id.
+func (s *sessionManager) updatePersistInfo(id string, success string, successMsg string, errors string, errorsMsg string) {
+	persistInfos1 := persistInfo{
+		Success:    success,
+		SuccessMsg: successMsg,
+		Error:      errors,
+		ErrorMsg:   errorsMsg,
+		LastActive: time.Now().Unix(),
+	}
+	(*s.mapPersistInfo)[id] = persistInfos1
+}
+
+// another function to edit the session info (persistInfo).
+func (s *sessionManager) removePersistInfoError(id string) {
+	persistInfos1 := (*s.mapPersistInfo)[id]
+	persistInfos1.Error = "false"
+	persistInfos1.ErrorMsg = "None"
+	(*s.mapPersistInfo)[id] = persistInfos1
+
+}
+
+// a function to generate a new cookie, with the session id as cookie value.
+func newCookie(expiry int, id string) *http.Cookie { //make a new cookie.
+	theBlueCookie := &http.Cookie{
+		Name:   "theBlueCookie",
+		Value:  id,
+		MaxAge: expiry,
+	}
+	return theBlueCookie
+}
+
+// a function that sets the cookie generated from the newCookie() func.
+func (s *sessionManager) newCookieAndSet(useCase string, res http.ResponseWriter, req *http.Request, id string) {
+	if useCase == "logout********" {
+		theBlueCookie := newCookie(-1, id)
+		http.SetCookie(res, theBlueCookie)
+	} else {
+		theBlueCookie := newCookie(30*60, id)
+		http.SetCookie(res, theBlueCookie)
+	}
+}
+
+// the actual function incharge of logging
+// opens 2 channels and returns both channels
+// starts a goroutine that takes any string output from both channels and logs them into the logger file
+// goroutine opens the logger file and defer the closure, waits for any input in a for loop
+// for loop closes when it receives "close_goRoutine" on c1 channel
+func loggerGo() (chan string, chan string) {
+	c1 := make(chan string)
+	c2 := make(chan string)
+	var logType string
+	var msg string
+	go func(c1 chan string, c2 chan string) {
+		f, err := os.OpenFile("secure//logger.log",
+			os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Println(err)
+		}
+		defer f.Close()
+		for {
+			logType = <-c1
+			msg = <-c2
+			Trace := log.New(f,
+				logType+": ",
+				log.Ldate|log.Ltime|log.Lshortfile)
+			if logType == "close_goRoutine" {
+				Trace := log.New(f,
+					"TRACE: ",
+					log.Ldate|log.Ltime|log.Lshortfile)
+				Trace.Println("Closing logger go routine")
+				break
+			}
+			Trace.Println(msg)
+		}
+	}(c1, c2)
+
+	return c1, c2
+}
