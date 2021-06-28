@@ -185,50 +185,6 @@ func (e *Embeddings) EmbeddingSize() int {
 	return e.embedSize
 }
 
-// func (e *Embeddings) similarity(embed []float32, skips map[int]interface{}, limit int) ([]WordSimilarity, error) {
-// 	dps := make([]float32, e.Size())
-// 	e.blas.Sgemv(blas.NoTrans, int(e.Size()), int(e.EmbeddingSize()),
-// 		1, e.matrix, int(e.EmbeddingSize()), embed, 1, 0, dps, 1)
-
-// 	var results []WordSimilarity
-// 	for idx, sim := range dps {
-// 		// Skip words in the skip set.
-// 		if _, ok := skips[idx]; ok {
-// 			continue
-// 		}
-
-// 		ip := sort.Search(len(results), func(i int) bool {
-// 			return results[i].Similarity <= sim
-// 		})
-// 		if ip < limit {
-// 			results = insertWithLimit(results, limit, ip, WordSimilarity{e.words[idx], sim})
-// 		}
-// 	}
-
-// 	return results, nil
-// }
-
-// type binaryNode struct {
-// 	//refer to idx
-// 	item int
-// 	word  string
-// 	left  *binaryNode
-// 	right *binaryNode
-// }
-
-// func (n *binaryNode) add(n2 *binaryNode, item1 int, word string) error {
-// 	if n2 == nil {
-// 		newNode := &binaryNode{item1, word, nil, nil}
-// 		n2 = newNode
-// 		return nil
-// 	}
-// 	if item1 < (*n).item { //smaller go left.
-// 		n.add((n2.left), item1, word)
-// 	} else {
-// 		n.add((n2.right), item1, word)
-// 	}
-// 	return nil
-// }
 
 func cosineSimilarity(vec1 []float32, vec2 []float32) float32 {
 	if len(vec1) != len(vec2) {
@@ -372,9 +328,8 @@ func (e *Embeddings) compareEmbeddingAll(tarWordVec []float32) ([]string, []floa
 }
 
 func getWord2Vec() *Embeddings {
-	// fileLoc := "C:/Users/Fong/Desktop/GoogleNews-vectors-negative300-SLIM.bin"
-	fileLoc := "C:/Users/Fong/Desktop/GoogleNews-vectors-negative300.bin"
-	fmt.Println(fileLoc)
+	// fileLoc := "C:/Users/Fong/Desktop/GoogleNews-vectors-negative300-SLIM.bin" //word2vec bin file, credits to google
+	fileLoc := "C:/Users/Fong/Desktop/GoogleNews-vectors-negative300.bin" //word2vec bin file, credits to google
 
 	f, err := os.Open(fileLoc)
 	if err != nil {
@@ -425,7 +380,7 @@ func getWord2Vec() *Embeddings {
 	return embeddings
 }
 
-// fmt.Println(cosineSimilarity(embeddings.getEmbedding(86), embeddings.getEmbedding(87)))
+// codes to test out the embeddings
 // fmt.Println(embeddings.getWordEmbeddingSim("spain", "europe"))
 // aa := embeddings.getWordEmbeddingCombine2([]string{"women", "king"}, []string{"man"})
 // embeddings.compareEmbeddingAll(aa)
@@ -437,12 +392,4 @@ func getWord2Vec() *Embeddings {
 // bb := embeddings.getWordEmbeddingCombine([]string{"paris", "morocco"}, []string{"france"})
 // embeddings.compareEmbeddingAll(bb)
 
-// fmt.Println(embeddings.getWordEmbedding("king"))
-// fmt.Println(embeddings.getWordEmbedding("queen"))
-// fmt.Println(embeddings.getWordEmbedding("man"))
-// fmt.Println(embeddings.getWordEmbedding("women"))
-// fmt.Println(embeddings.getWordEmbeddingSim("queen", "women"))
-// bb1, _ := embeddings.getWordEmbedding("rabat")
-// fmt.Println(cosineSimilarity(bb, bb1))
-// fmt.Println("86 :", embeddings.getEmbedding(86))
-// fmt.Println("87 :", embeddings.getEmbedding(87))
+
