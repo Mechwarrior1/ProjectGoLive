@@ -49,22 +49,27 @@
                                             <div class="records">Showing: <b>all</b> results</div>
                                         </div>
 
-                                        
                                             <div class="col-lg-6">
                                                 <div class="result-actions">
                                                     <div class="result-sorting">
                                                         <span>Date:</span>
+                                                        <select class="form-control border-0" id="PostSort" name="PostSort">
+                                                            <option value="desc">Descending</option>
+                                                            <option value="asc">Ascending</option>
+                                                        </select>
+
+                                                    </div>
+                                                    <div class="result-sorting">
+                                                        <span>Sort:</span>
                                                         <select class="form-control border-0" id="PostDate" name="PostDate">
                                                             <option value="All">Show all</option>
                                                             <option value="7days">Recent 7 days</option>
                                                             <option value="30days">Recent 30 days</option>
                                                         </select>
-                                                        </form>
                                                     </div>
                                                 </div>
                                             </div>
-                                        
-                                        
+
                                     </div>
                                 </div>
                                 <div class="result-body">
@@ -83,7 +88,7 @@
                                                             <div class="widget-26-title">
                                                             <a href="/getpost/{{.ID}}"><b>{{.Name}}</b></a>
                                                             </div>
-                                                            <p class="m-0"><a href="/user/{{.Username}}" class="item-name">{{.Username}}</p>
+                                                            <p class="m-0"><a href="/user?id={{.Username}}&edit=false" class="item-name">{{.Username}}</p>
                                                             
                                                         </td>
                                                         <td>

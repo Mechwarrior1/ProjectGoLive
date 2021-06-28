@@ -1,0 +1,33 @@
+{{template "header" .UserPersistInfo}}
+    
+    {{ $owner := .Owner}}
+    {{ $edit := .Edit}}
+    {{ $userData := .UserData}}
+        <h3>{{$userData.Username}}</h3>
+        <br>
+        <Hr>
+        <span>Last login: {{$userData.LastLogin}}</span>
+        <span>Joined  on: {{$userData.DateJoin}}</span>
+        <br>
+        <p>Comment:</p>
+        {{if $owner}}
+            {{if $edit}}
+            <form method="post" >
+                <textarea  rows="3" cols="50" name="CommentItem" class="form-control" id="CommentItem" aria-label="With textarea" >{{$userData.CommentItem}}</textarea>
+                <br>
+                
+                <input type="submit" class="btn btn-primary">
+            </form>
+            {{end}}
+            {{if not $edit}}
+                
+                <textarea readonly rows="3" cols="50" name="CommentItem" class="form-control" id="CommentItem" aria-label="With textarea">{{$userData.CommentItem}}</textarea>
+                <br>
+                <a href="/user?id={{$userData.ID}}&edit=true"><button class="btn btn-primary btn-sm">Edit Comment</button></a>
+            {{end}}
+        {{end}}
+        {{if not $owner}}
+            <textarea readonly rows="3" cols="50" name="CommentItem" class="form-control" id="CommentItem" aria-label="With textarea">{{$userData.CommentItem}}</textarea>
+        {{end}}
+  </div>
+{{template "footer"}}

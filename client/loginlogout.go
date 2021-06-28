@@ -65,7 +65,7 @@ func signup(res http.ResponseWriter, req *http.Request) {
 				return
 			}
 			currentTime := time.Now()
-			lastLogin := currentTime.Format("2006-01-02 15:04:05 Monday")
+			lastLogin := currentTime.Format("06-01-2006 15:04 Monday")
 			err5 := addUser(username, string(bPassword), "", lastLogin) // send user info to api
 			if err5 != nil {
 				sessionMgr.updatePersistInfo(id, "false", "None", "true", "There was an error, please try again", "logout********", "None", false)
@@ -113,6 +113,7 @@ func login(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 		sessionMgr.checkLoggedIn(username)
+
 		// create session.
 		sessionMgr.updatePersistInfo(id, "true", "You have successfully logged in!", "false", "None", username, userPersistInfo1.LastLogin, false)
 		sessionMgr.newCookieAndSet("", res, req, id)

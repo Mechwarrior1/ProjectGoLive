@@ -638,3 +638,81 @@ TRACE: 2021/06/27 11:44:24 sessionanduser.go:155: Successfully loaded key from f
 TRACE: 2021/06/27 11:45:19 sessionanduser.go:155: Server started
 TRACE: 2021/06/27 11:45:19 sessionanduser.go:155: Successfully loaded key from file
 TRACE: 2021/06/27 11:45:46 sessionanduser.go:155: john logged in
+TRACE: 2021/06/28 19:34:51 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 19:34:51 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 19:35:10 sessionanduser.go:155: admin logged in
+TRACE: 2021/06/28 19:49:04 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 19:49:04 sessionanduser.go:155: Successfully loaded key from file
+ERROR: 2021/06/28 19:49:09 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+ERROR: 2021/06/28 19:49:25 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+TRACE: 2021/06/28 19:50:13 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 19:50:14 sessionanduser.go:155: Successfully loaded key from file
+ERROR: 2021/06/28 19:50:26 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+TRACE: 2021/06/28 19:50:59 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 19:50:59 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 19:51:17 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 19:51:18 sessionanduser.go:155: Successfully loaded key from file
+ERROR: 2021/06/28 19:51:19 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+ERROR: 2021/06/28 19:53:59 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+TRACE: 2021/06/28 19:58:00 sessionanduser.go:155: john logged in
+TRACE: 2021/06/28 19:58:55 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 19:58:55 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 19:59:07 sessionanduser.go:155: john logged in
+TRACE: 2021/06/28 20:01:20 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:01:20 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:03:40 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:03:41 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:03:47 sessionanduser.go:155: john logged in
+TRACE: 2021/06/28 20:05:00 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:05:00 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:05:05 sessionanduser.go:155: john logged in
+TRACE: 2021/06/28 20:06:02 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:06:02 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:06:15 sessionanduser.go:155: john logged in
+TRACE: 2021/06/28 20:08:47 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:08:47 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:09:05 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:09:05 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:09:16 sessionanduser.go:155: john logged in
+TRACE: 2021/06/28 20:10:41 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:10:41 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:11:00 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:11:00 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:11:45 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:11:45 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:13:17 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:13:17 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:16:38 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:16:38 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:16:42 sessionanduser.go:155: admin logged in
+TRACE: 2021/06/28 20:18:50 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:18:50 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:19:53 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:19:53 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:20:00 sessionanduser.go:155: admin logged in
+TRACE: 2021/06/28 20:29:40 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:29:40 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:29:46 sessionanduser.go:155: admin logged in
+TRACE: 2021/06/28 20:31:01 sessionanduser.go:155: admin has logged out
+TRACE: 2021/06/28 20:31:05 sessionanduser.go:155: john logged in
+TRACE: 2021/06/28 20:31:50 sessionanduser.go:155: john has logged out
+ERROR: 2021/06/28 20:32:56 sessionanduser.go:155: Error encounted when reading datapacket: username not found
+TRACE: 2021/06/28 20:33:08 sessionanduser.go:155: MetalRecycler logged in
+ERROR: 2021/06/28 20:38:02 sessionanduser.go:155: The HTTPS request failed with error: Post "https://localhost:5555/api/v0/db/info": stream error: stream ID 1; INTERNAL_ERROR
+TRACE: 2021/06/28 20:42:43 sessionanduser.go:155: Created item: 'Old electronics', by user: 'MetalRecycler' desc: 'We recycle old computer, television, phones and other electronics, contact us if you have any unwanted items and we will help you dispose of them on your doorstep!'
+TRACE: 2021/06/28 20:44:03 sessionanduser.go:155: admin logged in
+TRACE: 2021/06/28 20:44:41 sessionanduser.go:155: admin has logged out
+TRACE: 2021/06/28 20:44:45 sessionanduser.go:155: john logged in
+TRACE: 2021/06/28 20:48:23 sessionanduser.go:155: john has logged out
+TRACE: 2021/06/28 20:48:28 sessionanduser.go:155: admin logged in
+TRACE: 2021/06/28 20:49:59 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:49:59 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:52:37 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:52:37 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:54:12 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:54:12 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:55:53 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:55:53 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/28 20:56:21 sessionanduser.go:155: john logged in
+TRACE: 2021/06/28 20:58:52 sessionanduser.go:155: Server started
+TRACE: 2021/06/28 20:58:52 sessionanduser.go:155: Successfully loaded key from file

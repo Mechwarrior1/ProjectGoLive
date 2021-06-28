@@ -22,7 +22,7 @@ var (
 	tplGetPostDetail = template.Must(template.New("").ParseFiles("templates/getpostdetail.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
 	tplCreatePost    = template.Must(template.New("").ParseFiles("templates/createpost.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
 	tplEditPost      = template.Must(template.New("").ParseFiles("templates/editpost.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
-	// tplUpdateCourseForm = template.Must(template.New("").ParseFiles("templates/updatecourseform.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
+	tplUpdateUser    = template.Must(template.New("").ParseFiles("templates/updateuser.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
 	// tplShutdown         = template.Must(template.New("").ParseFiles("templates/shutdown.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
 
 	// a struct to handle all the server session and user information.
@@ -51,7 +51,7 @@ func init() {
 	router.HandleFunc("/createpost", createPost)
 	router.HandleFunc("/editpost/{id}", editPost)
 	// router.HandleFunc("/shutdown", shutdown)
-	// router.HandleFunc("/updatecourse/{courseid}", updateCourseForm)
+	router.HandleFunc("/user", getUser)
 	router.HandleFunc("/", index)
 
 	s = http.Server{Addr: ":5221", Handler: router}

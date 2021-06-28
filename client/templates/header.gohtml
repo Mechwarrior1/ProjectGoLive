@@ -379,7 +379,7 @@
             {{else}}
               {{if .Username}}
                 <div class="rightbox">
-                  <h5>Welcome {{.Username}}, <a href="/logout" class="navbar-brand">Log Out</a></h5>
+                  <h5>Welcome <a class="navbar-brand" href="/user?id={{.Username}}&edit=false">{{.Username}}</a>, <a href="/logout" class="navbar-brand">Log Out</a></h5>
                   <p>Last Login: {{.LastLogin}}</p>
                   
                 </div>

@@ -162,7 +162,7 @@ func loggerGo() (chan string, chan string) {
 // a function to update a user's last login.
 func (u *userPersistInfo) updateLastLogin() *userPersistInfo {
 	currentTime := time.Now()
-	lastLogin := currentTime.Format("2006-01-02 15:04:05 Monday")
+	lastLogin := currentTime.Format("02-01-2006 15:04 Monday")
 	u.LastLogin = lastLogin
 	return u
 }
@@ -191,7 +191,7 @@ func addUser(username string, pwString string, commentItem string, lastLogin str
 	userInfo1 := make(map[string]string)
 	userInfo1["Username"] = username
 	userInfo1["LastLogin"] = lastLogin
-	userInfo1["DateJoin"] = currentTime.Format("2006-01-02 Monday")
+	userInfo1["DateJoin"] = currentTime.Format("02-01-2006 Monday")
 	userInfo1["CommentItem"] = commentItem
 
 	jsonData1.InfoType = "UserInfo"
@@ -201,10 +201,10 @@ func addUser(username string, pwString string, commentItem string, lastLogin str
 		return err1
 	}
 	fmt.Println(res2)
-	logger1.logTrace("TRACE", username+" is added/updated to system")
 	if err1 == nil && err2 == nil {
-
+		return nil
 	}
+	logger1.logTrace("TRACE", username+" is added/updated to system")
 	return err1
 }
 
@@ -408,11 +408,12 @@ func checkUsername(res http.ResponseWriter, req *http.Request, username string) 
 }
 
 func checkPW(username string, password string, reqUser string) bool {
-	baseURL := "https://127.0.0.1:5555/api/v0/check"
 	userSecret1 := make(map[string]string)
 	userSecret1["Username"] = username
 	userSecret1["Password"] = password
-
+	lastLogin := time.Now().Format("02-01-2006 15:04 Monday")
+	fmt.Println(lastLogin)
+	userSecret1["LastLogin"] = lastLogin
 	jsonData1 := dataPacket{
 		// key to access rest api
 		Key:         "abce85da-b8b1-11eb-8529-0242ac130003",
@@ -422,7 +423,7 @@ func checkPW(username string, password string, reqUser string) bool {
 		RequestUser: reqUser,
 		DataInfo:    []map[string]string{userSecret1},
 	}
-	dataInfo1, err1 := tapAPI(http.MethodGet, jsonData1, baseURL)
+	dataInfo1, err1 := tapAPI(http.MethodGet, jsonData1, baseURL+"check")
 	// receiveInfo := mapInterfaceToString(dataInfo1)
 
 	fmt.Println("checkUser: ", err1, dataInfo1)
