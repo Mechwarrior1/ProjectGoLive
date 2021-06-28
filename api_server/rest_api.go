@@ -224,7 +224,7 @@ func readJSONBody(w http.ResponseWriter, r *http.Request) (*dataPacket, error) {
 	if err == nil {
 		// convert JSON to object
 		json.Unmarshal(reqBody, &newDataPacket)
-		if newDataPacket.Key != "abce85da-b8b1-11eb-8529-0242ac130003" {
+		if newDataPacket.Key != "" {
 			w.WriteHeader(http.StatusNotFound)
 			newErrorResponse(w, r, "401 - Invalid key")
 			return &newDataPacket, errors.New("incorrect api key supplied")
