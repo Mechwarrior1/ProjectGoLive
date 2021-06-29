@@ -175,7 +175,7 @@ func addUser(username string, pwString string, commentItem string, lastLogin str
 	userSecret1["CommentItem"] = commentItem
 	jsonData1 := dataPacket{
 		// key to access rest api
-		Key:         "abce85da-b8b1-11eb-8529-0242ac130003",
+		Key:         key1(),
 		ErrorMsg:    "nil",
 		InfoType:    "UserSecret",
 		ResBool:     "false",
@@ -393,7 +393,7 @@ func checkUsername(res http.ResponseWriter, req *http.Request, username string) 
 	userInfo1["Username"] = username
 	jsonData1 := dataPacket{
 		// key to access rest api
-		Key:         "abce85da-b8b1-11eb-8529-0242ac130003",
+		Key:         key1(),
 		ErrorMsg:    "nil",
 		InfoType:    "UserInfo",
 		ResBool:     "false",
@@ -416,7 +416,7 @@ func checkPW(username string, password string, reqUser string) bool {
 	userSecret1["LastLogin"] = lastLogin
 	jsonData1 := dataPacket{
 		// key to access rest api
-		Key:         "abce85da-b8b1-11eb-8529-0242ac130003",
+		Key:         key1(),
 		ErrorMsg:    "nil",
 		InfoType:    "UserSecret",
 		ResBool:     "false",
@@ -429,110 +429,3 @@ func checkPW(username string, password string, reqUser string) bool {
 	fmt.Println("checkUser: ", err1, dataInfo1)
 	return dataInfo1.ResBool == "true"
 }
-
-// a function for http handler, used for /deletemovie, lets the admin delete sessions currently logged on the system.
-// unable to delete own session.
-// only accessible by admin (user.isAdmin == true).
-// func (s *sessionManager) deleteSessionPage(res http.ResponseWriter, req *http.Request) {
-// 	id, userPersistInfo1 := s.getIdPersistInfo(res, req)
-// 	if !userPersistInfo1.IsAdmin {
-// 		s.updatePersistInfo(id, "false", "None", "true1", "You do not have the rights to access this page", userPersistInfo1.Username, "seelast")
-// 		http.Redirect(res, req, "/", http.StatusSeeOther)
-// 		return
-// 	}
-
-// 	dataInsert := struct {
-// 		MapPersistInfo map[string]userPersistInfo
-// 		PersistInfo    *userPersistInfo
-// 	}{
-// 		*s.mapPersistInfo,
-// 		userPersistInfo1,
-// 	}
-// 	if req.Method == http.MethodPost {
-// 		if !userPersistInfo1.IsAdmin {
-// 			s.updatePersistInfo(id, "false", "None", "true1", "You do not have the rights to access this page", userPersistInfo1.Username, "seelast")
-// 			http.Redirect(res, req, "/", http.StatusSeeOther)
-// 			return
-// 		}
-// 		req.ParseForm()                            // Required if you don't call r.FormValue().
-// 		deleteUuid := req.Form["deleteSessionNum"] //req.FormValue("deleteMovieNum").
-// 		_, ok := (*s.mapPersistInfo)[deleteUuid[0]]
-// 		if id == deleteUuid[0] {
-// 			s.updatePersistInfo(id, "false", "None", "true", "You cannot delete your own session: "+id, userPersistInfo1.Username, "seelast")
-// 			http.Redirect(res, req, "/deletesession", http.StatusSeeOther)
-// 			return
-// 		}
-// 		if !ok {
-// 			s.updatePersistInfo(id, "false", "None", "true", "Please select a correct ID", userPersistInfo1.Username, "seelast")
-// 			http.Redirect(res, req, "/deletesession", http.StatusSeeOther)
-// 			return
-// 		}
-// 		err2 := s.deleteSession(deleteUuid[0])
-// 		if err2 != nil {
-// 			s.updatePersistInfo(id, "false", "None", "true", "Target session not found", userPersistInfo1.Username, "seelast")
-// 			http.Redirect(res, req, "/deletesession", http.StatusSeeOther)
-// 			return
-// 		}
-// 		s.updatePersistInfo(id, "true", "You have deleted "+deleteUuid[0], "false", "None", userPersistInfo1.Username, "seelast")
-// 		http.Redirect(res, req, "/deletesession", http.StatusSeeOther)
-// 	}
-// 	tplDeleteSession.ExecuteTemplate(res, "deletesession.gohtml", dataInsert)
-// }
-
-// // a function for http handler, used for /deleteuser, lets the admin delete users that have signed up.
-// // unable to delete any admin users.
-// // only accessible by admin (user.isAdmin == true).
-// func deleteUser(res http.ResponseWriter, req *http.Request) {
-// 	user, id, persistInfo1 := getUser(res, req)
-// 	if !user.IsAdmin {
-// 		sessionMgr.updatePersistInfo(id, "false", "None", "true1", "You do not have the rights to access this page", user.Username, "seelast")
-// 		http.Redirect(res, req, "/", http.StatusSeeOther)
-// 		return
-// 	}
-// 	userList := map[string]bool{}
-// 	for k, user1 := range *sessionMgr.mapUsers {
-// 		userList[k] = user1.IsAdmin
-// 	}
-// 	dataInsert := struct {
-// 		UserList    map[string]bool
-// 		PersistInfo persistInfo
-// 	}{
-// 		userList,
-// 		persistInfo1,
-// 	}
-// 	if req.Method == http.MethodPost {
-// 		if !user.IsAdmin {
-// 			sessionMgr.updatePersistInfo(id, "false", "None", "true1", "You do not have the rights to access this page", user.Username, "seelast")
-// 			http.Redirect(res, req, "/", http.StatusSeeOther)
-// 			return
-// 		}
-// 		req.ParseForm()
-// 		deleteUser := req.Form["deleteUserNum"]
-// 		if len(deleteUser) == 0 {
-// 			logger1.logTrace("WARNING", "an error occured while attempting to delete a user, parseform returned an empty slice")
-// 			sessionMgr.updatePersistInfo(id, "false", "None", "true", "An error seems to have occured", user.Username, "seelast")
-// 			http.Redirect(res, req, "/deleteuser", http.StatusSeeOther)
-// 			return
-// 		}
-// 		myUser, ok := sessionMgr.getUser(deleteUser[0])
-// 		if !ok {
-// 			sessionMgr.updatePersistInfo(id, "false", "None", "true", "an error occured while attempting to delete a user", user.Username, "seelast")
-// 			http.Redirect(res, req, "/deleteuser", http.StatusSeeOther)
-// 			return
-// 		}
-// 		if myUser.IsAdmin {
-// 			sessionMgr.updatePersistInfo(id, "false", "None", "true", "You cannot delete an Admin", user.Username, "seelast")
-// 			http.Redirect(res, req, "/deleteuser", http.StatusSeeOther)
-// 			return
-// 		}
-// 		sessionMgr.deleteUser(myUser.Username) // delete the user from mapUsers.
-// 		for id2, _ := range *sessionMgr.mapPersistInfo {
-// 			if id2 == deleteUser[0] {
-// 				sessionMgr.deleteSession(id2) //deletes the deleted user's session if he is logged in.
-// 			}
-// 		}
-// 		sessionMgr.updatePersistInfo(id, "true", "You have deleted the user: "+deleteUser[0], "false", "None", user.Username, "seelast")
-// 		http.Redirect(res, req, "/deleteuser", http.StatusSeeOther)
-// 	}
-// 	tplDeleteUser.ExecuteTemplate(res, "deleteuser.gohtml", dataInsert)
-// }

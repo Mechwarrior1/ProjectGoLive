@@ -20,7 +20,8 @@ func createHash(key string) string {
 }
 
 // opens a xml file containing the passphrase, to recreate the key for encrpytion/decryption.
-func getPassphrase() string {
+// loc is the location "secure/keys.xml"
+func getPassphrase(loc string) string {
 	type Keys struct {
 		Passphrase string
 	}
@@ -36,8 +37,8 @@ func getPassphrase() string {
 
 // takes in data bytes[] and encrypt it with the key from from createHash() and getPassphrase().
 // returns the encrypted data as []bytes.
-func encrypt(data []byte) []byte {
-	passphrase := getPassphrase()
+func encrypt(data []byte, loc string) []byte {
+	passphrase := getPassphrase(loc)
 	block, _ := aes.NewCipher([]byte(createHash(passphrase)))
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
@@ -50,8 +51,8 @@ func encrypt(data []byte) []byte {
 
 // takes in data bytes[] and decrypt it with the key from createHash() and getPassphrase().
 // returns the decrypted data as []bytes.
-func decrypt(data []byte) []byte {
-	passphrase := getPassphrase()
+func decrypt(data []byte, loc string) []byte {
+	passphrase := getPassphrase(loc)
 	key := []byte(createHash(passphrase))
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -72,21 +73,21 @@ func decrypt(data []byte) []byte {
 // takes the encrypted data from encrypt() and save it to a file with the filename as name.
 // filename - string, to name the new saved encrypted file.
 // data - the encrypted data.
-func encryptToFile(filename string, string1 string) {
+func encryptToFile(filename string, string1 string, loc string) {
 	data := []byte(string1)
 	f, _ := os.Create(filename)
 	defer f.Close()
-	f.Write(encrypt(data))
+	f.Write(encrypt(data, loc))
 	// logger1.logTrace("TRACE", "Successfully saved mapUser to file")
 }
 
 // takes in a filename, reads it and decode it with decrypt(see file encryptdecrypt)
-func decryptFromFile(filename string) []byte {
+func decryptFromFile(filename string, loc string) []byte {
 	data1, err := ioutil.ReadFile(filename)
 	if err != nil {
 		fmt.Println("error when reading file")
 		return nil
 	}
 	// logger1.logTrace("TRACE", "Successfully loaded password from file")
-	return decrypt(data1)
+	return decrypt(data1, loc)
 }

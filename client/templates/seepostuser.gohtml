@@ -1,0 +1,84 @@
+{{template "header" .UserPersistInfo}}
+<div class="container">
+<div class="row">
+    <div class="col-lg-12 card-margin">
+        <div class="card search-form">
+            <div class="card-body p-0">
+                
+                    <center>
+                    <h3>Listing for {{.PostUsername}}</h3>
+                    </center>
+                
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+        <div class="col-12">
+            <div class="card card-margin">
+                <div class="card-body">
+                    <div class="row search-body">
+                        <div class="col-lg-12">
+                            <div class="search-result">
+                                <div class="result-header">
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="records">Showing: <b>all</b> results</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="result-body">
+                                    <div class="table-responsive">
+                                        <table class="table widget-26">
+                                            <tbody>
+
+                                                {{range .DataInfo}}
+                                                    <tr>
+                                                        <td>
+                                                            <div class="widget-26-emp-img">
+                                                                <img src={{.ImageLink}} alt="Company" />
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="widget-26-title">
+                                                            <a href="/getpost/{{.ID}}"><b>{{.Name}}</b></a>
+                                                            </div>
+                                                            <p class="m-0"><a href="/user?id={{.Username}}&edit=false" class="item-name">{{.Username}}</p>
+                                                            
+                                                        </td>
+                                                        <td>
+                                                            <div class="widget-26-info">
+                                                                <p class="type m-0">{{.Cat}}</p>
+                                                                <p class="type m-0">{{.ConditionItem}}</p>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="widget-26-info" >
+                                                                <p class="type m-0">{{.DatePosted}}</p>
+                                                                </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="widget-26-info" >
+                                                                <p class="type m-0">{{.ContactMeetInfo}}</p>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                {{end}}
+
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{{template "footer"}}

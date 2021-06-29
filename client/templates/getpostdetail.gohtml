@@ -6,6 +6,8 @@
     {{ $postCommentInfo := .PostCommentInfo}}
         {{if $owner}}
             <a href="/editpost/{{$postInfo.ID}}" class="button" class="btn btn-primary btn-sm"><button class="btn btn-primary btn-sm">Edit Post</button></a>
+            <br>
+            <a href="/complete/{{$postInfo.ID}}" class="button" class="btn btn-primary btn-sm"><button class="btn btn-primary btn-sm">Flag as Completed</button></a>
         {{end}}
         {{if eq $postInfo.Completion "true"}}
             <h5>Note: This post is flagged as completed</h5>

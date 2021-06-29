@@ -140,6 +140,8 @@ func createPost(res http.ResponseWriter, req *http.Request) {
 		http.Redirect(res, req, "/", http.StatusSeeOther)
 		return
 	}
+
+	sessionMgr.updatePersistInfo(id, "false", "None", "false", "None", "", "seelast", false)
 	tplCreatePost.ExecuteTemplate(res, "createpost.gohtml", userPersistInfo1)
 }
 
@@ -235,8 +237,9 @@ func editPost(res http.ResponseWriter, req *http.Request) {
 		sessionMgr.updatePersistInfo(id, "true", "You have created item: '"+postName+"'", "false", "None", "", "seelast", false)
 		http.Redirect(res, req, "/", http.StatusSeeOther)
 		return
-
 	}
+
+	sessionMgr.updatePersistInfo(id, "false", "None", "false", "None", "", "seelast", false)
 	tplEditPost.ExecuteTemplate(res, "editpost.gohtml", dataInsert)
 }
 
@@ -353,6 +356,7 @@ func seePostAll(res http.ResponseWriter, req *http.Request) {
 			*userPersistInfo1,
 		}
 
+		sessionMgr.updatePersistInfo(id, "false", "None", "false", "None", "", "seelast", false)
 		tplSeePostAll.ExecuteTemplate(res, "seepostall.gohtml", dataInsert)
 		return
 	}
@@ -439,7 +443,93 @@ func getPostDetail(res http.ResponseWriter, req *http.Request) {
 		http.Redirect(res, req, "/getpost/"+params["id"], http.StatusSeeOther)
 		return
 	}
+
+	sessionMgr.updatePersistInfo(id, "false", "None", "false", "None", "", "seelast", false)
 	tplGetPostDetail.ExecuteTemplate(res, "getpostdetail.gohtml", dataInsert)
+}
+
+func seePostUser(res http.ResponseWriter, req *http.Request) {
+	postUsername := mux.Vars(req)["id"] // get post id
+	id, userPersistInfo1 := sessionMgr.getIdPersistInfo(res, req)
+	mapListing := make(map[string]string)
+	mapListing["Name"] = ""
+	mapListing["filterUsername"] = postUsername //get all post for the username
+
+	jsonData1 := dataPacket{
+		// key to access rest api
+		Key:         key1(),
+		ErrorMsg:    "nil",
+		InfoType:    "ItemListing",
+		ResBool:     "false",
+		RequestUser: userPersistInfo1.Username,
+		DataInfo:    []map[string]string{mapListing},
+	}
+
+	dataPacket1, err1 := tapAPI("GET", jsonData1, baseURL+"allinfo")
+	// dataInfoSorted, _ := sortPost(dataPacket1.DataInfo, "All", "All", "desc")
+
+	if err1 != nil || dataPacket1.ErrorMsg == "false" {
+		sessionMgr.updatePersistInfo(id, "false", "None", "true1", "An error has occurred, or user has no post", "", "seelast", false)
+		http.Redirect(res, req, "/", http.StatusSeeOther)
+		return
+	}
+
+	dataInsert := struct {
+		DataInfo        []map[string]string
+		UserPersistInfo userPersistInfo
+		PostUsername    string
+	}{
+		dataPacket1.DataInfo,
+		*userPersistInfo1,
+		postUsername,
+	}
+
+	sessionMgr.updatePersistInfo(id, "false", "None", "false", "None", "", "seelast", false)
+	tplSeePostUser.ExecuteTemplate(res, "seepostuser.gohtml", dataInsert)
+}
+
+func postComplete(res http.ResponseWriter, req *http.Request) {
+	id, userPersistInfo1 := sessionMgr.getIdPersistInfo(res, req)
+	params := mux.Vars(req)
+
+	mapListing := make(map[string]string)
+	mapListing["ID"] = params["id"]
+
+	jsonData1 := dataPacket{
+		// key to access rest api
+		Key:         key1(),
+		ErrorMsg:    "nil",
+		InfoType:    "ItemListing",
+		ResBool:     "false",
+		RequestUser: userPersistInfo1.Username,
+		DataInfo:    []map[string]string{mapListing},
+	}
+
+	dataPacket1, err1 := tapAPI(http.MethodGet, jsonData1, baseURL+"db/info")
+
+	if err1 != nil || dataPacket1.ResBool == "false" || userPersistInfo1.Username != dataPacket1.DataInfo[0]["Username"] {
+		sessionMgr.updatePersistInfo(id, "false", "None", "true1", "An error has occurred or you do not have access to this page", "", "seelast", false)
+		http.Redirect(res, req, "/", http.StatusSeeOther)
+		return
+	}
+
+	// get form values.
+	mapListing2 := dataPacket1.DataInfo[0]
+	mapListing2["Completion"] = "true"
+	fmt.Println(params, mapListing2)
+	jsonData1.DataInfo = []map[string]string{mapListing2}
+
+	_, err5 := tapAPI("PUT", jsonData1, baseURL+"db/info")
+	if err5 != nil {
+		sessionMgr.updatePersistInfo(id, "false", "None", "true", "An error has occurred, please try again later", "", "seelast", false)
+		http.Redirect(res, req, "/", http.StatusSeeOther)
+		return
+	}
+
+	sessionMgr.updatePersistInfo(id, "false", "None", "false", "None", "", "seelast", false)
+	logger1.logTrace("TRACE", "Updated Item status for '"+mapListing2["Name"]+"' to completed ")
+	sessionMgr.updatePersistInfo(id, "true", "'"+mapListing2["Name"]+"' is tagged as completed", "false", "None", "", "seelast", false)
+	http.Redirect(res, req, "/", http.StatusSeeOther)
 }
 
 // a function for http handler, for the main page of the site.
@@ -455,6 +545,7 @@ func index(res http.ResponseWriter, req *http.Request) {
 		http.Redirect(res, req, "/seepost?search1="+postSearch+"&date=All&cat="+postCat+"&sort=desc", http.StatusSeeOther)
 		return
 	}
+
 	tplIndex.ExecuteTemplate(res, "index.gohtml", persistInfo1)
 }
 
@@ -542,6 +633,7 @@ func getUser(res http.ResponseWriter, req *http.Request) {
 		editParam == "true",
 	}
 
+
 	// post request for adding a new comment for the post
 	if req.Method == http.MethodPost {
 
@@ -573,5 +665,6 @@ func getUser(res http.ResponseWriter, req *http.Request) {
 		http.Redirect(res, req, "/user?id="+idParam+"&edit=false", http.StatusSeeOther)
 		return
 	}
+	sessionMgr.updatePersistInfo(id, "false", "None", "false", "None", "", "seelast", false)
 	tplUpdateUser.ExecuteTemplate(res, "updateuser.gohtml", dataInsert)
 }

@@ -72,9 +72,18 @@ type (
 	}
 )
 
+var key1 = anonFunc() //decrypt api key from file
+
+func anonFunc() func() string {
+	key1 := string(decryptFromFile("secure/apikey", "secure/apikey.xml"))
+	return func() string {
+		return key1
+	}
+}
+
 // Opens db and returns a struct to access it
 func openDB() dbHandler {
-	pass := string(decryptFromFile("secure/mysql"))
+	pass := string(decryptFromFile("secure/mysql", "secure/keys.xml"))
 	db, err := sql.Open("mysql", "myuser:"+pass+"@tcp(127.0.0.1:60575)/my_db")
 	if err != nil {
 		panic(err.Error())
@@ -190,7 +199,7 @@ func (dbHandler dbHandler) getRecord(dbTable string) ([]interface{}, error) {
 }
 
 // access the DB and get all records
-func (dbHandler dbHandler) getRecordlisting(dbTable string, requestWords string) ([]interface{}, error) {
+func (dbHandler dbHandler) getRecordlisting(dbTable string, requestWords string, filterUsername string) ([]interface{}, error) {
 	// allData := []genData{}
 	allData := []interface{}{}
 	requestWords2 := strings.Fields(requestWords) //split the words for embeding
@@ -206,28 +215,32 @@ func (dbHandler dbHandler) getRecordlisting(dbTable string, requestWords string)
 		if err != nil {
 			fmt.Println("logger: error at getRecordlisting:" + err.Error())
 		}
+		if filterUsername == "" {
+			if data1.Completion != "true" {
+				requestWordsEmbed2 := embed.getWordEmbeddingCombine(strings.Fields(data1.Name), []string{})
+				addVal := float32(0)
+				addVal2 := float32(0)
 
-		if data1.Completion != "true" {
-			requestWordsEmbed2 := embed.getWordEmbeddingCombine(strings.Fields(data1.Name), []string{})
-			addVal := float32(0)
-			addVal2 := float32(0)
+				for _, word := range requestWords2 {
+					if strings.Contains(data1.Name, word) {
+						addVal += 0.05
+					}
+					if strings.Contains(data1.CommentItem, word) {
+						addVal2 += 0.005
+					}
+				}
 
-			for _, word := range requestWords2 {
-				if strings.Contains(data1.Name, word) {
-					fmt.Println("0.05, "+data1.Name, word)
-					addVal += 0.05
-				}
-				if strings.Contains(data1.CommentItem, word) {
-					addVal2 += 0.005
-				}
+				addVal3 := math.Min(0.15, math.Max(float64(addVal2), 0))
+				addVal4 := math.Min(0.2, math.Max(float64(addVal), 0))
+				cosSim := cosineSimilarity(requestWordsEmbed, requestWordsEmbed2)
+				data1.Similarity = fmt.Sprintf("%f", cosSim+float32(addVal3+addVal4))
+				fmt.Println(requestWords, data1.Name, cosSim+float32(addVal3+addVal4))
+				allData = append(allData, data1)
 			}
-
-			addVal3 := math.Min(0.15, math.Max(float64(addVal2), 0))
-			addVal4 := math.Min(0.2, math.Max(float64(addVal), 0))
-			cosSim := cosineSimilarity(requestWordsEmbed, requestWordsEmbed2)
-			data1.Similarity = fmt.Sprintf("%f", cosSim+float32(addVal3+addVal4))
-			fmt.Println(requestWords, data1.Name, cosSim+float32(addVal3+addVal4))
-			allData = append(allData, data1)
+		} else {
+			if data1.Username == filterUsername {
+				allData = append(allData, data1)
+			}
 		}
 	}
 	return allData, nil
@@ -319,9 +332,8 @@ CommentItem (ID , Username, ForItem, Date, CommentItem);
 func (dbHandler dbHandler) editRecord(dbTable string, values ...interface{}) error {
 	var err error
 	switch dbTable {
-	case "UserSecret":
-		aa, err := dbHandler.DB.Exec("UPDATE "+dbTable+" SET Username=?, Password=?, IsAdmin=?, CommentItem=? WHERE ID=?", values[0], values[1], values[2], values[3], values[4])
-		fmt.Println(aa, values, err)
+	// case "UserSecret":
+	// 	_, err := dbHandler.DB.Exec("UPDATE "+dbTable+" SET Username=?, Password=?, IsAdmin=?, CommentItem=? WHERE ID=?", values[0], values[1], values[2], values[3], values[4])
 	case "UserInfo":
 		_, err = dbHandler.DB.Exec("UPDATE "+dbTable+" SET Username=?, LastLogin=?, DateJoin=?, CommentItem=? WHERE ID=?", values[0], values[1], values[2], values[3], values[4])
 	case "ItemListing":
