@@ -58,7 +58,7 @@ jobs: #job to execute on event
       uses: EnricoMi/publish-unit-test-result-action@v1 #checkout unit test reporting 
       if: always() #always happen
       with: 
-        files: client/report.xml #uses a file created earlier
+        files: client/report2.xml #uses a file created earlier
         
     - if: ${{ success() }}
       name: Export report
@@ -67,7 +67,7 @@ jobs: #job to execute on event
     - name: Prepare documents
       run: |
         mv api_server/report.xml ./upload #move file to upload folder
-        mv client/report.xml ./upload #move file to upload folder
+        mv client/report2.xml ./upload #move file to upload folder
       
     - name: Prepare artifacts
       uses: actions/upload-artifact@v2
