@@ -45,7 +45,7 @@ jobs: #job to execute on event
         cd ..
         cd client
         go test -v 
-        go test -v | go2xunit > report.xml #run test again and output as report.xml
+        go test -v | go2xunit > report2.xml #run test again and output as report.xml
         ls #verify report is created
         
     - name: Publish unit test result
@@ -61,11 +61,13 @@ jobs: #job to execute on event
         files: client/report.xml #uses a file created earlier
         
     - if: ${{ success() }}
-      name: Export report.xml
+      name: Export report
       run: mkdir upload
       
     - name: Prepare documents
-      run: mv report.xml ./upload #move file to upload folder
+      run: |
+        mv api_server/report.xml ./upload #move file to upload folder
+        mv client/report.xml ./upload #move file to upload folder
       
     - name: Prepare artifacts
       uses: actions/upload-artifact@v2
