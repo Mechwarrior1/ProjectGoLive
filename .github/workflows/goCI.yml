@@ -37,21 +37,11 @@ jobs: #job to execute on event
         go get golang.org/x/crypto/bcrypt
         go get github.com/satori/go.uuid
         go get github.com/tebeka/go2xunit
-        cd api_server
-        go mod init rest_api
-        go mod tidy
-        cat rest_api.go #print the contents of file
+        
         go test -v 
         go test -v | go2xunit > report.xml #run test again and output as report.xml
         ls #verify report is created
         
-        cd ..
-        cd client
-        go mod init mainClient
-        go mod tidy
-        go test -v 
-        go test -v | go2xunit > report.xml #run test again and output as report.xml
-        ls #verify report is created
     - name: Publish unit test result
       uses: EnricoMi/publish-unit-test-result-action@v1 #checkout unit test reporting 
       if: always() #always happen
