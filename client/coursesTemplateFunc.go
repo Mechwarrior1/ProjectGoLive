@@ -68,14 +68,20 @@ func tapAPI(httpMethod string, jsonData dataPacket, baseURL1 string) (*dataPacke
 		return &newDataPacket, nil
 	}
 }
+func checkLogged(res http.ResponseWriter, req *http.Request, userPersistInfo1 *userPersistInfo, id string) bool {
+	if userPersistInfo1.Username == "" || userPersistInfo1.Username == "None" || userPersistInfo1.Username == "logout********" {
+		sessionMgr.updatePersistInfo(id, "false", "None", "true", "Please kindly log in to post", "", "seelast", false)
+		http.Redirect(res, req, "/", http.StatusSeeOther)
+		return false
+	}
+	return true
+}
 
 // a function for http handler, used to create any course.
 // bring to a form for inputs
 func createPost(res http.ResponseWriter, req *http.Request) {
 	id, userPersistInfo1 := sessionMgr.getIdPersistInfo(res, req)
-	if userPersistInfo1.Username == "" || userPersistInfo1.Username == "None" || userPersistInfo1.Username == "" {
-		sessionMgr.updatePersistInfo(id, "false", "None", "true", "Please kindly log in to post", "", "seelast", false)
-		http.Redirect(res, req, "/", http.StatusSeeOther)
+	if !checkLogged(res, req, userPersistInfo1, id) {
 		return
 	}
 	if req.Method == http.MethodPost {
@@ -149,6 +155,9 @@ func createPost(res http.ResponseWriter, req *http.Request) {
 // a form for inputs
 func editPost(res http.ResponseWriter, req *http.Request) {
 	id, userPersistInfo1 := sessionMgr.getIdPersistInfo(res, req)
+	if !checkLogged(res, req, userPersistInfo1, id) {
+		return
+	}
 	params := mux.Vars(req)
 	mapListing := make(map[string]string)
 	mapListing["Name"] = params["id"]
@@ -187,7 +196,7 @@ func editPost(res http.ResponseWriter, req *http.Request) {
 		postImg2 := req.FormValue("PostImg2")
 		if strings.Contains(postImg2, "script") {
 			sessionMgr.updatePersistInfo(id, "false", "None", "true", "Please fill in the form correctly, without special characters for the name and title", "", "seelast", false)
-			http.Redirect(res, req, "/createpost", http.StatusSeeOther)
+			http.Redirect(res, req, "/", http.StatusSeeOther)
 			return
 		}
 		postCondition := req.FormValue("PostCondition")
@@ -199,14 +208,15 @@ func editPost(res http.ResponseWriter, req *http.Request) {
 			if replaceAllString(string1) != string1 {
 				fmt.Println("unable to create post, due to string:", string1)
 				sessionMgr.updatePersistInfo(id, "false", "None", "true", "Please fill in the form correctly, without special characters for the name and title", "", "seelast", false)
-				http.Redirect(res, req, "/createpost", http.StatusSeeOther)
+				http.Redirect(res, req, "/", http.StatusSeeOther)
 				return
 			}
 		}
 
 		//put inputs into map and push it into the api
 		newPost := make(map[string]string)
-		newPost["Username"] = "admin" //userPersistInfo1.Username
+		newPost["ID"] = params["id"]
+		newPost["Username"] = userPersistInfo1.Username
 		newPost["Name"] = postName
 		newPost["ImageLink"] = postImg2
 		timenow := time.Now().Unix()
@@ -215,26 +225,20 @@ func editPost(res http.ResponseWriter, req *http.Request) {
 		newPost["ConditionItem"] = postCondition
 		newPost["Cat"] = postCat
 		newPost["ContactMeetInfo"] = postContactMeetInfo
-		newPost["Completion"] = "false"
-		jsonData1 := dataPacket{
-			// key to access rest api
-			Key:         key1(),
-			ErrorMsg:    "nil",
-			InfoType:    "ItemListing",
-			ResBool:     "false",
-			RequestUser: userPersistInfo1.Username,
-			DataInfo:    []map[string]string{newPost},
+		newPost["Completion"] = dataPacket1.DataInfo[0]["Completion"]
+		for k, v := range newPost {
+			fmt.Println(k, ", ", v)
 		}
-
-		_, err5 := tapAPI("POST", jsonData1, baseURL+"db/info")
+		jsonData1.DataInfo = []map[string]string{newPost}
+		_, err5 := tapAPI(http.MethodPut, jsonData1, baseURL+"db/info")
 		if err5 != nil {
 			sessionMgr.updatePersistInfo(id, "false", "None", "true", "An error has occurred, please try again later", "", "seelast", false)
-			http.Redirect(res, req, "/createpost", http.StatusSeeOther)
+			http.Redirect(res, req, "/editpost/"+params["id"], http.StatusSeeOther)
 			return
 		}
 
 		logger1.logTrace("TRACE", "Created item: '"+postName+"', by user: '"+userPersistInfo1.Username+""+"' desc: '"+postComment+"'")
-		sessionMgr.updatePersistInfo(id, "true", "You have created item: '"+postName+"'", "false", "None", "", "seelast", false)
+		sessionMgr.updatePersistInfo(id, "true", "You have edited item: '"+postName+"'", "false", "None", "", "seelast", false)
 		http.Redirect(res, req, "/", http.StatusSeeOther)
 		return
 	}
@@ -380,7 +384,9 @@ func getPostDetail(res http.ResponseWriter, req *http.Request) {
 		RequestUser: userPersistInfo1.Username,
 		DataInfo:    []map[string]string{mapListing},
 	}
+
 	dataPacket1, err1 := tapAPI(http.MethodGet, jsonData1, baseURL+"db/info")
+
 	if err1 != nil || dataPacket1.ResBool == "false" || len(dataPacket1.DataInfo) == 0 {
 		//if post id does not exist return to search page
 		sessionMgr.updatePersistInfo(id, "false", "None", "true", "The detail: "+params["id"]+" cannot be found, please try another course", "", "seelast", false)
@@ -388,9 +394,10 @@ func getPostDetail(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// request for Comments for the post, sending the post id to api
+	// request for Comments for the post, sending the post id to api, if id cannot be found, redirect
 	jsonData1.InfoType = "CommentItem"
 	dataPacket2, err2 := tapAPI(http.MethodGet, jsonData1, baseURL+"allinfo")
+
 	if err2 != nil || dataPacket2.ResBool == "false" {
 		// if pos
 		sessionMgr.updatePersistInfo(id, "false", "None", "true", "The detail: "+params["id"]+" cannot be found, please try another course", "", "seelast", false)
@@ -418,9 +425,7 @@ func getPostDetail(res http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
 
 		username1 := userPersistInfo1.Username
-		if username1 == "" || username1 == "None" {
-			sessionMgr.updatePersistInfo(id, "false", "None", "true", "you need to login to post a comment", "", "seelast", false)
-			http.Redirect(res, req, "/getpost/"+params["id"], http.StatusSeeOther)
+		if !checkLogged(res, req, userPersistInfo1, id) {
 			return
 		}
 
@@ -549,52 +554,7 @@ func index(res http.ResponseWriter, req *http.Request) {
 	tplIndex.ExecuteTemplate(res, "index.gohtml", persistInfo1)
 }
 
-// a function for http handler, used to delete any course.
-// func deleteCourse(res http.ResponseWriter, req *http.Request) {
-// 	id, persistInfo1 := sessionMgr.getIdPersistInfo(res, req)
-// 	allCourse, err := getAllCourse()
-// 	if err != nil {
-// 		sessionMgr.updatePersistInfo(id, "false", "None", "true1", "An error seems to have occured: "+err.Error())
-// 		http.Redirect(res, req, "/", http.StatusSeeOther)
-// 		return
-// 	}
-// 	dataInsert := struct {
-// 		CourseInfo  []courseInfo
-// 		PersistInfo persistInfo
-// 	}{
-// 		allCourse,
-// 		persistInfo1,
-// 	}
-// 	if req.Method == http.MethodPost {
-// 		// get chosen item
-// 		req.ParseForm()
-// 		deleteCourse1 := req.Form["deleteCourse"]
-// 		// create packet to send
-// 		courseInfo1 := courseInfo{
-// 			"",
-// 			deleteCourse1[0],
-// 			"",
-// 			"",
-// 		}
-// 		jsonData1 := dataPacket{Key: key1(),
-// 			ErrorMsg:        "nil",
-// 			CourseInfoSlice: []courseInfo{courseInfo1},
-// 		}
-// 		_, err1 := tapAPI(http.MethodDelete, jsonData1, "")
-// 		if err1 != nil {
-// 			sessionMgr.updatePersistInfo(id, "false", "None", "true1", "An error seems to have occured: "+err1.Error())
-// 			http.Redirect(res, req, "/deletecourse", http.StatusSeeOther)
-// 			return
-// 		}
-// 		logger1.logTrace("TRACE", "Deleted course: '"+deleteCourse1[0])
-// 		sessionMgr.updatePersistInfo(id, "true", "You have deleted the course: "+deleteCourse1[0], "false", "None")
-// 		http.Redirect(res, req, "/deletecourse", http.StatusSeeOther)
-// 		return
-// 	}
-// 	tplDeleteCourse.ExecuteTemplate(res, "deletecourse.gohtml", dataInsert)
-// }
-
-// a function for http handler, follow up from getCourse, zooms into the course
+// a function for http handler, gives you the information on user
 func getUser(res http.ResponseWriter, req *http.Request) {
 	idParam := req.URL.Query().Get("id")
 	editParam := req.URL.Query().Get("edit")
@@ -632,7 +592,6 @@ func getUser(res http.ResponseWriter, req *http.Request) {
 		userData["Username"] == userPersistInfo1.Username,
 		editParam == "true",
 	}
-
 
 	// post request for adding a new comment for the post
 	if req.Method == http.MethodPost {

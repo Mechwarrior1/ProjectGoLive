@@ -208,11 +208,6 @@ func addUser(username string, pwString string, commentItem string, lastLogin str
 	return err1
 }
 
-// deletes the user struct that is mapped to the username from mapUsers.
-// func (s *sessionManager) deleteUser(username string) {
-// put in api request to backend server
-// }
-
 // logs the session in the sessionmanager.
 // updates the user's lastlogin.
 // attaches session id to user's lastsession.
@@ -298,7 +293,7 @@ func (s *sessionManager) getIdPersistInfo(res http.ResponseWriter, req *http.Req
 		userPersistInfo1, ok = (*s.mapPersistInfo)[id]
 	}
 	if !ok {
-		// uuid has expired, generate new
+		// uuid has does not exist or expired, generate new
 		userPersistInfo1 = &userPersistInfo{
 			Success:    "false",
 			SuccessMsg: "None",
@@ -362,6 +357,7 @@ func newCookie(expiry int, id string) *http.Cookie { //make a new cookie.
 		Name:   "goRecycleCookie",
 		Value:  id,
 		MaxAge: expiry,
+		Path:   "/",
 	}
 	return goRecycleCookie
 }

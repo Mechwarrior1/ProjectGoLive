@@ -239,6 +239,7 @@ func readJSONBody(w http.ResponseWriter, r *http.Request) (*dataPacket, error) {
 
 }
 
+// checks if owner of the post is the same as the one requesting, for edits or
 func checkUser(tarDB string, requestUser string, dataInfo []interface{}) bool {
 
 	switch tarDB {
@@ -379,7 +380,7 @@ func genInfo(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err3 != nil || len(dbInfoSlice) == 0 {
-
+			fmt.Println(dbInfoSlice, err3)
 			fmt.Println("logger: error when looking up id " + tarItemID + " for DB " + tarDB + ", err:" + err3.Error())
 			w.WriteHeader(http.StatusNotFound)
 			newErrorResponse(w, r, "404 - No item found")
@@ -429,7 +430,6 @@ func genInfo(w http.ResponseWriter, r *http.Request) {
 
 	// PUT is updating existing course
 	if r.Method == "PUT" {
-
 		var err2 error
 		switch tarDB {
 		case "CommentUser":
@@ -465,11 +465,17 @@ func genInfo(w http.ResponseWriter, r *http.Request) {
 		case "ItemListing":
 			dbInfoSlice1 := dbInfoSlice[0].(itemListing)
 			//( &data1.Username, &data1.Name, &data1.ImageLink, &data1.DatePosted, &data1.CommentItem, &data1.ConditionItem, &data1.Cat, &data1.ContactMeetInfo, &data1.ID,)
+			fmt.Println("\n", tarDB, "\n",
+				receiveInfo["ImageLink"], "\n",
+				receiveInfo["CommentItem"], "\n",
+				receiveInfo["ConditionItem"], "\n",
+				receiveInfo["Cat"], "\n",
+				receiveInfo["ContactMeetInfo"], "\n",
+				receiveInfo["Completion"], "\n",
+				receiveInfo["ID"], "\n",
+				dbInfoSlice1.ID)
 			err2 = dbHandler1.editRecord(tarDB,
-				dbInfoSlice1.Username,
-				dbInfoSlice1.Name,
 				receiveInfo["ImageLink"],
-				dbInfoSlice1.DatePosted,
 				receiveInfo["CommentItem"],
 				receiveInfo["ConditionItem"],
 				receiveInfo["Cat"],
@@ -508,7 +514,6 @@ func main() {
 	router.HandleFunc("/api/v0/check", pwCheck)
 	router.HandleFunc("/api/v0/allinfo", allInfo)
 	router.HandleFunc("/api/v0/username", usernameCheck)
-	// router.HandleFunc("/api/v0/shutdown", shutdown)
 	router.HandleFunc("/api/v0/db/info", genInfo).Methods("GET", "PUT", "POST", "DELETE")
 	fmt.Println("listening at port 5555")
 	s = http.Server{Addr: ":5555", Handler: router}
@@ -517,66 +522,4 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// fmt.Println(dbHandler1.getRecord("UserSecret"))  //works
-	// fmt.Println(dbHandler1.getRecord("UserInfo"))    //works
-	// fmt.Println(dbHandler1.getRecord("ItemListing")) //works
-	// fmt.Println(dbHandler1.getRecord("CommentUser")) //works
-	// fmt.Println(dbHandler1.getRecord("CommentItem")) //works
-
-	// dbHandler1.insertRecord("UserSecret", "000002", "admin2", "admin2", "false", "not a real admin")
-	// dbHandler1.insertRecord("UserInfo", "000002", "admin2", "19/6/2021", "19/6/2021", "not a real admin")
-	// dbHandler1.insertRecord("ItemListing",
-	// "000002",
-	// "admin2",
-	// "float",
-	// "https://cdn.education.com/files/86601_86700/86647/float.jpg",
-	// "56345345",
-	// "giving away a float",
-	// "well used",
-	// "misc",
-	// "call me at 12345678, or meet at city hall mrt",
-	// "false") //works
-	// &data1.ID, &data1.Username, &data1.Name, &data1.ImageLink, &data1.DatePosted, &data1.CommentItem, &data1.ConditionItem, &data1.Cat, &data1.ContactMeetInfo
-	// dbHandler1.insertRecord("CommentUser", "000002", "admin2", "admin", "21/6/2021", "make me an admin")      //works      //&data1.ID, &data1.Username, &data1.ForUsername, &data1.Date, &data1.CommentItem
-	// dbHandler1.insertRecord("CommentItem", "000002", "admin2", "000001", "21/6/2021", "i love this game too") //works //&data1.ID, &data1.Username, &data1.ForItem, &data1.Date, &data1.CommentItem
-
-	// editRecord(dbTable string, values ...interface{})
-	// dbHandler1.editRecord("UserSecret", "admin3", "admin2", "false", "not a real admin", "000002")      //works
-	// dbHandler1.editRecord("UserInfo", "admin3", "19/6/2021", "19/6/2021", "not a real admin", "000002")       //works
-	// dbHandler1.editRecord("ItemListing", "000002", "admin3", "float", "https://cdn.education.com/files/86601_86700/86647/float.jpg", "56345345", "giving away a float", "well used", "misc", "call me at 12345678, or meet at city hall mrt","false", "000002") //works
-	// //&data1.ID, &data1.Username, &data1.Name, &data1.ImageLink, &data1.DatePosted, &data1.CommentItem, &data1.ConditionItem, &data1.Cat, &data1.ContactMeetInfo
-	// dbHandler1.editRecord("CommentUser", "admin3", "admin", "21/6/2021", "make me an admin", "000002")      //works      //&data1.ID, &data1.Username, &data1.ForUsername, &data1.Date, &data1.CommentItem
-	// dbHandler1.editRecord("CommentItem", "admin3", "000001", "21/6/2021", "i love this game too", "000002") //works
-
-	// getMaxID(dbTable string)
-	// fmt.Println(dbHandler1.getMaxID("UserSecret"))
-	// fmt.Println(dbHandler1.getMaxID("UserInfo"))
-	// fmt.Println(dbHandler1.getMaxID("ItemListing"))
-	// fmt.Println(dbHandler1.getMaxID("CommentUser"))
-	// fmt.Println(dbHandler1.getMaxID("CommentItem"))
-
-	// dbHandler1.deleteRecord("UserSecret", "000002")  //works
-	// dbHandler1.deleteRecord("UserInfo", "000002")    //works
-	// dbHandler1.deleteRecord("ItemListing", "000002") //works
-	// dbHandler1.deleteRecord("CommentUser", "000002") //works
-	// dbHandler1.deleteRecord("CommentItem", "000002") //works
-
-	// fmt.Println(dbHandler1.getRecord("UserSecret"))  //works
-	// fmt.Println(dbHandler1.getRecord("UserInfo"))    //works
-	// fmt.Println(dbHandler1.getRecord("ItemListing")) //works
-	// fmt.Println(dbHandler1.getRecord("CommentUser")) //works
-	// fmt.Println(dbHandler1.getRecord("CommentItem")) //works
 }
-
-/*
-	// so using interface to call the function to return pointers doesnt seem to work
-	aa1 := userSecret{}
-	var data1 genData = aa1
-	// aa, _, _, _, ee := data1.returnParameter()
-	results, _ := dbHandler1.DB.Query("Select * FROM my_db." + "UserInfo")
-	fmt.Println(results.Scan(data1.returnParameter()))
-	fmt.Println(aa1, data1)
-	out, _ := json.Marshal(aa1)
-	fmt.Println(string(out))
-
-*/

@@ -597,3 +597,141 @@ TRACE: 2021/06/29 23:53:10 sessionanduser.go:155: Darren has logged out
 TRACE: 2021/06/30 00:23:24 sessionanduser.go:155: None session expired
 TRACE: 2021/06/30 00:23:24 sessionanduser.go:155: None session expired
 TRACE: 2021/06/30 00:23:24 sessionanduser.go:155: None session expired
+TRACE: 2021/06/30 09:21:30 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 09:21:30 sessionanduser.go:155: Successfully loaded key from file
+ERROR: 2021/06/30 09:22:00 sessionanduser.go:155: Error encounted when reading datapacket: 404 - Invalid credentials
+TRACE: 2021/06/30 09:22:00 sessionanduser.go:155: someone tried to login to: Darren, but the password is wrong
+ERROR: 2021/06/30 09:22:16 sessionanduser.go:155: Error encounted when reading datapacket: 404 - Invalid credentials
+TRACE: 2021/06/30 09:22:16 sessionanduser.go:155: someone tried to login to: admin, but the password is wrong
+TRACE: 2021/06/30 09:23:54 sessionanduser.go:155: Darren logged in
+TRACE: 2021/06/30 09:53:44 sessionanduser.go:155: Darren has logged out
+TRACE: 2021/06/30 09:55:26 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 09:55:26 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 10:07:19 sessionanduser.go:155: admin logged in
+TRACE: 2021/06/30 10:08:35 sessionanduser.go:155: Created item: 'Old plastics', by user: 'admin' desc: 'tons of old plastics'
+TRACE: 2021/06/30 10:10:12 sessionanduser.go:155: admin logged in
+TRACE: 2021/06/30 10:13:54 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 10:13:54 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 10:14:09 sessionanduser.go:155: admin logged in
+TRACE: 2021/06/30 10:16:02 sessionanduser.go:155: Created item: 'Old plastics', by user: 'admin' desc: 'tons of old plastics'
+TRACE: 2021/06/30 10:16:35 sessionanduser.go:155: admin has logged out
+TRACE: 2021/06/30 10:17:16 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 10:17:16 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 10:17:43 sessionanduser.go:155: admin logged in
+TRACE: 2021/06/30 10:18:14 sessionanduser.go:155: admin logged in
+ERROR: 2021/06/30 10:18:30 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+TRACE: 2021/06/30 10:23:37 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 10:23:37 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 10:24:08 sessionanduser.go:155: admin logged in
+TRACE: 2021/06/30 10:26:11 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 10:26:11 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 10:26:50 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 10:26:50 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 10:27:15 sessionanduser.go:155: admin logged in
+ERROR: 2021/06/30 10:27:30 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+TRACE: 2021/06/30 10:42:17 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 10:42:17 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 10:42:29 sessionanduser.go:155: admin logged in
+TRACE: 2021/06/30 10:43:17 sessionanduser.go:155: admin has logged out
+TRACE: 2021/06/30 10:43:41 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 10:43:41 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 10:44:04 sessionanduser.go:155: admin logged in
+ERROR: 2021/06/30 10:44:39 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+TRACE: 2021/06/30 10:45:06 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 10:45:06 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 11:28:39 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 11:28:39 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 11:28:54 sessionanduser.go:155: john logged in
+ERROR: 2021/06/30 11:29:11 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+TRACE: 2021/06/30 11:29:26 sessionanduser.go:155: john has logged out
+TRACE: 2021/06/30 11:30:53 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 11:30:53 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 11:31:03 sessionanduser.go:155: john logged in
+TRACE: 2021/06/30 11:31:21 sessionanduser.go:155: john has logged out
+TRACE: 2021/06/30 11:32:42 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 11:32:42 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 11:33:00 sessionanduser.go:155: john logged in
+ERROR: 2021/06/30 11:33:10 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+TRACE: 2021/06/30 11:37:28 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 11:37:28 sessionanduser.go:155: Successfully loaded key from file
+ERROR: 2021/06/30 11:37:38 sessionanduser.go:155: Error encounted when reading datapacket: 402 - Invalid credentials
+TRACE: 2021/06/30 11:37:38 sessionanduser.go:155: someone tried to login to: john, but the password is wrong
+TRACE: 2021/06/30 11:37:41 sessionanduser.go:155: john logged in
+ERROR: 2021/06/30 11:38:01 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+ERROR: 2021/06/30 11:38:01 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+ERROR: 2021/06/30 11:38:20 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+ERROR: 2021/06/30 11:38:32 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+ERROR: 2021/06/30 11:38:48 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+ERROR: 2021/06/30 11:39:04 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+TRACE: 2021/06/30 11:43:14 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 11:43:14 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 11:47:06 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 11:47:06 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 11:47:18 sessionanduser.go:155: john logged in
+ERROR: 2021/06/30 11:47:31 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+TRACE: 2021/06/30 11:50:39 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 11:50:39 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 11:50:49 sessionanduser.go:155: john logged in
+ERROR: 2021/06/30 11:50:59 sessionanduser.go:155: Error encounted when reading datapacket: 404 - No item found
+TRACE: 2021/06/30 11:55:04 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 11:55:04 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 11:55:11 sessionanduser.go:155: john logged in
+TRACE: 2021/06/30 11:55:33 sessionanduser.go:155: Created item: 'old shoes', by user: 'john' desc: 'new shoes, my doc says i cant run, so i am giving it away'
+TRACE: 2021/06/30 12:03:31 sessionanduser.go:155: john has logged out
+TRACE: 2021/06/30 12:03:44 sessionanduser.go:155: Darren logged in
+TRACE: 2021/06/30 12:04:46 sessionanduser.go:155: Darren has logged out
+TRACE: 2021/06/30 12:12:57 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 12:12:57 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 12:46:34 sessionanduser.go:155: admin logged in
+TRACE: 2021/06/30 12:47:04 sessionanduser.go:155: Created item: 'Old plastics', by user: 'admin' desc: 'really old plastic'
+TRACE: 2021/06/30 12:47:27 sessionanduser.go:155: Created item: 'Old plastics', by user: 'admin' desc: 'tons of old plastics.'
+TRACE: 2021/06/30 12:47:40 sessionanduser.go:155: Updated Item status for 'Old plastics' to completed 
+TRACE: 2021/06/30 12:47:49 sessionanduser.go:155: admin has logged out
+TRACE: 2021/06/30 16:36:07 sessionanduser.go:155: Server started
+TRACE: 2021/06/30 16:36:07 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/06/30 16:36:35 sessionanduser.go:155: admin logged in
+TRACE: 2021/06/30 16:37:09 sessionanduser.go:155: Created item: 'plastics', by user: 'admin' desc: 'old plastics'
+TRACE: 2021/06/30 16:37:28 sessionanduser.go:155: Created item: 'plastics', by user: 'admin' desc: 'old plastics, got 2 boxes full'
+TRACE: 2021/06/30 16:38:04 sessionanduser.go:155: admin has logged out
+TRACE: 2021/06/30 16:38:10 sessionanduser.go:155: john logged in
+TRACE: 2021/06/30 16:38:28 sessionanduser.go:155: john has logged out
+TRACE: 2021/06/30 16:39:20 sessionanduser.go:155: admin logged in
+TRACE: 2021/06/30 16:39:34 sessionanduser.go:155: Created item: 'Old plastics', by user: 'admin' desc: 'really old plastic'
+TRACE: 2021/06/30 16:40:14 sessionanduser.go:155: admin has logged out
+TRACE: 2021/07/01 14:49:37 sessionanduser.go:155: Server started
+TRACE: 2021/07/01 14:49:37 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/01 14:50:16 sessionanduser.go:155: john logged in
+TRACE: 2021/07/01 14:50:44 sessionanduser.go:155: Server started
+TRACE: 2021/07/01 14:50:44 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/01 14:52:46 sessionanduser.go:155: Server started
+TRACE: 2021/07/01 14:52:46 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/01 14:52:54 sessionanduser.go:155: admin logged in
+TRACE: 2021/07/01 14:53:05 sessionanduser.go:155: Server started
+TRACE: 2021/07/01 14:53:05 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/01 14:53:19 sessionanduser.go:155: admin logged in
+TRACE: 2021/07/01 14:53:31 sessionanduser.go:155: Server started
+TRACE: 2021/07/01 14:53:32 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/01 14:54:38 sessionanduser.go:155: Server started
+TRACE: 2021/07/01 14:54:38 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/01 14:54:45 sessionanduser.go:155: Darren logged in
+TRACE: 2021/07/01 14:57:12 sessionanduser.go:155: Updated Item status for 'old magazine' to completed 
+TRACE: 2021/07/01 15:03:16 sessionanduser.go:155: Created item: 'broken wood planks', by user: 'Darren' desc: 'broken planks from a construction site'
+TRACE: 2021/07/01 15:08:04 sessionanduser.go:155: Created item: 'old bricks', by user: 'Darren' desc: 'old bricks from a torn down building'
+TRACE: 2021/07/01 15:09:48 sessionanduser.go:155: Darren has logged out
+ERROR: 2021/07/01 15:11:45 sessionanduser.go:155: Error encounted when reading datapacket: username not found
+TRACE: 2021/07/01 15:11:53 sessionanduser.go:155: Plasticguys logged in
+TRACE: 2021/07/01 15:15:37 sessionanduser.go:155: Created item: 'plastic', by user: 'Plasticguys' desc: 'we recycle old plastic bottles and containers'
+TRACE: 2021/07/01 15:22:52 sessionanduser.go:155: Created item: 'plastic', by user: 'Plasticguys' desc: 'we recycle old plastic bottles and containers'
+TRACE: 2021/07/01 15:23:44 sessionanduser.go:155: Plasticguys has logged out
+TRACE: 2021/07/01 15:46:46 sessionanduser.go:155: Server started
+TRACE: 2021/07/01 15:46:46 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/01 15:46:46 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/01 15:47:10 sessionanduser.go:155: Server started
+TRACE: 2021/07/01 15:47:10 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/01 15:47:10 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/01 15:47:25 sessionanduser.go:155: Server started
+TRACE: 2021/07/01 15:47:25 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/01 15:47:25 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/01 15:47:39 sessionanduser.go:155: Server started
+TRACE: 2021/07/01 15:47:39 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/01 15:47:39 sessionanduser.go:155: Successfully loaded key from file
