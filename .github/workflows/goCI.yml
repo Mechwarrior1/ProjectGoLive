@@ -90,7 +90,7 @@ jobs: #job to execute on event
         labels: worflow-failed
         body: Workflow failed for commit ${{github.sha}}
       
-    - name: Notify on Discord
+    - name: Notify on Discord.
       uses: fateyan/action-discord-notifier@v1
       with:
         message-title: New Commit Pushed
