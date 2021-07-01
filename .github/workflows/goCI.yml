@@ -29,13 +29,6 @@ jobs: #job to execute on event
         repository: Mechwarrior1/ProjectGoLive #hidden repo i am trying to access
         path: virtualRepoFolder #folder to save to in my virtual env
         
-    - name: Show hidden files
-      run: |
-        cd virtualRepoFolder #access folder of interest in virutal env
-        ls
-        cat myText.txt #show content of file
-        cd ..
-        
     - name: Install dependencies for GO and test
       run: |
         go get github.com/franela/goblin #go packages
