@@ -37,7 +37,13 @@ jobs: #job to execute on event
         go get golang.org/x/crypto/bcrypt
         go get github.com/satori/go.uuid
         go get github.com/tebeka/go2xunit
+        cd api_server
+        go test -v 
+        go test -v | go2xunit > report.xml #run test again and output as report.xml
+        ls #verify report is created
         
+        cd ..
+        cd client
         go test -v 
         go test -v | go2xunit > report.xml #run test again and output as report.xml
         ls #verify report is created
