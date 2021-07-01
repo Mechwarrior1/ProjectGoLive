@@ -23,11 +23,6 @@ jobs: #job to execute on event
     - name: Checkout our codes #bring repo code to virtual environment
       uses: actions/checkout@v2
       
-    - name: Check file system #check virtual environment has my files
-      run: |
-        ls
-        cat calc.go #print the contents of calc.go
-        cat calc_goblin_test.go 
     - name: Checkout private repo remotely
       uses: actions/checkout@v2
       with:
@@ -42,7 +37,7 @@ jobs: #job to execute on event
         cat myText.txt #show content of file
         cd ..
         
-    - name: Install dependencies for GO and test calc
+    - name: Install dependencies for GO and test
       run: |
         go get github.com/franela/goblin #go packages
         go get github.com/gorilla/mux 
