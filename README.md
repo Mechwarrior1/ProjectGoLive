@@ -5,7 +5,7 @@ This is a prototype for a recycling marketplace written in GO
 
 
 
-It uses 4 mysql tables, whihch follows:
+It uses 4 mysql tables, which follows:
 
 CREATE TABLE UserSecret  (ID VARCHAR(6) NOT NULL PRIMARY KEY, Username VARCHAR(20) NOT NULL, Password VARCHAR(50) NOT NULL, IsAdmin VARCHAR(5) NOT NULL, CommentItem VARCHAR(300));
 
