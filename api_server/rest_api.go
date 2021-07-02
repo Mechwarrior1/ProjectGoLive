@@ -1,7 +1,5 @@
 package main
 
-// cd C:\Projects\Go\src\ProjectGoLive\ProjectGoLive\api_server\
-// go run rest_api.go mysql_api.go encryptdecrypt.go readword2vec.go
 import (
 	"crypto/tls"
 	"encoding/json"
@@ -164,32 +162,7 @@ func usernameCheck(w http.ResponseWriter, r *http.Request) {
 	newResponse(w, r, []interface{}{}, "nil", "UserInfo", "true", "")
 }
 
-// // function to shutdown the api service
-// func shutdown(w http.ResponseWriter, r *http.Request) {
-// 	if r.Method == "GET" {
-// 		dataPacket1, err1 := readJSONBody(w, r)
-// 		if err1 != nil {
-// 			w.WriteHeader(http.StatusNotFound)
-// 			newErrorResponse(w, r, err1.Error())
-// 			return
-// 		}
-// 		if dataPacket1.DataInfo[0].Username == "shutdown" {
-// 			newResponse(w, r, []courseInfo{}, "nil", "UserInfo", "true", "")
-// 			fmt.Println("Shutting down...")
-// 			go func() {
-// 				time.Sleep(1 * time.Second)
-// 				if err3 := s.Shutdown(context.Background()); err3 != nil {
-// 					fmt.Println(err3)
-// 				}
-// 			}()
-// 		}
-// 	} else {
-// 		newErrorResponse(w, r, "method is wrong")
-// 	}
-// }
-
 // the function that writes the response back
-// needs the []courseInfo
 func newResponse(w http.ResponseWriter, r *http.Request, dataInfo []interface{}, errorMsg string, infoType string, resBool string, requestUser string) {
 	if errorMsg == "nil" {
 		w.WriteHeader(http.StatusCreated)
@@ -206,7 +179,7 @@ func newResponse(w http.ResponseWriter, r *http.Request, dataInfo []interface{},
 
 }
 
-// Response writer for when query is an error
+// Response writer for when returning an error to a query
 func newErrorResponse(w http.ResponseWriter, r *http.Request, errorMsg string) {
 	var DataInfo1 []interface{}
 	newResponse(w, r, DataInfo1, errorMsg, "error", "false", "")
@@ -236,7 +209,6 @@ func readJSONBody(w http.ResponseWriter, r *http.Request) (*dataPacket, error) {
 	}
 
 	return &newDataPacket, errors.New("error while attempting to read body of request")
-
 }
 
 // checks if owner of the post is the same as the one requesting, for edits or
@@ -271,10 +243,9 @@ func checkUser(tarDB string, requestUser string, dataInfo []interface{}) bool {
 }
 
 // main function for the rest api.
-// GET request returns the specified course.
-// DELETE request deletes the specified course.
-// POST request will post the course into the DB.
-// PUT request will edit the specified course.
+// GET request returns the specified post/user/comments.
+// POST request will post the post/user/comments into the DB.
+// PUT request will edit the specified post/user/comments.
 func genInfo(w http.ResponseWriter, r *http.Request) {
 	dataPacket1, err1 := readJSONBody(w, r) // read response JSON
 	if err1 != nil {
@@ -292,11 +263,10 @@ func genInfo(w http.ResponseWriter, r *http.Request) {
 	tarItemID := receiveInfo["ID"]
 	tarDB := dataPacket1.InfoType
 	if r.Method == "POST" {
-		// check if course exists; add only if course does not exist
 		maxID, err4 := dbHandler1.getMaxID(tarDB)
 		maxIDString := fmt.Sprintf("%06d", maxID+1) //get current max ID in DB and increment by 1
 		var err2 error
-		switch tarDB {
+		switch tarDB { //switch function for different database
 
 		case "UserSecret":
 			err2 = dbHandler1.insertRecord(tarDB, maxIDString, receiveInfo["Username"], receiveInfo["Password"], receiveInfo["IsAdmin"], receiveInfo["CommentItem"]) // deletes if target is found
@@ -335,7 +305,6 @@ func genInfo(w http.ResponseWriter, r *http.Request) {
 			}
 
 		case "ItemListing":
-			// dbInfoSlice := dbInfoSlice.(itemListing)
 			err2 = dbHandler1.insertRecord(tarDB,
 				maxIDString,
 				receiveInfo["Username"],
@@ -371,7 +340,7 @@ func genInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// if request is not post, check
+	// if request is not post, check if the ID exist before proceeding
 	dbInfoSlice, err3 := dbHandler1.getSingleRecord(tarDB, " WHERE ID = "+tarItemID)
 	if err3 != nil || len(dbInfoSlice) == 0 {
 
@@ -392,7 +361,7 @@ func genInfo(w http.ResponseWriter, r *http.Request) {
 	// for userinfo, itemlisting, commentitem and commentuser only
 	if r.Method == "GET" {
 
-		if tarDB != "UserSecret" {
+		if tarDB != "UserSecret" { //prevents any requeset to ask for user secrets
 			w.WriteHeader(http.StatusCreated)
 			newResponse(w, r, dbInfoSlice, "nil", tarDB, "true", "")
 			return
@@ -410,25 +379,26 @@ func genInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//delete commentitem, commentuser, itemlisting only cannot delete user info
 	if r.Method == "DELETE" {
-		err2 := dbHandler1.deleteRecord(tarDB, tarItemID) // deletes if target is found
 
-		if err2 != nil && (tarDB == "ItemListing" || tarDB == "CommentUser" || tarDB == "CommentItem") {
-			// newResponse(w, r, allCourses, "username not found", "userInfo", "false", "")
-			w.WriteHeader(http.StatusCreated)
-			newResponse(w, r, []interface{}{}, "nil", "userInfo", "true", "")
-			return
+		if tarDB == "ItemListing" || tarDB == "CommentUser" || tarDB == "CommentItem" { //only delete records for 3 items
+			err2 := dbHandler1.deleteRecord(tarDB, tarItemID) // attempt to delete record
+			if err2 != nil {
+				w.WriteHeader(http.StatusCreated)
+				newResponse(w, r, []interface{}{}, "nil", "userInfo", "true", "")
+				return
+			}
 
 		} else {
-			fmt.Println("logger:  " + ": " + tarDB + " db not found or not in use for Delete func, err:") //reach here only if it is not returned by the switch
+			//if delete did not occur
+			fmt.Println("logger:  " + ": " + tarDB + " db not found or not in use for Delete func, err:")
 			w.WriteHeader(http.StatusConflict)
 			newErrorResponse(w, r, "404 - not found")
 			return
 		}
 	}
 
-	// PUT is updating existing course
+	// PUT is for updating existing course
 	if r.Method == "PUT" {
 		var err2 error
 		switch tarDB {
@@ -438,7 +408,7 @@ func genInfo(w http.ResponseWriter, r *http.Request) {
 
 			if err2 == nil {
 				w.WriteHeader(http.StatusCreated)
-				newResponse(w, r, []interface{}{}, "nil", "userInfo", "true", "")
+				newResponse(w, r, []interface{}{}, "nil", "CommentUser", "true", "")
 				return
 			}
 
@@ -448,7 +418,7 @@ func genInfo(w http.ResponseWriter, r *http.Request) {
 
 			if err2 == nil {
 				w.WriteHeader(http.StatusCreated)
-				newResponse(w, r, []interface{}{}, "nil", "userInfo", "true", "")
+				newResponse(w, r, []interface{}{}, "nil", "CommentItem", "true", "")
 				return
 			}
 
@@ -458,22 +428,12 @@ func genInfo(w http.ResponseWriter, r *http.Request) {
 
 			if err2 == nil {
 				w.WriteHeader(http.StatusCreated)
-				newResponse(w, r, []interface{}{}, "nil", "userInfo", "true", "")
+				newResponse(w, r, []interface{}{}, "nil", "UserInfo", "true", "")
 				return
 			}
 
 		case "ItemListing":
 			dbInfoSlice1 := dbInfoSlice[0].(itemListing)
-			//( &data1.Username, &data1.Name, &data1.ImageLink, &data1.DatePosted, &data1.CommentItem, &data1.ConditionItem, &data1.Cat, &data1.ContactMeetInfo, &data1.ID,)
-			fmt.Println("\n", tarDB, "\n",
-				receiveInfo["ImageLink"], "\n",
-				receiveInfo["CommentItem"], "\n",
-				receiveInfo["ConditionItem"], "\n",
-				receiveInfo["Cat"], "\n",
-				receiveInfo["ContactMeetInfo"], "\n",
-				receiveInfo["Completion"], "\n",
-				receiveInfo["ID"], "\n",
-				dbInfoSlice1.ID)
 			err2 = dbHandler1.editRecord(tarDB,
 				receiveInfo["ImageLink"],
 				receiveInfo["CommentItem"],
@@ -485,7 +445,7 @@ func genInfo(w http.ResponseWriter, r *http.Request) {
 
 			if err2 == nil {
 				w.WriteHeader(http.StatusCreated)
-				newResponse(w, r, []interface{}{}, "nil", "userInfo", "true", "")
+				newResponse(w, r, []interface{}{}, "nil", "ItemListing", "true", "")
 				return
 			}
 
@@ -496,7 +456,7 @@ func genInfo(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		fmt.Println("logger: edit, " + tarDB + ":" + err2.Error()) //reach here only if it is not returned by the switch
+		fmt.Println("logger: edit, " + tarDB + ":" + err2.Error()) // if the method is not any of the above, return error
 		w.WriteHeader(http.StatusConflict)
 		newErrorResponse(w, r, err2.Error())
 		return

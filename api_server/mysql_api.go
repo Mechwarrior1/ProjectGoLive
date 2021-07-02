@@ -146,7 +146,7 @@ func (dbHandler dbHandler) getRecord(dbTable string) ([]interface{}, error) {
 	return allData, nil
 }
 
-// removes stop words and split into array of words
+// removes stop words and split into array of words with regexp
 func cleanWord(input1 string, splitText *regexp.Regexp, stopWords *regexp.Regexp) []string {
 	newArr := []string{}
 
@@ -161,12 +161,14 @@ func cleanWord(input1 string, splitText *regexp.Regexp, stopWords *regexp.Regexp
 	return newArr
 }
 
-// access the DB and get all records
+// access the DB and get all records for itemListing
+// computes similarity between vectors for each word embedding
+// puts the similarity into the struct and returns array of struct to the request
 func (dbHandler dbHandler) getRecordlisting(dbTable string, requestWords string, filterUsername string) ([]interface{}, error) {
 	// allData := []genData{}
 	allData := []interface{}{}
-	requestWords2 := cleanWord(requestWords, splitText, stopWords2) //clean and split the words for embeding
-	requestWordsEmbed := embed.getWordEmbeddingCombine(requestWords2, []string{})
+	requestWords2 := cleanWord(requestWords, splitText, stopWords2)               //clean and split the words for embeding
+	requestWordsEmbed := embed.getWordEmbeddingCombine(requestWords2, []string{}) //get combined word embedding
 	results, err := dbHandler.DB.Query("Select * FROM my_db." + dbTable)
 
 	if err != nil {
@@ -180,23 +182,23 @@ func (dbHandler dbHandler) getRecordlisting(dbTable string, requestWords string,
 		}
 		if filterUsername == "" {
 			if data1.Completion != "true" {
-				requestWordsEmbed2 := embed.getWordEmbeddingCombine(strings.Fields(data1.Name), []string{})
+				requestWordsEmbed2 := embed.getWordEmbeddingCombine(cleanWord(data1.Name, splitText, stopWords2), []string{})
 				addVal := float32(0)
 				addVal2 := float32(0)
 
-				for _, word := range requestWords2 {
+				for _, word := range requestWords2 { // checks for any similar words in the name string
 					if strings.Contains(data1.Name, word) {
 						addVal += 0.05
 					}
-					if strings.Contains(data1.CommentItem, word) {
+					if strings.Contains(data1.CommentItem, word) { // checks for any similar words in the description string
 						addVal2 += 0.005
 					}
 				}
 
 				addVal3 := math.Min(0.15, math.Max(float64(addVal2), 0))
 				addVal4 := math.Min(0.2, math.Max(float64(addVal), 0))
-				cosSim := cosineSimilarity(requestWordsEmbed, requestWordsEmbed2)
-				data1.Similarity = fmt.Sprintf("%f", cosSim+float32(addVal3+addVal4))
+				cosSim := cosineSimilarity(requestWordsEmbed, requestWordsEmbed2)     // computes similarity of words using their vectors
+				data1.Similarity = fmt.Sprintf("%f", cosSim+float32(addVal3+addVal4)) // puts the score into struct
 				fmt.Println(requestWords, data1.Name, cosSim+float32(addVal3+addVal4))
 				allData = append(allData, data1)
 			}
@@ -210,6 +212,7 @@ func (dbHandler dbHandler) getRecordlisting(dbTable string, requestWords string,
 }
 
 // access the DB and get a single record, search using courseName
+// based on requested database, it will be marshalled into the struct
 func (dbHandler dbHandler) getSingleRecord(dbTable string, queryString string) ([]interface{}, error) {
 	//queryString examples, " WHERE ID = 1" or "WHERE Username = alvin"
 	allData := make([]interface{}, 0)
@@ -246,6 +249,7 @@ func (dbHandler dbHandler) getSingleRecord(dbTable string, queryString string) (
 }
 
 // post a record into the DB
+// based on requested database, it will be marshalled into the respective struct
 func (dbHandler dbHandler) insertRecord(dbTable string, values ...string) error {
 	var err error
 	switch dbTable {
@@ -276,6 +280,7 @@ func (dbHandler dbHandler) getMaxID(dbTable string) (int, error) {
 }
 
 // edit a single record on DB, chosen record based on ID
+// based on requested database, it will be marshalled into the respective struct
 func (dbHandler dbHandler) editRecord(dbTable string, values ...interface{}) error {
 	var err error
 	switch dbTable {

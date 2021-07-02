@@ -41,10 +41,8 @@ type (
 
 		// boolean, true of this user is an admin.
 		IsAdmin bool
-
-		// // contains the id of the user's session, keeps the old id if he logs out.
-		// lastSessionId string
 	}
+
 	userSecret struct {
 		ID          string `json:"ID"`
 		Username    string `json:"Username"`
@@ -167,7 +165,7 @@ func (u *userPersistInfo) updateLastLogin() *userPersistInfo {
 	return u
 }
 
-// sends user info to api
+// sends user info to api to be added into mysql
 func addUser(username string, pwString string, commentItem string, lastLogin string) error {
 	userSecret1 := make(map[string]string)
 	userSecret1["Username"] = username
@@ -373,15 +371,6 @@ func (s *sessionManager) newCookieAndSet(useCase string, res http.ResponseWriter
 	}
 }
 
-func mapInterfaceToString(dataPacket1 *dataPacket) map[string]string {
-	receiveInfo := dataPacket1.DataInfo[0] //.(map[string]string) // convert received data into map[string]string
-	// receiveInfo := make(map[string]string)
-	// for k, v := range receiveInfoRaw {
-	// 	receiveInfo[k] = fmt.Sprintf("%v", v)
-	// }
-	return receiveInfo
-}
-
 // a function that checks if username is taken
 func checkUsername(res http.ResponseWriter, req *http.Request, username string) bool {
 	baseURL := "https://127.0.0.1:5555/api/v0/username"
@@ -403,6 +392,8 @@ func checkUsername(res http.ResponseWriter, req *http.Request, username string) 
 	return dataInfo1.ResBool == "true"
 }
 
+// talks api, giving username and password
+// api returns true or false
 func checkPW(username string, password string, reqUser string) bool {
 	userSecret1 := make(map[string]string)
 	userSecret1["Username"] = username

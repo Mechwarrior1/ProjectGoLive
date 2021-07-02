@@ -735,3 +735,49 @@ TRACE: 2021/07/01 15:47:25 sessionanduser.go:155: Successfully loaded key from f
 TRACE: 2021/07/01 15:47:39 sessionanduser.go:155: Server started
 TRACE: 2021/07/01 15:47:39 sessionanduser.go:155: Successfully loaded key from file
 TRACE: 2021/07/01 15:47:39 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/01 23:43:45 sessionanduser.go:155: Server started
+TRACE: 2021/07/01 23:43:45 sessionanduser.go:155: Successfully loaded key from file
+ERROR: 2021/07/01 23:55:34 sessionanduser.go:155: The HTTPS request failed with error: Get "https://localhost:5555/api/v0/allinfo": dial tcp [::1]:5555: connectex: No connection could be made because the target machine actively refused it.
+ERROR: 2021/07/02 00:01:01 sessionanduser.go:155: Error encounted when reading datapacket: username not found
+TRACE: 2021/07/02 00:01:08 sessionanduser.go:155: vonatrix logged in
+TRACE: 2021/07/02 00:01:47 sessionanduser.go:155: Created item: 'plastic bottles', by user: 'vonatrix' desc: 'old plastic bottles
+'
+TRACE: 2021/07/02 00:03:44 sessionanduser.go:155: vonatrix has logged out
+TRACE: 2021/07/02 00:26:30 sessionanduser.go:155: Server started
+TRACE: 2021/07/02 00:26:30 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/02 00:27:18 sessionanduser.go:155: Darren logged in
+TRACE: 2021/07/02 00:27:32 sessionanduser.go:155: Created item: 'Old newspaper', by user: 'Darren' desc: 'a huge pile of old newspaper'
+TRACE: 2021/07/02 00:29:02 sessionanduser.go:155: Server started
+TRACE: 2021/07/02 00:29:02 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/02 00:29:08 sessionanduser.go:155: Darren logged in
+TRACE: 2021/07/02 00:31:25 sessionanduser.go:155: Server started
+TRACE: 2021/07/02 00:31:25 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/02 00:31:36 sessionanduser.go:155: Darren logged in
+TRACE: 2021/07/02 00:31:43 sessionanduser.go:155: Created item: 'Old newspaper', by user: 'Darren' desc: 'a huge pile of old newspaper'
+TRACE: 2021/07/02 00:31:57 sessionanduser.go:155: Created item: 'old magazine', by user: 'Darren' desc: 'lots of old magazines'
+TRACE: 2021/07/02 00:40:40 sessionanduser.go:155: Darren has logged out
+TRACE: 2021/07/02 00:42:22 sessionanduser.go:155: Server started
+TRACE: 2021/07/02 00:42:22 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/02 08:37:12 sessionanduser.go:155: Server started
+TRACE: 2021/07/02 08:37:12 sessionanduser.go:155: Successfully loaded key from file
+ERROR: 2021/07/02 08:42:00 sessionanduser.go:155: Error encounted when reading datapacket: 404 - Invalid credentials
+TRACE: 2021/07/02 08:42:00 sessionanduser.go:155: someone tried to login to: alvin, but the password is wrong
+ERROR: 2021/07/02 08:42:18 sessionanduser.go:155: Error encounted when reading datapacket: username not found
+TRACE: 2021/07/02 08:42:25 sessionanduser.go:155: yona logged in
+TRACE: 2021/07/02 08:44:13 sessionanduser.go:155: Server started
+TRACE: 2021/07/02 08:44:13 sessionanduser.go:155: Successfully loaded key from file
+TRACE: 2021/07/02 08:44:25 sessionanduser.go:155: yona logged in
+TRACE: 2021/07/02 08:45:30 sessionanduser.go:155: Created item: 'brick', by user: 'yona' desc: 'left over bricks, around 10 left, call me if you want them'
+TRACE: 2021/07/02 09:48:43 sessionanduser.go:155: yona has logged out
+TRACE: 2021/07/02 09:48:49 sessionanduser.go:155: someone tried to use yona to sign up, but it was used
+ERROR: 2021/07/02 09:48:59 sessionanduser.go:155: Error encounted when reading datapacket: 402 - Invalid credentials
+TRACE: 2021/07/02 09:48:59 sessionanduser.go:155: someone tried to login to: yona, but the password is wrong
+TRACE: 2021/07/02 10:19:13 sessionanduser.go:155: None session expired
+ERROR: 2021/07/02 10:24:20 sessionanduser.go:155: Error encounted when reading datapacket: username not found
+TRACE: 2021/07/02 10:24:28 sessionanduser.go:155: alvin logged in
+TRACE: 2021/07/02 10:24:57 sessionanduser.go:155: Created item: 'Old plastics', by user: 'alvin' desc: 'really old plastic, have 2 boxes'
+TRACE: 2021/07/02 10:25:25 sessionanduser.go:155: Created item: 'Old plastics', by user: 'alvin' desc: 'really old plastic, have 2 boxes'
+TRACE: 2021/07/02 10:25:46 sessionanduser.go:155: Updated Item status for 'Old plastics' to completed 
+TRACE: 2021/07/02 10:26:14 sessionanduser.go:155: alvin has logged out
+TRACE: 2021/07/02 10:59:13 sessionanduser.go:155: None session expired
+TRACE: 2021/07/02 10:59:13 sessionanduser.go:155: None session expired

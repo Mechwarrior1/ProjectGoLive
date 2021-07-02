@@ -12,10 +12,9 @@ import (
 var (
 	logger1 logger //logs activities
 	s       http.Server
-	key1    func() string
+	key1    func() string //get key from encrypted file
 
-	tplIndex = template.Must(template.New("").ParseFiles("templates/header.gohtml", "templates/index.gohtml"))
-	// tplDeleteCourse = template.Must(template.New("").ParseFiles("templates/deletecourse.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
+	tplIndex         = template.Must(template.New("").ParseFiles("templates/header.gohtml", "templates/index.gohtml"))
 	tplSeePostAll    = template.Must(template.New("").ParseFiles("templates/seepostall.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
 	tplLogin         = template.Must(template.New("").ParseFiles("templates/login.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
 	tplSignup        = template.Must(template.New("").ParseFiles("templates/signup.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
@@ -24,7 +23,6 @@ var (
 	tplEditPost      = template.Must(template.New("").ParseFiles("templates/editpost.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
 	tplUpdateUser    = template.Must(template.New("").ParseFiles("templates/updateuser.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
 	tplSeePostUser   = template.Must(template.New("").ParseFiles("templates/seepostuser.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
-	// tplShutdown         = template.Must(template.New("").ParseFiles("templates/shutdown.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
 
 	// a struct to handle all the server session and user information.
 	sessionMgr = &sessionManager{
@@ -52,7 +50,6 @@ func init() {
 	router.HandleFunc("/createpost", createPost)
 	router.HandleFunc("/editpost/{id}", editPost)
 	router.HandleFunc("/seepostuser/{id}", seePostUser)
-	// router.HandleFunc("/shutdown", shutdown)
 	router.HandleFunc("/user", getUser)
 	router.HandleFunc("/", index)
 
@@ -68,6 +65,7 @@ func main() {
 	}
 }
 
+// a function to decrypt api key and return the value when it is called
 func anonFunc() func() string {
 	key1 := string(decryptFromFile("secure/apikey"))
 	return func() string {

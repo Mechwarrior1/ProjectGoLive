@@ -185,51 +185,8 @@ func (e *Embeddings) EmbeddingSize() int {
 	return e.embedSize
 }
 
-// func (e *Embeddings) similarity(embed []float32, skips map[int]interface{}, limit int) ([]WordSimilarity, error) {
-// 	dps := make([]float32, e.Size())
-// 	e.blas.Sgemv(blas.NoTrans, int(e.Size()), int(e.EmbeddingSize()),
-// 		1, e.matrix, int(e.EmbeddingSize()), embed, 1, 0, dps, 1)
-
-// 	var results []WordSimilarity
-// 	for idx, sim := range dps {
-// 		// Skip words in the skip set.
-// 		if _, ok := skips[idx]; ok {
-// 			continue
-// 		}
-
-// 		ip := sort.Search(len(results), func(i int) bool {
-// 			return results[i].Similarity <= sim
-// 		})
-// 		if ip < limit {
-// 			results = insertWithLimit(results, limit, ip, WordSimilarity{e.words[idx], sim})
-// 		}
-// 	}
-
-// 	return results, nil
-// }
-
-// type binaryNode struct {
-// 	//refer to idx
-// 	item int
-// 	word  string
-// 	left  *binaryNode
-// 	right *binaryNode
-// }
-
-// func (n *binaryNode) add(n2 *binaryNode, item1 int, word string) error {
-// 	if n2 == nil {
-// 		newNode := &binaryNode{item1, word, nil, nil}
-// 		n2 = newNode
-// 		return nil
-// 	}
-// 	if item1 < (*n).item { //smaller go left.
-// 		n.add((n2.left), item1, word)
-// 	} else {
-// 		n.add((n2.right), item1, word)
-// 	}
-// 	return nil
-// }
-
+//computes the similarity for 2 vectors
+// normalization has been done when loading the word2vec
 func cosineSimilarity(vec1 []float32, vec2 []float32) float32 {
 	if len(vec1) != len(vec2) {
 		return 0
@@ -241,12 +198,14 @@ func cosineSimilarity(vec1 []float32, vec2 []float32) float32 {
 	return inner_product
 }
 
+//get embeddings from the array based on index
 func (e *Embeddings) getEmbedding(idx int) []float32 {
 	idx2 := e.embedSize * idx
 
 	return e.matrix[idx2 : idx2+e.embedSize]
 }
 
+//get embeddings from array given word
 func (e *Embeddings) getWordEmbedding(word string) ([]float32, error) {
 	idx, ok := e.indices[word]
 	if !ok {
@@ -258,6 +217,7 @@ func (e *Embeddings) getWordEmbedding(word string) ([]float32, error) {
 	return e.getEmbedding(idx), nil
 }
 
+//computes the similarity between 2 words
 func (e *Embeddings) getWordEmbeddingSim(word string, word2 string) (float32, error) {
 	idx, ok := e.indices[word]
 	idx2, ok2 := e.indices[word2]
@@ -267,6 +227,7 @@ func (e *Embeddings) getWordEmbeddingSim(word string, word2 string) (float32, er
 	return cosineSimilarity(e.getEmbedding(idx), e.getEmbedding(idx2)), nil
 }
 
+// add 2 vectors together and returns a new vector
 func (e *Embeddings) addEmbedding(vec1 []float32, vec2 []float32, divide1 float32) []float32 {
 	new_vec := make([]float32, e.embedSize)
 	embedLen := e.embedSize
@@ -276,6 +237,7 @@ func (e *Embeddings) addEmbedding(vec1 []float32, vec2 []float32, divide1 float3
 	return new_vec
 }
 
+// subtract 2 vectors and returns a new vector
 func (e *Embeddings) subtractEmbedding(vec1 []float32, vec2 []float32, divide1 float32) []float32 {
 	new_vec := make([]float32, e.embedSize)
 	embedLen := e.embedSize
@@ -285,13 +247,14 @@ func (e *Embeddings) subtractEmbedding(vec1 []float32, vec2 []float32, divide1 f
 	return new_vec
 }
 
+// a func to combine (add and subtract) vectors of words together, returns the vectors
+// based on inputted word array
 func (e *Embeddings) getWordEmbeddingCombine(wordsAdd []string, wordsSubtract []string) []float32 {
 	combined_vec := []float32{}
 	for _, word := range wordsAdd {
 		idx, ok := e.indices[word]
 		if ok {
-			// fmt.Println("add word: " + word)
-			if len(combined_vec) == 0 {
+			if len(combined_vec) == 0 { // adding vectors
 				fmt.Println(true)
 				combined_vec = e.getEmbedding(idx)
 			} else {
@@ -301,7 +264,7 @@ func (e *Embeddings) getWordEmbeddingCombine(wordsAdd []string, wordsSubtract []
 			fmt.Println("logger: word not in embedding, " + word) // for futuer logger
 		}
 	}
-	for _, word := range wordsSubtract {
+	for _, word := range wordsSubtract { //subtracting vector
 		idx2, ok2 := e.indices[word]
 		if ok2 {
 			fmt.Println("subtract word: " + word)
@@ -314,43 +277,9 @@ func (e *Embeddings) getWordEmbeddingCombine(wordsAdd []string, wordsSubtract []
 	return combined_vec
 }
 
-func (e *Embeddings) getWordEmbeddingCombine2(wordsAdd []string, wordsSubtract []string) []float32 {
-	// totalLen := float32(len(wordsAdd) + len(wordsSubtract))
-	combined_vec := make([]float32, e.embedSize)
-	for _, word := range wordsAdd {
-		idx, ok := e.indices[word]
-		if ok {
-			fmt.Println("add word: " + word)
-			tarEmbed := e.getEmbedding(idx)
-			if len(combined_vec) == 0 {
-				combined_vec := make([]float32, e.embedSize)
-				for i, val := range tarEmbed {
-					combined_vec[i] = val / 1
-				}
-			} else {
-				combined_vec = e.addEmbedding(combined_vec, tarEmbed, 1)
-			}
-			fmt.Println(combined_vec[:3], tarEmbed[:3])
-		} else {
-			fmt.Println("logger: word not in embedding: " + word) // for futuer logger
-		}
-	}
-	for _, word := range wordsSubtract {
-		idx2, ok2 := e.indices[word]
-		if ok2 {
-			tarEmbed2 := e.getEmbedding(idx2)
-			combined_vec = e.subtractEmbedding(combined_vec, tarEmbed2, 1)
-			fmt.Println(combined_vec[:3], tarEmbed2[:3])
-
-		} else {
-			fmt.Println("logger: word not in embedding: " + word) // for futuer logger
-		}
-
-	}
-
-	return combined_vec
-}
-
+//  func not in use
+// compares a word to all other words in the embedding
+// find closest matching word
 func (e *Embeddings) compareEmbeddingAll(tarWordVec []float32) ([]string, []float32) {
 	vecLen := len(e.words)
 	wordSlice := make(map[float32]string, vecLen)
@@ -371,6 +300,8 @@ func (e *Embeddings) compareEmbeddingAll(tarWordVec []float32) ([]string, []floa
 	return newWordsSorted, newsimSliceSorted
 }
 
+// opens the Word2vec binary file and loads it into an array and map
+// returns a struct with the embeddings array and word -> index map
 func getWord2Vec() *Embeddings {
 	// fileLoc := "C:/Users/Fong/Desktop/GoogleNews-vectors-negative300-SLIM.bin"
 	fileLoc := "C:/Users/Fong/Desktop/GoogleNews-vectors-negative300.bin"
@@ -424,6 +355,8 @@ func getWord2Vec() *Embeddings {
 	}
 	return embeddings
 }
+
+// testing the word embeddings, see the similarities between words
 
 // fmt.Println(cosineSimilarity(embeddings.getEmbedding(86), embeddings.getEmbedding(87)))
 // fmt.Println(embeddings.getWordEmbeddingSim("spain", "europe"))

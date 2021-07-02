@@ -81,13 +81,13 @@ func encryptToFile(filename string, string1 string, loc string) {
 	// logger1.logTrace("TRACE", "Successfully saved mapUser to file")
 }
 
-// takes in a filename, reads it and decode it with decrypt(see file encryptdecrypt)
+// takes in a filename, reads it and decode it with decrypt
 func decryptFromFile(filename string, loc string) []byte {
 	data1, err := ioutil.ReadFile(filename)
 	if err != nil {
 		fmt.Println("error when reading file")
 		return nil
 	}
-	// logger1.logTrace("TRACE", "Successfully loaded password from file")
+	// logger1.logTrace("TRACE", "Successfully loaded key from file")
 	return decrypt(data1, loc)
 }

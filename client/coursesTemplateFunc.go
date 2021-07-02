@@ -24,7 +24,7 @@ const (
 
 // removes all special characters from a string
 func replaceAllString(string1 string) string {
-	reg, err := regexp.Compile(`[^a-zA-Z0-9!@#$%^&\s,.?]+`)
+	reg, err := regexp.Compile(`[^a-zA-Z0-9!@#$%^&\s,.?_]+`)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -68,9 +68,11 @@ func tapAPI(httpMethod string, jsonData dataPacket, baseURL1 string) (*dataPacke
 		return &newDataPacket, nil
 	}
 }
+
+// check if user is logged in, else redirect
 func checkLogged(res http.ResponseWriter, req *http.Request, userPersistInfo1 *userPersistInfo, id string) bool {
 	if userPersistInfo1.Username == "" || userPersistInfo1.Username == "None" || userPersistInfo1.Username == "logout********" {
-		sessionMgr.updatePersistInfo(id, "false", "None", "true", "Please kindly log in to post", "", "seelast", false)
+		sessionMgr.updatePersistInfo(id, "false", "None", "true1", "Please kindly log in to access page", "", "seelast", false)
 		http.Redirect(res, req, "/", http.StatusSeeOther)
 		return false
 	}
@@ -135,7 +137,6 @@ func createPost(res http.ResponseWriter, req *http.Request) {
 		_, err5 := tapAPI("POST", jsonData1, address)
 
 		if err5 != nil {
-
 			sessionMgr.updatePersistInfo(id, "false", "None", "true", "An error has occurred, please try again later", "", "seelast", false)
 			http.Redirect(res, req, "/createpost", http.StatusSeeOther)
 			return
@@ -151,7 +152,7 @@ func createPost(res http.ResponseWriter, req *http.Request) {
 	tplCreatePost.ExecuteTemplate(res, "createpost.gohtml", userPersistInfo1)
 }
 
-// a function for http handler, used to edit any post
+// a function for http handler, used to edit the listed post
 // a form for inputs
 func editPost(res http.ResponseWriter, req *http.Request) {
 	id, userPersistInfo1 := sessionMgr.getIdPersistInfo(res, req)
@@ -190,7 +191,7 @@ func editPost(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if req.Method == http.MethodPost {
-		// get form values.
+		// get form values
 		postName := req.FormValue("PostName")
 		postComment := req.FormValue("PostComment")
 		postImg2 := req.FormValue("PostImg2")
@@ -229,8 +230,10 @@ func editPost(res http.ResponseWriter, req *http.Request) {
 		for k, v := range newPost {
 			fmt.Println(k, ", ", v)
 		}
+
 		jsonData1.DataInfo = []map[string]string{newPost}
-		_, err5 := tapAPI(http.MethodPut, jsonData1, baseURL+"db/info")
+		_, err5 := tapAPI(http.MethodPut, jsonData1, baseURL+"db/info") //communicate with api
+		// if error feedback to user
 		if err5 != nil {
 			sessionMgr.updatePersistInfo(id, "false", "None", "true", "An error has occurred, please try again later", "", "seelast", false)
 			http.Redirect(res, req, "/editpost/"+params["id"], http.StatusSeeOther)
@@ -239,7 +242,7 @@ func editPost(res http.ResponseWriter, req *http.Request) {
 
 		logger1.logTrace("TRACE", "Created item: '"+postName+"', by user: '"+userPersistInfo1.Username+""+"' desc: '"+postComment+"'")
 		sessionMgr.updatePersistInfo(id, "true", "You have edited item: '"+postName+"'", "false", "None", "", "seelast", false)
-		http.Redirect(res, req, "/", http.StatusSeeOther)
+		http.Redirect(res, req, "/getpost/"+params["id"], http.StatusSeeOther)
 		return
 	}
 
@@ -276,11 +279,11 @@ func sortPost(dataArr []map[string]string, date1 string, cat1 string, sort1 stri
 		}
 
 	}
-
+	//sorts the similarity and provides an index
 	_, sortArr2 := mergeSort(sortArrSim, sortArr)
 	maxLen := len(sortArr)
 
-	if sort1 == "asc" { //
+	if sort1 == "asc" {
 
 		for idx := 0; idx < maxLen; idx++ { //sorts results in ascending order
 			newSorted = append(newSorted, dataArr[sortArr2[idx]])
@@ -352,6 +355,7 @@ func seePostAll(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 
+		// data required by the go template
 		dataInsert := struct {
 			DataInfo        []map[string]string
 			UserPersistInfo userPersistInfo
@@ -440,6 +444,7 @@ func getPostDetail(res http.ResponseWriter, req *http.Request) {
 		jsonData1.DataInfo = []map[string]string{mapComment}
 		dataPacket3, err3 := tapAPI(http.MethodPost, jsonData1, baseURL+"db/info")
 
+		// if response is an error
 		if err3 == nil && dataPacket3.ResBool == "true" {
 			sessionMgr.updatePersistInfo(id, "true", "You have posted a comment", "false", "None", "", "seelast", false)
 		} else {
@@ -449,10 +454,12 @@ func getPostDetail(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	sessionMgr.updatePersistInfo(id, "false", "None", "false", "None", "", "seelast", false)
+	sessionMgr.updatePersistInfo(id, "false", "None", "false", "None", "", "seelast", false) // clean up feedback
 	tplGetPostDetail.ExecuteTemplate(res, "getpostdetail.gohtml", dataInsert)
 }
 
+// see the post for a particular user
+// filters for their post/listing
 func seePostUser(res http.ResponseWriter, req *http.Request) {
 	postUsername := mux.Vars(req)["id"] // get post id
 	id, userPersistInfo1 := sessionMgr.getIdPersistInfo(res, req)
@@ -493,6 +500,7 @@ func seePostUser(res http.ResponseWriter, req *http.Request) {
 	tplSeePostUser.ExecuteTemplate(res, "seepostuser.gohtml", dataInsert)
 }
 
+// changes the post to completed, and return the rest of the values to api
 func postComplete(res http.ResponseWriter, req *http.Request) {
 	id, userPersistInfo1 := sessionMgr.getIdPersistInfo(res, req)
 	params := mux.Vars(req)
@@ -518,16 +526,18 @@ func postComplete(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// get form values.
+	// change completion value, returns the rest
 	mapListing2 := dataPacket1.DataInfo[0]
 	mapListing2["Completion"] = "true"
 	fmt.Println(params, mapListing2)
 	jsonData1.DataInfo = []map[string]string{mapListing2}
 
+	//if error feedback to user and
 	_, err5 := tapAPI("PUT", jsonData1, baseURL+"db/info")
 	if err5 != nil {
 		sessionMgr.updatePersistInfo(id, "false", "None", "true", "An error has occurred, please try again later", "", "seelast", false)
 		http.Redirect(res, req, "/", http.StatusSeeOther)
+		logger1.logTrace("TRACE", "error encountered while changing status of '"+mapListing2["Name"]+"' to completed ")
 		return
 	}
 
@@ -561,7 +571,8 @@ func getUser(res http.ResponseWriter, req *http.Request) {
 	id, userPersistInfo1 := sessionMgr.getIdPersistInfo(res, req)
 	// reuqesting the information for the user, using the post id
 	mapListing := make(map[string]string)
-	mapListing["ID"] = idParam // only for ItemListing
+	mapListing["ID"] = idParam // get info for ItemListing based on ID
+
 	jsonData1 := dataPacket{
 		// key to access rest api
 		Key:         key1(),
@@ -572,6 +583,7 @@ func getUser(res http.ResponseWriter, req *http.Request) {
 		DataInfo:    []map[string]string{mapListing},
 	}
 	dataPacket1, err1 := tapAPI(http.MethodGet, jsonData1, baseURL+"db/info")
+	// if error in fetching data
 	if err1 != nil || dataPacket1.ResBool == "false" || len(dataPacket1.DataInfo) == 0 {
 		//if user id does not exist return to index page
 		sessionMgr.updatePersistInfo(id, "false", "None", "true", "The detail: "+idParam+" cannot be found, please try another course", "", "seelast", false)
@@ -615,7 +627,7 @@ func getUser(res http.ResponseWriter, req *http.Request) {
 
 		jsonData1.DataInfo = []map[string]string{mapComment}
 		dataPacket3, err3 := tapAPI(http.MethodPut, jsonData1, baseURL+"db/info")
-
+		// if error in posting a comment
 		if err3 == nil && dataPacket3.ResBool == "true" {
 			sessionMgr.updatePersistInfo(id, "true", "You have posted a comment", "false", "None", "", "seelast", false)
 		} else {
