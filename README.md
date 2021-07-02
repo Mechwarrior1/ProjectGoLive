@@ -6,8 +6,11 @@ This is a prototype for a recycling marketplace written in GO
 
 It uses 4 mysql tables, whihch follows:
 CREATE TABLE UserSecret  (ID VARCHAR(6) NOT NULL PRIMARY KEY, Username VARCHAR(20) NOT NULL, Password VARCHAR(50) NOT NULL, IsAdmin VARCHAR(5) NOT NULL, CommentItem VARCHAR(300));
+
 CREATE TABLE UserInfo    (ID VARCHAR(6) NOT NULL PRIMARY KEY, Username VARCHAR(20) NOT NULL, LastLogin VARCHAR(50), DateJoin VARCHAR(50) NOT NULL, CommentItem VARCHAR(300));
+
 CREATE TABLE ItemListing (ID VARCHAR(6) NOT NULL PRIMARY KEY, Username VARCHAR(20) NOT NULL, Name VARCHAR(20), ImageLink VARCHAR(200), DatePosted VARCHAR(30), CommentItem VARCHAR(300), ConditionItem VARCHAR(100), Cat VARCHAR(50), ContactMeetInfo VARCHAR(100), Completion VARCHAR(5) );
+
 CREATE TABLE CommentItem (ID VARCHAR(6) NOT NULL PRIMARY KEY, Username VARCHAR(20) NOT NULL, ForItem VARCHAR(20) NOT NULL, Date VARCHAR(50) NOT NULL, CommentItem VARCHAR(300));
 
 
