@@ -277,7 +277,7 @@ func (e *Embeddings) getWordEmbeddingCombine(wordsAdd []string, wordsSubtract []
 	return combined_vec
 }
 
-//  func not in use
+// func not in use
 // compares a word to all other words in the embedding
 // find closest matching word
 func (e *Embeddings) compareEmbeddingAll(tarWordVec []float32) ([]string, []float32) {
