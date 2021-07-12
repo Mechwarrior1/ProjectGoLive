@@ -1,0 +1,75 @@
+//on cmd, Create a new docker image for mysql and enter it
+docker run --name mysql_market -p 60575:3306 -e MYSQL_ROOT_PASSWORD=5jIfadn39fShq -d mysql:latest
+Set PATH=%PATH%;"C:\Program Files\MySQL\MySQL Server 8.0\bin\
+mysql -P 60575 --protocol=tcp -u root -p
+5jIfadn39fShq
+
+// after entering mysql database as root
+CREATE database my_db;
+USE my_db;
+CREATE TABLE UserSecret  (ID VARCHAR(6) NOT NULL PRIMARY KEY, Username VARCHAR(20) NOT NULL, Password VARCHAR(50) NOT NULL, IsAdmin VARCHAR(5) NOT NULL, CommentItem VARCHAR(300));
+CREATE TABLE UserInfo    (ID VARCHAR(6) NOT NULL PRIMARY KEY, Username VARCHAR(20) NOT NULL, LastLogin VARCHAR(50), DateJoin VARCHAR(50) NOT NULL, CommentItem VARCHAR(300));
+CREATE TABLE ItemListing (ID VARCHAR(6) NOT NULL PRIMARY KEY, Username VARCHAR(20) NOT NULL, Name VARCHAR(20), ImageLink VARCHAR(200), DatePosted VARCHAR(30), CommentItem VARCHAR(300), ConditionItem VARCHAR(100), Cat VARCHAR(50), ContactMeetInfo VARCHAR(100), Completion VARCHAR(5) );
+CREATE TABLE CommentUser (ID VARCHAR(6) NOT NULL PRIMARY KEY, Username VARCHAR(20) NOT NULL, ForUsername VARCHAR(20) NOT NULL, Date VARCHAR(50) NOT NULL, CommentItem VARCHAR(300));
+CREATE TABLE CommentItem (ID VARCHAR(6) NOT NULL PRIMARY KEY, Username VARCHAR(20) NOT NULL, ForItem VARCHAR(20) NOT NULL, Date VARCHAR(50) NOT NULL, CommentItem VARCHAR(300));
+
+INSERT INTO UserSecret  (ID, Username, Password, IsAdmin, CommentItem) VALUES ("000001", "admin", "admin", "true","secret");
+INSERT INTO UserInfo    (ID, Username, LastLogin, DateJoin, CommentItem) VALUES ("000001", "admin", "18/6/2021", "18/6/2021","im the captain");
+INSERT INTO ItemListing (ID, Username, Name, ImageLink, DatePosted, CommentItem, ConditionItem, Cat, ContactMeetInfo, Completion) VALUES ("000001", "admin", "boardgame", "https://cf.geekdo-images.com/1N4DBN9ggYo7didRPyL2bg__itemrep/img/3K9WSRxkTgXCXyDm-7rojkdfLpQ=/fit-in/246x300/filters:strip_icc()/pic6230642.jpg","55867392","unfathomable board game", "lightly used", "games", "meet in jurong area, call me at 12345678","false");
+INSERT INTO CommentUser (ID, Username, ForUsername, Date, CommentItem) VALUES ("000001", "admin", "admin", "18/6/2021","i think admin is a pretty nice guy");
+INSERT INTO CommentItem (ID, Username, ForItem, Date, CommentItem) VALUES ("000001", "admin", "000001", "18/6/2021","nice game, thinking of getting it");
+SELECT * from UserSecret;
+
+// create a new user 
+
+CREATE USER 'myuser'@'localhost' IDENTIFIED BY 'sdfh39FjslJd2';
+CREATE USER 'myuser'@'%' IDENTIFIED BY 'sdfh39FjslJd2';
+GRANT DELETE ON my_db.UserSecret TO 'myuser'@'localhost';
+GRANT DELETE ON my_db.UserSecret TO 'myuser'@'%';
+GRANT SELECT ON my_db.UserSecret TO 'myuser'@'localhost';
+GRANT SELECT ON my_db.UserSecret TO 'myuser'@'%';
+GRANT UPDATE ON my_db.UserSecret TO 'myuser'@'localhost';
+GRANT UPDATE ON my_db.UserSecret TO 'myuser'@'%';
+GRANT INSERT ON my_db.UserSecret TO 'myuser'@'localhost';
+GRANT INSERT ON my_db.UserSecret TO 'myuser'@'%';
+
+GRANT DELETE ON my_db.UserInfo TO 'myuser'@'localhost';
+GRANT DELETE ON my_db.UserInfo TO 'myuser'@'%';
+GRANT SELECT ON my_db.UserInfo TO 'myuser'@'localhost';
+GRANT SELECT ON my_db.UserInfo TO 'myuser'@'%';
+GRANT UPDATE ON my_db.UserInfo TO 'myuser'@'localhost';
+GRANT UPDATE ON my_db.UserInfo TO 'myuser'@'%';
+GRANT INSERT ON my_db.UserInfo TO 'myuser'@'localhost';
+GRANT INSERT ON my_db.UserInfo TO 'myuser'@'%';
+
+GRANT DELETE ON my_db.ItemListing TO 'myuser'@'localhost';
+GRANT DELETE ON my_db.ItemListing TO 'myuser'@'%';
+GRANT SELECT ON my_db.ItemListing TO 'myuser'@'localhost';
+GRANT SELECT ON my_db.ItemListing TO 'myuser'@'%';
+GRANT UPDATE ON my_db.ItemListing TO 'myuser'@'localhost';
+GRANT UPDATE ON my_db.ItemListing TO 'myuser'@'%';
+GRANT INSERT ON my_db.ItemListing TO 'myuser'@'localhost';
+GRANT INSERT ON my_db.ItemListing TO 'myuser'@'%';
+
+GRANT DELETE ON my_db.CommentUser TO 'myuser'@'localhost';
+GRANT DELETE ON my_db.CommentUser TO 'myuser'@'%';
+GRANT SELECT ON my_db.CommentUser TO 'myuser'@'localhost';
+GRANT SELECT ON my_db.CommentUser TO 'myuser'@'%';
+GRANT UPDATE ON my_db.CommentUser TO 'myuser'@'localhost';
+GRANT UPDATE ON my_db.CommentUser TO 'myuser'@'%';
+GRANT INSERT ON my_db.CommentUser TO 'myuser'@'localhost';
+GRANT INSERT ON my_db.CommentUser TO 'myuser'@'%';
+
+GRANT DELETE ON my_db.CommentItem TO 'myuser'@'localhost';
+GRANT DELETE ON my_db.CommentItem TO 'myuser'@'%';
+GRANT SELECT ON my_db.CommentItem TO 'myuser'@'localhost';
+GRANT SELECT ON my_db.CommentItem TO 'myuser'@'%';
+GRANT UPDATE ON my_db.CommentItem TO 'myuser'@'localhost';
+GRANT UPDATE ON my_db.CommentItem TO 'myuser'@'%';
+GRANT INSERT ON my_db.CommentItem TO 'myuser'@'localhost';
+GRANT INSERT ON my_db.CommentItem TO 'myuser'@'%';
+exit;
+
+
+mysql -P 60575 --protocol=tcp -u myuser -p
+sdfh39FjslJd2
