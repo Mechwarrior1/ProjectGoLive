@@ -781,3 +781,78 @@ TRACE: 2021/07/02 10:25:46 sessionanduser.go:155: Updated Item status for 'Old p
 TRACE: 2021/07/02 10:26:14 sessionanduser.go:155: alvin has logged out
 TRACE: 2021/07/02 10:59:13 sessionanduser.go:155: None session expired
 TRACE: 2021/07/02 10:59:13 sessionanduser.go:155: None session expired
+TRACE: 2021/07/14 16:20:43 sessionanduser.go:153: Server started
+TRACE: 2021/07/14 16:20:43 sessionanduser.go:153: Successfully loaded key from file
+TRACE: 2021/07/14 16:21:57 sessionanduser.go:153: Server started
+TRACE: 2021/07/14 16:21:57 sessionanduser.go:153: Successfully loaded key from file
+TRACE: 2021/07/14 20:25:05 sessionanduser.go:153: Server started
+TRACE: 2021/07/14 20:25:06 sessionanduser.go:153: Successfully loaded key from file
+ERROR: 2021/07/14 20:48:43 sessionanduser.go:153: The HTTPS request failed with error: Get "https://localhost:5555/api/v0/check": stream error: stream ID 1; INTERNAL_ERROR
+TRACE: 2021/07/14 20:48:43 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 20:53:46 sessionanduser.go:153: The HTTPS request failed with error: Get "https://localhost:5555/api/v0/check": stream error: stream ID 1; INTERNAL_ERROR
+TRACE: 2021/07/14 20:53:46 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 20:56:18 sessionanduser.go:153: The HTTPS request failed with error: Get "https://localhost:5555/api/v0/check": stream error: stream ID 1; INTERNAL_ERROR
+TRACE: 2021/07/14 20:56:18 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 21:02:18 sessionanduser.go:153: The HTTPS request failed with error: Get "https://localhost:5555/api/v0/check": stream error: stream ID 1; INTERNAL_ERROR
+TRACE: 2021/07/14 21:02:18 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 21:03:15 sessionanduser.go:153: The HTTPS request failed with error: Get "https://localhost:5555/api/v0/check": stream error: stream ID 1; INTERNAL_ERROR
+TRACE: 2021/07/14 21:03:15 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 21:06:22 sessionanduser.go:153: The HTTPS request failed with error: Get "https://localhost:5555/api/v0/check": stream error: stream ID 1; INTERNAL_ERROR
+TRACE: 2021/07/14 21:06:22 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 21:06:52 sessionanduser.go:153: The HTTPS request failed with error: Get "https://localhost:5555/api/v0/check": stream error: stream ID 1; INTERNAL_ERROR
+TRACE: 2021/07/14 21:06:52 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 21:07:12 sessionanduser.go:153: The HTTPS request failed with error: Get "https://localhost:5555/api/v0/check": stream error: stream ID 1; INTERNAL_ERROR
+TRACE: 2021/07/14 21:07:12 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+TRACE: 2021/07/14 21:20:06 sessionanduser.go:153: None session expired
+TRACE: 2021/07/14 21:40:06 sessionanduser.go:153: logout******** session expired
+ERROR: 2021/07/14 22:01:31 sessionanduser.go:153: The HTTPS request failed with error: Get "https://localhost:5555/api/v0/check": stream error: stream ID 1; INTERNAL_ERROR
+TRACE: 2021/07/14 22:01:31 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 22:02:42 sessionanduser.go:153: The HTTPS request failed with error: Get "https://localhost:5555/api/v0/check": stream error: stream ID 1; INTERNAL_ERROR
+TRACE: 2021/07/14 22:02:42 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 22:15:42 sessionanduser.go:153: Error encounted when reading datapacket: 
+TRACE: 2021/07/14 22:15:42 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 22:16:44 sessionanduser.go:153: Error encounted when reading datapacket: 
+TRACE: 2021/07/14 22:16:44 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 22:18:01 sessionanduser.go:153: Error encounted when reading datapacket: 
+TRACE: 2021/07/14 22:18:01 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 22:18:42 sessionanduser.go:153: Error encounted when reading datapacket: 
+TRACE: 2021/07/14 22:18:42 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 22:18:58 sessionanduser.go:153: Error encounted when reading datapacket: 
+TRACE: 2021/07/14 22:18:58 sessionanduser.go:153: someone tried to login to: Darren, but the password is wrong
+ERROR: 2021/07/14 22:20:40 sessionanduser.go:153: The HTTPS request failed with error: Get "https://127.0.0.1:5555/api/v0/username": dial tcp 127.0.0.1:5555: connectex: No connection could be made because the target machine actively refused it.
+ERROR: 2021/07/14 22:20:42 sessionanduser.go:153: The HTTPS request failed with error: Get "https://127.0.0.1:5555/api/v0/username": dial tcp 127.0.0.1:5555: connectex: No connection could be made because the target machine actively refused it.
+ERROR: 2021/07/14 22:20:42 sessionanduser.go:153: The HTTPS request failed with error: Post "https://127.0.0.1:5555/api/v0/db/info": dial tcp 127.0.0.1:5555: connectex: No connection could be made because the target machine actively refused it.
+ERROR: 2021/07/14 22:20:44 sessionanduser.go:153: The HTTPS request failed with error: Post "https://127.0.0.1:5555/api/v0/db/info": dial tcp 127.0.0.1:5555: connectex: No connection could be made because the target machine actively refused it.
+ERROR: 2021/07/14 22:21:21 sessionanduser.go:153: Error encounted when reading datapacket: 
+TRACE: 2021/07/14 22:21:21 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 22:22:11 sessionanduser.go:153: Error encounted when reading datapacket: 
+TRACE: 2021/07/14 22:22:11 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 22:24:02 sessionanduser.go:153: Error encounted when reading datapacket: 
+TRACE: 2021/07/14 22:24:02 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 22:24:51 sessionanduser.go:153: The HTTPS request failed with error: Get "https://localhost:5555/api/v0/check": stream error: stream ID 1; INTERNAL_ERROR
+TRACE: 2021/07/14 22:24:51 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 22:25:31 sessionanduser.go:153: The HTTPS request failed with error: Get "https://localhost:5555/api/v0/check": stream error: stream ID 1; INTERNAL_ERROR
+TRACE: 2021/07/14 22:25:31 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 22:26:41 sessionanduser.go:153: The HTTPS request failed with error: Get "https://localhost:5555/api/v0/check": dial tcp [::1]:5555: connectex: No connection could be made because the target machine actively refused it.
+TRACE: 2021/07/14 22:26:41 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+ERROR: 2021/07/14 22:27:20 sessionanduser.go:153: The HTTPS request failed with error: Get "https://localhost:5555/api/v0/check": stream error: stream ID 1; INTERNAL_ERROR
+TRACE: 2021/07/14 22:27:20 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+TRACE: 2021/07/14 22:29:29 sessionanduser.go:153: admin logged in
+ERROR: 2021/07/14 22:32:11 sessionanduser.go:153: Error encounted when reading datapacket: 
+ERROR: 2021/07/14 22:32:12 sessionanduser.go:153: Error encounted when reading datapacket: 
+ERROR: 2021/07/14 22:32:13 sessionanduser.go:153: Error encounted when reading datapacket: 
+ERROR: 2021/07/14 22:32:14 sessionanduser.go:153: Error encounted when reading datapacket: 
+ERROR: 2021/07/14 22:32:15 sessionanduser.go:153: Error encounted when reading datapacket: 
+ERROR: 2021/07/14 22:32:16 sessionanduser.go:153: Error encounted when reading datapacket: 
+ERROR: 2021/07/14 22:32:23 sessionanduser.go:153: Error encounted when reading datapacket: 
+ERROR: 2021/07/14 22:32:24 sessionanduser.go:153: Error encounted when reading datapacket: 
+TRACE: 2021/07/14 22:32:30 sessionanduser.go:153: admin has logged out
+TRACE: 2021/07/14 22:32:40 sessionanduser.go:153: admin logged in
+ERROR: 2021/07/14 22:32:42 sessionanduser.go:153: Error encounted when reading datapacket: 
+TRACE: 2021/07/14 22:33:28 sessionanduser.go:153: admin has logged out
+ERROR: 2021/07/14 22:33:34 sessionanduser.go:153: The HTTPS request failed with error: Get "https://localhost:5555/api/v0/check": dial tcp [::1]:5555: connectex: No connection could be made because the target machine actively refused it.
+TRACE: 2021/07/14 22:33:34 sessionanduser.go:153: someone tried to login to: admin, but the password is wrong
+TRACE: 2021/07/14 22:33:49 sessionanduser.go:153: admin logged in
+TRACE: 2021/07/14 22:36:28 sessionanduser.go:153: admin has logged out
+TRACE: 2021/07/14 22:36:32 sessionanduser.go:153: admin logged in
+ERROR: 2021/07/14 22:36:56 sessionanduser.go:153: Error encounted when reading datapacket: 

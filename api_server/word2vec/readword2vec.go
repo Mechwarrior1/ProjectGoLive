@@ -303,8 +303,8 @@ func (e *Embeddings) CompareEmbeddingAll(tarWordVec []float32) ([]string, []floa
 // opens the Word2vec binary file and loads it into an array and map
 // returns a struct with the embeddings array and word -> index map
 func GetWord2Vec() *Embeddings {
-	// fileLoc := "C:/Users/Fong/Desktop/GoogleNews-vectors-negative300-SLIM.bin"
-	fileLoc := "C:/Users/Fong/Desktop/GoogleNews-vectors-negative300.bin"
+	fileLoc := "C:/Users/Fong/Desktop/GoogleNews-vectors-negative300-SLIM.bin"
+	// fileLoc := "C:/Users/Fong/Desktop/GoogleNews-vectors-negative300.bin"
 	fmt.Println(fileLoc)
 
 	f, err := os.Open(fileLoc)

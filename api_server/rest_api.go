@@ -7,12 +7,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 
 	_ "github.com/go-sql-driver/mysql" // go mod init api_server.go
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -24,48 +23,42 @@ var (
 )
 
 // function for the rest api, respond with the slice of all courses
-func allInfo(w http.ResponseWriter, r *http.Request) {
+func allInfo(c echo.Context) error {
 	// can only return listing results, commentUser and commentItem
-	dataPacket1, err1 := readJSONBody(w, r) // read response JSON
+	dataPacket1, err1 := readJSONBody(c) // read response JSON
 
 	if err1 != nil {
 		fmt.Println(err1)
-		return
+		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
 	}
 
-	receiveInfoRaw := dataPacket1.DataInfo[0].(map[string]interface{}) // convert received data into map[string]string
-	receiveInfo := make(map[string]string)
+	receiveInfo := dataPacket1["DataInfo"].(map[string]string)
 
-	for k, v := range receiveInfoRaw {
-		receiveInfo[k] = fmt.Sprintf("%v", v)
-	}
-
-	tarDB := dataPacket1.InfoType
+	tarDB := dataPacket1["InfoType"].(string)
 	tarID := receiveInfo["ID"]
 
 	switch tarDB { // gets all post
 
 	case "ItemListing":
+
 		sendInfo, _ := dbHandler1.GetRecordlisting(tarDB, receiveInfo["Name"], receiveInfo["filterUsername"], embed)
-		w.WriteHeader(http.StatusCreated)
-		newResponse(w, r, sendInfo, "nil", "ItemListing", "true", "")
-		return
+		return newResponse(c, sendInfo, "nil", "ItemListing", "true", "", http.StatusOK)
 
-	case "CommentUser": // gets all comments regarding a particular user id
-		sendInfo, _ := dbHandler1.GetRecord(tarDB)
-		newSendInfo := []interface{}{}
+	// case "CommentUser": // gets all comments regarding a particular user id
+	// 	sendInfo, _ := dbHandler1.GetRecord(tarDB)
+	// 	newSendInfo := []interface{}{}
 
-		for i := range sendInfo {
+	// 	for i := range sendInfo {
+	// 		temp1 := sendInfo[i].(mysql.CommentUser)
 
-			temp1 := sendInfo[i].(mysql.CommentUser)
-			if temp1.ForUsername == tarID {
-				newSendInfo = append(newSendInfo, sendInfo[i])
-			}
-		}
+	// 		if temp1.ForUsername == tarID {
+	// 			newSendInfo = append(newSendInfo, sendInfo[i])
+	// 		}
+	// 	}
 
-		w.WriteHeader(http.StatusCreated)
-		newResponse(w, r, newSendInfo, "nil", "ItemListing", "true", "")
-		return
+	// 	w.WriteHeader(http.StatusCreated)
+	// 	newResponse(c, newSendInfo, "nil", "ItemListing", "true", "")
+	// 	return
 
 	case "CommentItem": // gets all comments regarding a particular item id
 		sendInfo, _ := dbHandler1.GetRecord(tarDB)
@@ -80,64 +73,52 @@ func allInfo(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		w.WriteHeader(http.StatusCreated)
-		newResponse(w, r, newSendInfo, "nil", "ItemListing", "true", "")
-		return
+		return newResponse(c, newSendInfo, "nil", "ItemListing", "true", "", http.StatusOK)
 
 	default:
-		w.WriteHeader(http.StatusNotFound)
-		newErrorResponse(w, r, "404 - not found")
-		return
+
+		return newErrorResponse(c, "404", http.StatusNotFound)
 	}
 }
 
-func pwCheck(w http.ResponseWriter, r *http.Request) { //works
-	dataPacket1, err := readJSONBody(w, r) // read response JSON
+func pwCheck(c echo.Context) error { //works
+	dataPacket1, err := readJSONBody(c) // read response JSON
 
 	if err != nil { //err means username not found, ok to proceed
-		return
+		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
 	}
 
-	receiveInfoRaw := dataPacket1.DataInfo[0].(map[string]interface{}) // convert received data into map[string]string
-	receiveInfo := make(map[string]string)
-
-	for k, v := range receiveInfoRaw {
-		receiveInfo[k] = fmt.Sprintf("%v", v)
-	}
-
-	dbData, err1 := dbHandler1.GetSingleRecord("UserSecret", "WHERE Username = \"?\"", receiveInfo["Username"])
+	receiveInfo := mapInterfaceToString(dataPacket1) // convert received data into map[string]string
+	dbData, err1 := dbHandler1.GetSingleRecord("UserSecret", "WHERE Username = ?", receiveInfo["Username"])
 
 	if err1 != nil || len(dbData) == 0 { //err means username not found, ok to proceed
-		w.WriteHeader(http.StatusNotFound)
-		newErrorResponse(w, r, "404 - Invalid credentials")
-		return
+
+		return newErrorResponse(c, "", http.StatusBadRequest)
 	}
 
 	// update last login
-	dbData2, err2 := dbHandler1.GetSingleRecord("UserInfo", "WHERE Username = \"?\"", receiveInfo["Username"])
-	dbDataInfo := dbData2[0].(map[string]interface{})
 	dbData1 := dbData[0].(mysql.UserSecret)
 	err3 := bcrypt.CompareHashAndPassword([]byte(dbData1.Password), []byte(receiveInfo["Password"]))
 
-	if err2 == nil && err3 == nil {
-		w.WriteHeader(http.StatusCreated)
+	if err3 == nil {
 		//update lastLogin if there is no issues
-		_ = dbHandler1.EditRecord("UserInfo", dbDataInfo)
+		dbHandler1.EditRecord("UserInfo", receiveInfo)
 		//return response with true if no issues
-		newResponse(w, r, []interface{}{}, "nil", "UserInfo", "true", "")
-		return
+		return newResponse(c, []interface{}{}, "nil", "UserInfo", "true", "", http.StatusOK)
 	}
 
-	w.WriteHeader(http.StatusNotFound)
-	newErrorResponse(w, r, "402 - Invalid credentials")
+	return newErrorResponse(c, "", http.StatusBadRequest)
 }
 
 // change map[string]interface to map[string]string
-func mapInterfaceToString(dataPacket1 *mysql.DataPacket) map[string]string {
-	receiveInfoRaw := dataPacket1.DataInfo[0].(map[string]interface{}) // convert received data into map[string]string
+func mapInterfaceToString(dataPacket1 map[string]interface{}) map[string]string {
+
+	fmt.Println(dataPacket1["DataInfo"])
+
+	receiveInfoRaw := dataPacket1["DataInfo"].([]interface{})[0] // convert received data into map[string]string
 	receiveInfo := make(map[string]string)
 
-	for k, v := range receiveInfoRaw {
+	for k, v := range receiveInfoRaw.(map[string]interface{}) {
 		receiveInfo[k] = fmt.Sprintf("%v", v)
 	}
 
@@ -146,30 +127,25 @@ func mapInterfaceToString(dataPacket1 *mysql.DataPacket) map[string]string {
 
 // checks if the username in the sent info is currently in DB
 // returns false if username is not taken
-func usernameCheck(w http.ResponseWriter, r *http.Request) {
-	dataPacket1, err1 := readJSONBody(w, r) // read response JSON
-	if err1 != nil {                        //err means username not found, ok to proceed
-		return
+func usernameCheck(c echo.Context) error {
+	dataPacket1, err1 := readJSONBody(c) // read response JSON
+	if err1 != nil {                     //err means username not found, ok to proceed
+		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
 	}
 
-	receiveInfo := mapInterfaceToString(dataPacket1) // convert received data into map[string]string
-	allData, err := dbHandler1.GetSingleRecord("UserInfo", " WHERE Username = \"?\"", receiveInfo["Username"])
+	receiveInfo := mapInterfaceToString(dataPacket1)
+	allData, err := dbHandler1.GetSingleRecord("UserInfo", " WHERE Username = ?", receiveInfo["Username"])
 
 	if err != nil || len(allData) == 0 { //err means username not found, ok to proceed
-		w.WriteHeader(http.StatusNotFound)
-		newResponse(w, r, []interface{}{}, "username not found", "UserInfo", "false", "")
-		return
+
+		return newResponse(c, []interface{}{}, "username not found", "UserInfo", "false", "", http.StatusOK)
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	newResponse(w, r, []interface{}{}, "nil", "UserInfo", "true", "")
+	return newResponse(c, []interface{}{}, "nil", "UserInfo", "true", "", http.StatusOK)
 }
 
 // the function that writes the response back
-func newResponse(w http.ResponseWriter, r *http.Request, dataInfo []interface{}, errorMsg string, infoType string, resBool string, requestUser string) {
-	if errorMsg == "nil" {
-		w.WriteHeader(http.StatusCreated)
-	}
+func newResponse(c echo.Context, dataInfo []interface{}, errorMsg string, infoType string, resBool string, requestUser string, httpStatus int) error {
 	//StatusOK 200
 	//StatusAccepted 202
 	//StatusCreated 201
@@ -184,41 +160,32 @@ func newResponse(w http.ResponseWriter, r *http.Request, dataInfo []interface{},
 	dataPacket1.InfoType = infoType       // to access which db
 	dataPacket1.ResBool = resBool         //
 	dataPacket1.RequestUser = requestUser //request coming from which user
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(dataPacket1)
 
+	fmt.Println(dataPacket1)
+	return c.JSON(httpStatus, dataPacket1) // encode to json and send
 }
 
 // Response writer for when returning an error to a query
-func newErrorResponse(w http.ResponseWriter, r *http.Request, errorMsg string) {
+func newErrorResponse(c echo.Context, errorMsg string, httpStatus int) error {
 	var DataInfo1 []interface{}
-	newResponse(w, r, DataInfo1, errorMsg, "error", "false", "")
+	return newResponse(c, DataInfo1, errorMsg, "error", "false", "", httpStatus)
 }
 
 // function to read the JSON on a request
-func readJSONBody(w http.ResponseWriter, r *http.Request) (*mysql.DataPacket, error) {
-	var newDataPacket mysql.DataPacket
-	reqBody, err := ioutil.ReadAll(r.Body)
+func readJSONBody(c echo.Context) (map[string]interface{}, error) {
+	// decode JSON body
+	json_map := make(map[string]interface{})
+	err1 := json.NewDecoder(c.Request().Body).Decode(&json_map)
+	if err1 == nil {
 
-	if err == nil {
-		// convert JSON to object
-		json.Unmarshal(reqBody, &newDataPacket)
-		if newDataPacket.Key != key1() {
-			w.WriteHeader(http.StatusNotFound)
-			newErrorResponse(w, r, "401 - Invalid key")
-			return &newDataPacket, errors.New("incorrect api key supplied")
+		if json_map["Key"] != key1() {
+			newErrorResponse(c, "403", http.StatusForbidden)
+			return json_map, errors.New("incorrect api key supplied")
 		}
-
-		if len(newDataPacket.DataInfo) == 0 {
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			newErrorResponse(w, r, "422 - Please supply course information in JSON format")
-			return &newDataPacket, errors.New("unable to read marshal json")
-		}
-
-		return &newDataPacket, nil
+		return json_map, nil
 	}
 
-	return &newDataPacket, errors.New("error while attempting to read body of request")
+	return json_map, errors.New("error while attempting to read body of request")
 }
 
 // checks if owner of the post is the same as the one requesting, for edits or
@@ -256,114 +223,133 @@ func checkUser(tarDB string, requestUser string, dataInfo []interface{}) bool {
 // GET request returns the specified post/user/comments.
 // POST request will post the post/user/comments into the DB.
 // PUT request will edit the specified post/user/comments.
-func genInfo(w http.ResponseWriter, r *http.Request) {
-	dataPacket1, err1 := readJSONBody(w, r) // read response JSON
+func genInfoPost(c echo.Context) error {
+	dataPacket1, err1 := readJSONBody(c) // read response JSON
 	if err1 != nil {
 		fmt.Println(err1)
-		return
+		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
 	}
 
-	receiveInfoRaw := dataPacket1.DataInfo[0].(map[string]interface{}) // convert received data into map[string]string
-	// receiveInfo := make(map[string]string)
+	receiveInfoRaw := mapInterfaceToString(dataPacket1) // convert received data into map[string]string
+	tarDB := dataPacket1["InfoType"].(string)
 
-	// for k, v := range receiveInfoRaw {
-	// 	receiveInfo[k] = fmt.Sprintf("%v", v)
-	// }
+	err2 := dbHandler1.InsertRecord(tarDB, receiveInfoRaw, "") // deletes if target is found
+	if err2 == nil {
 
-	tarItemID := receiveInfoRaw["ID"]
-	tarDB := dataPacket1.InfoType
-	if r.Method == "POST" {
-		err2 := dbHandler1.InsertRecord(tarDB, receiveInfoRaw, "") // deletes if target is found
-		if err2 == nil {
-			w.WriteHeader(http.StatusCreated)
-			newResponse(w, r, []interface{}{}, "nil", "userInfo", "true", "")
-			return
-
-		}
-
-		fmt.Println("logger: insert, " + tarDB + ": " + tarDB + " db not found") //reach here only if it is not returned by the switch
-		w.WriteHeader(http.StatusConflict)
-		newErrorResponse(w, r, "Bad Request , item not found")
-		return
+		return newResponse(c, []interface{}{}, "nil", "userInfo", "true", "", http.StatusOK)
 
 	}
 
-	// if request is not post, check if the ID exist before proceeding
-	dbInfoSlice, err3 := dbHandler1.GetSingleRecord(tarDB, " WHERE ID = ?", tarItemID.(string))
+	fmt.Println("logger: insert, " + tarDB + ": " + tarDB + " db not found") //reach here only if it is not returned by the switch
+
+	return newErrorResponse(c, "Bad Request , item not found", http.StatusBadRequest)
+
+}
+
+func getItem(c echo.Context, tarDB string, tarItemID string) ([]interface{}, error) {
+	dbInfoSlice, err3 := dbHandler1.GetSingleRecord(tarDB, " WHERE ID = ?", tarItemID)
 
 	if err3 != nil || len(dbInfoSlice) == 0 {
 
 		if tarDB == "UserInfo" {
-			dbInfoSlice, err3 = dbHandler1.GetSingleRecord(tarDB, " WHERE Username = \"?\"", tarItemID.(string))
+			dbInfoSlice, err3 = dbHandler1.GetSingleRecord(tarDB, " WHERE Username = ?", tarItemID)
 		}
 
 		if err3 != nil || len(dbInfoSlice) == 0 {
-			fmt.Println(dbInfoSlice, err3)
-			fmt.Println("logger: error when looking up id " + tarItemID.(string) + " for DB " + tarDB + ", err:" + err3.Error())
-			w.WriteHeader(http.StatusNotFound)
-			newErrorResponse(w, r, "Bad Request , item not found")
-			return
+
+			fmt.Println("logger: error when looking up id " + tarItemID + " for DB " + tarDB + ", err:" + err3.Error())
+			newErrorResponse(c, "Bad Request , item not found", http.StatusBadRequest)
+			return []interface{}{}, errors.New("403")
 		}
 
 	}
+	return dbInfoSlice, err3
+}
+
+func genInfoGet(c echo.Context) error {
+	dataPacket1, err1 := readJSONBody(c) // read response JSON
+	if err1 != nil {
+		fmt.Println(err1)
+		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
+	}
+
+	receiveInfoRaw := mapInterfaceToString(dataPacket1) // convert received data into map[string]string
+
+	tarItemID := receiveInfoRaw["ID"]
+	tarDB := dataPacket1["InfoType"].(string)
+
+	dbInfoSlice, err3 := getItem(c, tarDB, tarItemID)
 
 	// for userinfo, itemlisting, commentitem and commentuser only
-	if r.Method == "GET" {
 
-		if tarDB != "UserSecret" { //prevents any requeset to ask for user secrets
-			w.WriteHeader(http.StatusCreated)
-			newResponse(w, r, dbInfoSlice, "nil", tarDB, "true", "")
-			return
-		}
-
-		w.WriteHeader(http.StatusNotFound)
-		newErrorResponse(w, r, "Bad Request , item not found")
-		return
+	if tarDB != "UserSecret" && err3 == nil { //prevents any requeset to ask for user secrets
+		return newResponse(c, dbInfoSlice, "nil", tarDB, "true", "", http.StatusCreated)
 	}
 
-	if !checkUser(tarDB, dataPacket1.RequestUser, dbInfoSlice) { //checks if the user that requested deletion is the owner who posted the comment/listing
-		fmt.Println("logger: " + dataPacket1.RequestUser + " tried to access an item not from user, item ID:" + tarItemID.(string) + ", DB: " + tarDB)
-		w.WriteHeader(http.StatusNotFound)
-		newErrorResponse(w, r, "Bad Request , item not found")
-		return
+	return newErrorResponse(c, "Bad Request , item not found", http.StatusBadRequest)
+}
+
+func genInfoDelete(c echo.Context) error {
+
+	dataPacket1, err1 := readJSONBody(c) // read response JSON
+	if err1 != nil {
+		fmt.Println(err1)
+		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
 	}
+
+	receiveInfoRaw := mapInterfaceToString(dataPacket1) // convert received data into map[string]string
+
+	tarItemID := receiveInfoRaw["ID"]
+	tarDB := dataPacket1["InfoType"].(string)
+
+	dbInfoSlice, err3 := getItem(c, tarDB, tarItemID)
+
+	if !checkUser(tarDB, dataPacket1["RequestUser"].(string), dbInfoSlice) || err3 != nil {
+
+		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
+	}
+
 	// for deleting an entry
-	if r.Method == "DELETE" {
 
-		if tarDB == "ItemListing" || tarDB == "CommentUser" || tarDB == "CommentItem" { //only delete records for 3 items
-			err2 := dbHandler1.DeleteRecord(tarDB, tarItemID.(string)) // attempt to delete record
-			if err2 != nil {
-				w.WriteHeader(http.StatusCreated)
-				newResponse(w, r, []interface{}{}, "nil", "userInfo", "true", "")
-				return
-			}
+	if tarDB == "ItemListing" || tarDB == "CommentUser" || tarDB == "CommentItem" { //only delete records for 3 items
+		err2 := dbHandler1.DeleteRecord(tarDB, tarItemID) // attempt to delete record
+		if err2 != nil {
 
-		} else {
-			//if delete did not occur
-			fmt.Println("logger:  " + ": " + tarDB + " db not found or not in use for Delete func, err:")
-			w.WriteHeader(http.StatusConflict)
-			newErrorResponse(w, r, "Bad Request , item not found")
-			return
-		}
-	}
-
-	// PUT is for updating existing course
-	if r.Method == "PUT" {
-		var err2 error
-		err2 = dbHandler1.EditRecord(tarDB, receiveInfoRaw) // deletes if target is found
-
-		if err2 == nil {
-			w.WriteHeader(http.StatusCreated)
-			newResponse(w, r, []interface{}{}, "nil", "CommentUser", "true", "")
-			return
+			return newResponse(c, []interface{}{}, "nil", "userInfo", "true", "", http.StatusOK)
 		}
 
-		fmt.Println("logger: edit, " + tarDB + ": " + tarDB + " db not found") //reach here only if it is not returned by the switch
-		w.WriteHeader(http.StatusConflict)
-		newErrorResponse(w, r, "Bad Request , item not found")
-		return
-
 	}
+	//if delete did not occur
+	fmt.Println("logger:  " + ": " + tarDB + " db not found or not in use for Delete func, err:")
+	return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
+
+}
+
+// PUT is for updating existing course
+func genInfoPut(c echo.Context) error {
+
+	dataPacket1, err1 := readJSONBody(c) // read response JSON
+	if err1 != nil {
+		fmt.Println(err1)
+		return newErrorResponse(c, "Bad Request , item not found", http.StatusBadRequest)
+	}
+
+	receiveInfoRaw := mapInterfaceToString(dataPacket1) // convert received data into map[string]string
+	tarDB := dataPacket1["InfoType"].(string)
+
+	// dbInfoSlice, err3 := getItem(c, tarDB, tarItemID)
+
+	err2 := dbHandler1.EditRecord(tarDB, receiveInfoRaw) // deletes if target is found
+
+	if err2 == nil {
+
+		return newResponse(c, []interface{}{}, "nil", "CommentUser", "true", "", http.StatusCreated)
+	}
+
+	fmt.Println("logger: edit, " + tarDB + ": " + tarDB + " db not found") //reach here only if it is not returned by the switch
+
+	return newErrorResponse(c, "Bad Request , item not found", http.StatusBadRequest)
+
 }
 
 func main() {
@@ -372,13 +358,16 @@ func main() {
 	dbHandler1 = mysql.OpenDB()
 	defer dbHandler1.DB.Close()
 
-	router := mux.NewRouter()
-	router.HandleFunc("/api/v0/check", pwCheck)
-	router.HandleFunc("/api/v0/allinfo", allInfo)
-	router.HandleFunc("/api/v0/username", usernameCheck)
-	router.HandleFunc("/api/v0/db/info", genInfo).Methods("GET", "PUT", "POST", "DELETE")
+	e := echo.New()
+	e.GET("/api/v0/check", pwCheck)
+	e.GET("/api/v0/allinfo", allInfo)
+	e.GET("/api/v0/username", usernameCheck)
+	e.POST("/api/v0/db/info", genInfoPost)
+	e.GET("/api/v0/db/info", genInfoGet)
+	e.DELETE("/api/v0/db/info", genInfoDelete)
+	e.PUT("/api/v0/db/info", genInfoPut)
 	fmt.Println("listening at port 5555")
-	s = http.Server{Addr: ":5555", Handler: router}
+	s = http.Server{Addr: ":5555", Handler: e}
 
 	if err := s.ListenAndServeTLS("secure//cert.pem", "secure//key.pem"); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)

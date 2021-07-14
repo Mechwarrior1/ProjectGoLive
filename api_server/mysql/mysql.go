@@ -250,7 +250,7 @@ func (dbHandler DBHandler) GetSingleRecord(dbTable string, queryString string, q
 
 // post a record into the DB
 // based on requested database, it will be marshalled into the respective struct
-func (dbHandler DBHandler) InsertRecord(dbTable string, receiveInfo map[string]interface{}, maxIDString1 string) error {
+func (dbHandler DBHandler) InsertRecord(dbTable string, receiveInfo map[string]string, maxIDString1 string) error {
 	maxIDString := "000001"
 	if maxIDString1 == "" {
 		maxID, err1 := dbHandler.GetMaxID(dbTable)
@@ -345,7 +345,7 @@ func (dbHandler DBHandler) GetMaxID(dbTable string) (int, error) {
 
 // edit a single record on DB, chosen record based on ID
 // based on requested database, it will be marshalled into the respective struct
-func (dbHandler DBHandler) EditRecord(dbTable string, receiveInfo map[string]interface{}) error {
+func (dbHandler DBHandler) EditRecord(dbTable string, receiveInfo map[string]string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -355,13 +355,27 @@ func (dbHandler DBHandler) EditRecord(dbTable string, receiveInfo map[string]int
 	// 	_, err := dbHandler.DB.Exec("UPDATE "+dbTable+" SET Username=?, Password=?, IsAdmin=?, CommentItem=? WHERE ID=?", values[0], values[1], values[2], values[3], values[4])receiveInfo["Username"], receiveInfo["LastLogin"], receiveInfo["DateJoin"], receiveInfo["CommentItem"]
 	case "UserInfo":
 
+		if _, ok := receiveInfo["ID"]; !ok {
+			stmt, err := dbHandler.DB.PrepareContext(ctx, "UPDATE "+dbTable+" SET LastLogin=?, CommentItem=? WHERE Username=?")
+
+			if err != nil {
+				return err
+			}
+			defer stmt.Close()
+
+			_, err = stmt.ExecContext(ctx, receiveInfo["LastLogin"], receiveInfo["CommentItem"], receiveInfo["Username"])
+			return err
+		}
+
 		stmt, err := dbHandler.DB.PrepareContext(ctx, "UPDATE "+dbTable+" SET LastLogin=?, CommentItem=? WHERE ID=?")
+
 		if err != nil {
 			return err
 		}
 		defer stmt.Close()
 
 		_, err = stmt.ExecContext(ctx, receiveInfo["LastLogin"], receiveInfo["CommentItem"], receiveInfo["ID"])
+
 		return err
 
 	case "ItemListing":
