@@ -856,3 +856,47 @@ TRACE: 2021/07/14 22:33:49 sessionanduser.go:153: admin logged in
 TRACE: 2021/07/14 22:36:28 sessionanduser.go:153: admin has logged out
 TRACE: 2021/07/14 22:36:32 sessionanduser.go:153: admin logged in
 ERROR: 2021/07/14 22:36:56 sessionanduser.go:153: Error encounted when reading datapacket: 
+TRACE: 2021/07/15 11:34:26 sessionanduser.go:153: Server started
+TRACE: 2021/07/15 11:34:26 sessionanduser.go:153: Successfully loaded key from file
+TRACE: 2021/07/15 11:41:26 sessionanduser.go:153: Server started
+TRACE: 2021/07/15 11:41:26 sessionanduser.go:153: Successfully loaded key from file
+ERROR: 2021/07/15 11:41:37 sessionanduser.go:153: The HTTPS request failed with error: Get "https://localhost:5555/api/v0/allinfo": stream error: stream ID 1; INTERNAL_ERROR
+TRACE: 2021/07/15 11:46:34 sessionanduser.go:153: Server started
+TRACE: 2021/07/15 11:46:34 sessionanduser.go:153: Successfully loaded key from file
+TRACE: 2021/07/15 11:49:55 sessionanduser.go:153: Server started
+TRACE: 2021/07/15 11:49:55 sessionanduser.go:153: Successfully loaded key from file
+TRACE: 2021/07/15 11:51:11 sessionanduser.go:153: Server started
+TRACE: 2021/07/15 11:51:11 sessionanduser.go:153: Successfully loaded key from file
+TRACE: 2021/07/15 12:15:53 sessionanduser.go:153: Server started
+TRACE: 2021/07/15 12:15:53 sessionanduser.go:153: Successfully loaded key from file
+TRACE: 2021/07/15 13:38:08 sessionanduser.go:153: Server started
+TRACE: 2021/07/15 13:38:08 sessionanduser.go:153: Successfully loaded key from file
+TRACE: 2021/07/15 13:43:22 sessionanduser.go:153: Server started
+TRACE: 2021/07/15 13:43:22 sessionanduser.go:153: Successfully loaded key from file
+TRACE: 2021/07/15 13:43:34 sessionanduser.go:153: Server started
+TRACE: 2021/07/15 13:43:34 sessionanduser.go:153: Successfully loaded key from file
+TRACE: 2021/07/15 13:46:44 sessionanduser.go:153: Server started
+TRACE: 2021/07/15 13:46:44 sessionanduser.go:153: Successfully loaded key from file
+TRACE: 2021/07/15 14:00:50 sessionanduser.go:153: admin logged in
+TRACE: 2021/07/15 14:02:17 sessionanduser.go:153: admin has logged out
+ERROR: 2021/07/15 14:02:22 sessionanduser.go:153: Error encounted when reading datapacket: username not found
+TRACE: 2021/07/15 14:02:27 sessionanduser.go:153: admin2 logged in
+TRACE: 2021/07/15 14:02:39 sessionanduser.go:153: admin2 has logged out
+TRACE: 2021/07/15 14:10:18 sessionanduser.go:153: Server started
+TRACE: 2021/07/15 14:10:18 sessionanduser.go:153: Successfully loaded key from file
+TRACE: 2021/07/15 14:12:22 sessionanduser.go:153: admin logged in
+TRACE: 2021/07/15 14:13:14 sessionanduser.go:153: admin has logged out
+TRACE: 2021/07/15 14:13:18 sessionanduser.go:153: admin logged in
+TRACE: 2021/07/15 14:15:19 sessionanduser.go:153: admin has logged out
+ERROR: 2021/07/15 14:15:25 sessionanduser.go:153: Error encounted when reading datapacket: 
+TRACE: 2021/07/15 14:15:25 sessionanduser.go:153: someone tried to login to: admin2, but the password is wrong
+TRACE: 2021/07/15 14:15:29 sessionanduser.go:153: admin2 logged in
+TRACE: 2021/07/15 14:15:45 sessionanduser.go:153: admin2 has logged out
+TRACE: 2021/07/15 14:16:23 sessionanduser.go:153: admin logged in
+TRACE: 2021/07/15 14:16:58 sessionanduser.go:153: Created item: 'plastic', by user: 'admin' desc: 'real old plastic bottles'
+ERROR: 2021/07/15 14:17:41 sessionanduser.go:153: Error encounted when reading datapacket: 
+ERROR: 2021/07/15 14:17:56 sessionanduser.go:153: Error encounted when reading datapacket: 
+ERROR: 2021/07/15 14:18:14 sessionanduser.go:153: Error encounted when reading datapacket: 
+TRACE: 2021/07/15 14:19:27 sessionanduser.go:153: Server started
+TRACE: 2021/07/15 14:19:27 sessionanduser.go:153: Successfully loaded key from file
+TRACE: 2021/07/15 14:19:47 sessionanduser.go:153: admin logged in

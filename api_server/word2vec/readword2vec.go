@@ -42,7 +42,7 @@ func InsertSort(arr []float32, arrSort []int) ([]float32, []int) {
 		arr[i2] = temp1
 		arrSort[i2] = tempSort
 	}
-	fmt.Println(arr, arrSort)
+	// fmt.Println(arr, arrSort)
 	return arr, arrSort
 }
 
@@ -255,7 +255,6 @@ func (e *Embeddings) GetWordEmbeddingCombine(wordsAdd []string, wordsSubtract []
 		idx, ok := e.indices[word]
 		if ok {
 			if len(combined_vec) == 0 { // adding vectors
-				fmt.Println(true)
 				combined_vec = e.GetEmbedding(idx)
 			} else {
 				combined_vec = e.addEmbedding(combined_vec, e.GetEmbedding(idx), 1.0)

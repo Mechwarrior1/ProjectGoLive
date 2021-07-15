@@ -112,7 +112,7 @@ func createPost(res http.ResponseWriter, req *http.Request) {
 			}
 		}
 		// take inputs and put into map for api/server
-		newPost := make(map[string]string)
+		newPost := make(map[string]interface{})
 		newPost["Username"] = userPersistInfo1.Username
 		newPost["Name"] = postName
 		newPost["ImageLink"] = postImg2
@@ -130,7 +130,7 @@ func createPost(res http.ResponseWriter, req *http.Request) {
 			InfoType:    "ItemListing",
 			ResBool:     "false",
 			RequestUser: userPersistInfo1.Username,
-			DataInfo:    []map[string]string{newPost},
+			DataInfo:    []map[string]interface{}{newPost},
 		}
 
 		address := baseURL + "db/info"
@@ -160,7 +160,7 @@ func editPost(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	params := mux.Vars(req)
-	mapListing := make(map[string]string)
+	mapListing := make(map[string]interface{})
 	mapListing["Name"] = params["id"]
 	mapListing["ID"] = params["id"]
 
@@ -171,13 +171,13 @@ func editPost(res http.ResponseWriter, req *http.Request) {
 		InfoType:    "ItemListing",
 		ResBool:     "false",
 		RequestUser: userPersistInfo1.Username,
-		DataInfo:    []map[string]string{mapListing},
+		DataInfo:    []map[string]interface{}{mapListing},
 	}
 
 	dataPacket1, err1 := tapAPI(http.MethodGet, jsonData1, baseURL+"db/info")
 
 	dataInsert := struct { //struct for inserting into go template
-		DataInfo        map[string]string
+		DataInfo        map[string]interface{}
 		UserPersistInfo userPersistInfo
 	}{
 		dataPacket1.DataInfo[0],
@@ -215,7 +215,7 @@ func editPost(res http.ResponseWriter, req *http.Request) {
 		}
 
 		//put inputs into map and push it into the api
-		newPost := make(map[string]string)
+		newPost := make(map[string]interface{})
 		newPost["ID"] = params["id"]
 		newPost["Username"] = userPersistInfo1.Username
 		newPost["Name"] = postName
@@ -231,7 +231,7 @@ func editPost(res http.ResponseWriter, req *http.Request) {
 			fmt.Println(k, ", ", v)
 		}
 
-		jsonData1.DataInfo = []map[string]string{newPost}
+		jsonData1.DataInfo = []map[string]interface{}{newPost}
 		_, err5 := tapAPI(http.MethodPut, jsonData1, baseURL+"db/info") //communicate with api
 		// if error feedback to user
 		if err5 != nil {
@@ -252,11 +252,11 @@ func editPost(res http.ResponseWriter, req *http.Request) {
 
 // func sorts the incoming dataInfo by similarity (each map has "similarity")
 // based on how similar it is to the searched term
-func sortPost(dataArr []map[string]string, date1 string, cat1 string, sort1 string) ([]map[string]string, []int) {
+func sortPost(dataArr []map[string]interface{}, date1 string, cat1 string, sort1 string) ([]map[string]interface{}, []int) {
 	// fmt.Println("sort start:", date1, cat1)
-	newSorted := []map[string]string{}
+	newSorted := []map[string]interface{}{}
 	sortArr := []int{}
-	sortArrSim := []float32{}
+	sortArrSim := []float64{}
 
 	for i, map1 := range dataArr {
 
@@ -268,14 +268,14 @@ func sortPost(dataArr []map[string]string, date1 string, cat1 string, sort1 stri
 			timenow = timenow - (30 * 24 * 60 * 60)
 		}
 
-		dateVal, _ := strconv.Atoi(map1["DatePosted"])
+		dateVal, _ := strconv.Atoi(map1["DatePosted"].(string))
 		map1["DatePosted"] = time.Unix(int64(dateVal), 0).Format("02-01-2006")
 
 		// adds index of map into array if the map meets the criteria, before sorting it
 		if (timenow < int64(dateVal) || date1 == "All" || date1 == "") && (cat1 == map1["Cat"] || cat1 == "All" || cat1 == "") {
 			sortArr = append(sortArr, i)
-			simVal, _ := strconv.ParseFloat(map1["Similarity"], 32)
-			sortArrSim = append(sortArrSim, float32(simVal))
+			// simVal, _ := strconv.ParseFloat(map1["Similarity"], 32)
+			sortArrSim = append(sortArrSim, map1["Similarity"].(float64))
 		}
 
 	}
@@ -287,14 +287,14 @@ func sortPost(dataArr []map[string]string, date1 string, cat1 string, sort1 stri
 
 		for idx := 0; idx < maxLen; idx++ { //sorts results in ascending order
 			newSorted = append(newSorted, dataArr[sortArr2[idx]])
-			fmt.Println("data :", dataArr[sortArr2[idx]]["Name"], dataArr[sortArr2[idx]]["Similarity"])
+			fmt.Println("data :", dataArr[sortArr2[idx]]["Name"], ", ", dataArr[sortArr2[idx]]["Similarity"])
 		}
 
 	} else {
 
 		for idx := maxLen - 1; idx >= 0; idx-- { //sorts results in descending order
 			newSorted = append(newSorted, dataArr[sortArr2[idx]])
-			fmt.Println("data :", dataArr[sortArr2[idx]]["Name"], dataArr[sortArr2[idx]]["Similarity"])
+			fmt.Println("data :", dataArr[sortArr2[idx]]["Name"], ", ", dataArr[sortArr2[idx]]["Similarity"])
 		}
 
 	}
@@ -332,7 +332,7 @@ func seePostAll(res http.ResponseWriter, req *http.Request) {
 		}
 
 		id, userPersistInfo1 := sessionMgr.getIdPersistInfo(res, req)
-		mapListing := make(map[string]string)
+		mapListing := make(map[string]interface{})
 		mapListing["Name"] = searchParam // only for ItemListing
 		fmt.Println("search: [", searchParam, dateParam, catParam, sortParam, "] url:", req.URL.RequestURI())
 
@@ -343,7 +343,7 @@ func seePostAll(res http.ResponseWriter, req *http.Request) {
 			InfoType:    "ItemListing",
 			ResBool:     "false",
 			RequestUser: userPersistInfo1.Username,
-			DataInfo:    []map[string]string{mapListing},
+			DataInfo:    []map[string]interface{}{mapListing},
 		}
 
 		dataPacket1, err1 := tapAPI("GET", jsonData1, baseURL+"allinfo")
@@ -357,7 +357,7 @@ func seePostAll(res http.ResponseWriter, req *http.Request) {
 
 		// data required by the go template
 		dataInsert := struct {
-			DataInfo        []map[string]string
+			DataInfo        []map[string]interface{}
 			UserPersistInfo userPersistInfo
 		}{
 			dataInfoSorted,
@@ -376,7 +376,7 @@ func getPostDetail(res http.ResponseWriter, req *http.Request) {
 	id, userPersistInfo1 := sessionMgr.getIdPersistInfo(res, req)
 
 	// reuqesting the information for the post, using the post id
-	mapListing := make(map[string]string)
+	mapListing := make(map[string]interface{})
 	mapListing["Name"] = params["id"]
 	mapListing["ID"] = params["id"] // only for ItemListing
 	jsonData1 := dataPacket{
@@ -386,7 +386,7 @@ func getPostDetail(res http.ResponseWriter, req *http.Request) {
 		InfoType:    "ItemListing",
 		ResBool:     "false",
 		RequestUser: userPersistInfo1.Username,
-		DataInfo:    []map[string]string{mapListing},
+		DataInfo:    []map[string]interface{}{mapListing},
 	}
 
 	dataPacket1, err1 := tapAPI(http.MethodGet, jsonData1, baseURL+"db/info")
@@ -411,11 +411,11 @@ func getPostDetail(res http.ResponseWriter, req *http.Request) {
 
 	// send data of post and its comments to the template for rendering
 	postData := dataPacket1.DataInfo[0]
-	dateVal, _ := strconv.Atoi(postData["DatePosted"])
+	dateVal, _ := strconv.Atoi(postData["DatePosted"].(string))
 	postData["DatePosted"] = time.Unix(int64(dateVal), 0).Format("02-01-2006")
 	dataInsert := struct {
-		PostInfo        map[string]string
-		PostCommentInfo []map[string]string
+		PostInfo        map[string]interface{}
+		PostCommentInfo []map[string]interface{}
 		UserPersistInfo userPersistInfo
 		Owner           bool
 	}{
@@ -435,13 +435,13 @@ func getPostDetail(res http.ResponseWriter, req *http.Request) {
 
 		// put inputs into map to be sent to api
 		postComment := req.FormValue("PostComment")
-		mapComment := make(map[string]string)
+		mapComment := make(map[string]interface{})
 		mapComment["CommentItem"] = postComment
 		mapComment["Username"] = username1
 		mapComment["ForItem"] = params["id"]
 		mapComment["Date"] = time.Now().Format("02-01-2006")
 
-		jsonData1.DataInfo = []map[string]string{mapComment}
+		jsonData1.DataInfo = []map[string]interface{}{mapComment}
 		dataPacket3, err3 := tapAPI(http.MethodPost, jsonData1, baseURL+"db/info")
 
 		// if response is an error
@@ -463,7 +463,7 @@ func getPostDetail(res http.ResponseWriter, req *http.Request) {
 func seePostUser(res http.ResponseWriter, req *http.Request) {
 	postUsername := mux.Vars(req)["id"] // get post id
 	id, userPersistInfo1 := sessionMgr.getIdPersistInfo(res, req)
-	mapListing := make(map[string]string)
+	mapListing := make(map[string]interface{})
 	mapListing["Name"] = ""
 	mapListing["filterUsername"] = postUsername //get all post for the username
 
@@ -474,7 +474,7 @@ func seePostUser(res http.ResponseWriter, req *http.Request) {
 		InfoType:    "ItemListing",
 		ResBool:     "false",
 		RequestUser: userPersistInfo1.Username,
-		DataInfo:    []map[string]string{mapListing},
+		DataInfo:    []map[string]interface{}{mapListing},
 	}
 
 	dataPacket1, err1 := tapAPI("GET", jsonData1, baseURL+"allinfo")
@@ -487,7 +487,7 @@ func seePostUser(res http.ResponseWriter, req *http.Request) {
 	}
 
 	dataInsert := struct {
-		DataInfo        []map[string]string
+		DataInfo        []map[string]interface{}
 		UserPersistInfo userPersistInfo
 		PostUsername    string
 	}{
@@ -505,7 +505,7 @@ func postComplete(res http.ResponseWriter, req *http.Request) {
 	id, userPersistInfo1 := sessionMgr.getIdPersistInfo(res, req)
 	params := mux.Vars(req)
 
-	mapListing := make(map[string]string)
+	mapListing := make(map[string]interface{})
 	mapListing["ID"] = params["id"]
 
 	jsonData1 := dataPacket{
@@ -515,7 +515,7 @@ func postComplete(res http.ResponseWriter, req *http.Request) {
 		InfoType:    "ItemListing",
 		ResBool:     "false",
 		RequestUser: userPersistInfo1.Username,
-		DataInfo:    []map[string]string{mapListing},
+		DataInfo:    []map[string]interface{}{mapListing},
 	}
 
 	dataPacket1, err1 := tapAPI(http.MethodGet, jsonData1, baseURL+"db/info")
@@ -530,20 +530,20 @@ func postComplete(res http.ResponseWriter, req *http.Request) {
 	mapListing2 := dataPacket1.DataInfo[0]
 	mapListing2["Completion"] = "true"
 	fmt.Println(params, mapListing2)
-	jsonData1.DataInfo = []map[string]string{mapListing2}
+	jsonData1.DataInfo = []map[string]interface{}{mapListing2}
 
 	//if error feedback to user and
 	_, err5 := tapAPI("PUT", jsonData1, baseURL+"db/info")
 	if err5 != nil {
 		sessionMgr.updatePersistInfo(id, "false", "None", "true", "An error has occurred, please try again later", "", "seelast", false)
 		http.Redirect(res, req, "/", http.StatusSeeOther)
-		logger1.logTrace("TRACE", "error encountered while changing status of '"+mapListing2["Name"]+"' to completed ")
+		logger1.logTrace("TRACE", "error encountered while changing status of '"+mapListing2["Name"].(string)+"' to completed ")
 		return
 	}
 
 	sessionMgr.updatePersistInfo(id, "false", "None", "false", "None", "", "seelast", false)
-	logger1.logTrace("TRACE", "Updated Item status for '"+mapListing2["Name"]+"' to completed ")
-	sessionMgr.updatePersistInfo(id, "true", "'"+mapListing2["Name"]+"' is tagged as completed", "false", "None", "", "seelast", false)
+	logger1.logTrace("TRACE", "Updated Item status for '"+mapListing2["Name"].(string)+"' to completed ")
+	sessionMgr.updatePersistInfo(id, "true", "'"+mapListing2["Name"].(string)+"' is tagged as completed", "false", "None", "", "seelast", false)
 	http.Redirect(res, req, "/", http.StatusSeeOther)
 }
 
@@ -570,7 +570,7 @@ func getUser(res http.ResponseWriter, req *http.Request) {
 	editParam := req.URL.Query().Get("edit")
 	id, userPersistInfo1 := sessionMgr.getIdPersistInfo(res, req)
 	// reuqesting the information for the user, using the post id
-	mapListing := make(map[string]string)
+	mapListing := make(map[string]interface{})
 	mapListing["ID"] = idParam // get info for ItemListing based on ID
 
 	jsonData1 := dataPacket{
@@ -580,7 +580,7 @@ func getUser(res http.ResponseWriter, req *http.Request) {
 		InfoType:    "UserInfo",
 		ResBool:     "false",
 		RequestUser: userPersistInfo1.Username,
-		DataInfo:    []map[string]string{mapListing},
+		DataInfo:    []map[string]interface{}{mapListing},
 	}
 	dataPacket1, err1 := tapAPI(http.MethodGet, jsonData1, baseURL+"db/info")
 	// if error in fetching data
@@ -594,7 +594,7 @@ func getUser(res http.ResponseWriter, req *http.Request) {
 	// send data of post and its comments to the template for rendering
 	userData := dataPacket1.DataInfo[0]
 	dataInsert := struct {
-		UserData        map[string]string
+		UserData        map[string]interface{}
 		UserPersistInfo userPersistInfo
 		Owner           bool
 		Edit            bool
@@ -618,14 +618,14 @@ func getUser(res http.ResponseWriter, req *http.Request) {
 
 		// put inputs into map to be sent to api
 		commentItem := req.FormValue("CommentItem")
-		mapComment := make(map[string]string)
+		mapComment := make(map[string]interface{})
 		mapComment["CommentItem"] = commentItem
 		mapComment["Username"] = username1
 		mapComment["ID"] = idParam
 		mapComment["Date"] = userData["Date"]
 		mapComment["LastLogin"] = userData["Date"]
 
-		jsonData1.DataInfo = []map[string]string{mapComment}
+		jsonData1.DataInfo = []map[string]interface{}{mapComment}
 		dataPacket3, err3 := tapAPI(http.MethodPut, jsonData1, baseURL+"db/info")
 		// if error in posting a comment
 		if err3 == nil && dataPacket3.ResBool == "true" {

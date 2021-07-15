@@ -90,12 +90,12 @@ type (
 
 	dataPacket struct {
 		// key to access rest api
-		Key         string              `json:"Key"`
-		ErrorMsg    string              `json:"ErrorMsg"`
-		InfoType    string              `json:"InfoType"` // 5 types: userSecret, userInfo, itemListing, commentUser, commentItem
-		ResBool     string              `json:"ResBool"`
-		RequestUser string              `json:"RequestUser"`
-		DataInfo    []map[string]string `json:"DataInfo"`
+		Key         string                   `json:"Key"`
+		ErrorMsg    string                   `json:"ErrorMsg"`
+		InfoType    string                   `json:"InfoType"` // 5 types: userSecret, userInfo, itemListing, commentUser, commentItem
+		ResBool     string                   `json:"ResBool"`
+		RequestUser string                   `json:"RequestUser"`
+		DataInfo    []map[string]interface{} `json:"DataInfo"`
 	}
 	// a struct to handle all the server session and user information.
 	sessionManager struct {
@@ -167,7 +167,7 @@ func (u *userPersistInfo) updateLastLogin() *userPersistInfo {
 
 // sends user info to api to be added into mysql
 func addUser(username string, pwString string, commentItem string, lastLogin string) error {
-	userSecret1 := make(map[string]string)
+	userSecret1 := make(map[string]interface{})
 	userSecret1["Username"] = username
 	userSecret1["Password"] = pwString
 	userSecret1["CommentItem"] = commentItem
@@ -178,7 +178,7 @@ func addUser(username string, pwString string, commentItem string, lastLogin str
 		InfoType:    "UserSecret",
 		ResBool:     "false",
 		RequestUser: username,
-		DataInfo:    []map[string]string{userSecret1},
+		DataInfo:    []map[string]interface{}{userSecret1},
 	}
 	res, err1 := tapAPI(http.MethodPost, jsonData1, "https://127.0.0.1:5555/api/v0/db/info")
 	if err1 != nil {
@@ -186,14 +186,14 @@ func addUser(username string, pwString string, commentItem string, lastLogin str
 	}
 	fmt.Println(res)
 	currentTime := time.Now()
-	userInfo1 := make(map[string]string)
+	userInfo1 := make(map[string]interface{})
 	userInfo1["Username"] = username
 	userInfo1["LastLogin"] = lastLogin
 	userInfo1["DateJoin"] = currentTime.Format("02-01-2006 Monday")
 	userInfo1["CommentItem"] = commentItem
 
 	jsonData1.InfoType = "UserInfo"
-	jsonData1.DataInfo = []map[string]string{userInfo1}
+	jsonData1.DataInfo = []map[string]interface{}{userInfo1}
 	res2, err2 := tapAPI(http.MethodPost, jsonData1, "https://127.0.0.1:5555/api/v0/db/info")
 	if err2 != nil {
 		return err1
@@ -374,7 +374,7 @@ func (s *sessionManager) newCookieAndSet(useCase string, res http.ResponseWriter
 // a function that checks if username is taken
 func checkUsername(res http.ResponseWriter, req *http.Request, username string) bool {
 	baseURL := "https://127.0.0.1:5555/api/v0/username"
-	userInfo1 := make(map[string]string)
+	userInfo1 := make(map[string]interface{})
 	userInfo1["Username"] = username
 	jsonData1 := dataPacket{
 		// key to access rest api
@@ -383,7 +383,7 @@ func checkUsername(res http.ResponseWriter, req *http.Request, username string) 
 		InfoType:    "UserInfo",
 		ResBool:     "false",
 		RequestUser: "",
-		DataInfo:    []map[string]string{userInfo1},
+		DataInfo:    []map[string]interface{}{userInfo1},
 	}
 	dataInfo1, err1 := tapAPI(http.MethodGet, jsonData1, baseURL)
 	// receiveInfo := mapInterfaceToString(dataInfo1)
@@ -395,11 +395,10 @@ func checkUsername(res http.ResponseWriter, req *http.Request, username string) 
 // talks api, giving username and password
 // api returns true or false
 func checkPW(username string, password string, reqUser string) bool {
-	userSecret1 := make(map[string]string)
+	userSecret1 := make(map[string]interface{})
 	userSecret1["Username"] = username
 	userSecret1["Password"] = password
 	lastLogin := time.Now().Format("02-01-2006 15:04 Monday")
-	fmt.Println(lastLogin)
 	userSecret1["LastLogin"] = lastLogin
 	jsonData1 := dataPacket{
 		// key to access rest api
@@ -408,7 +407,7 @@ func checkPW(username string, password string, reqUser string) bool {
 		InfoType:    "UserSecret",
 		ResBool:     "false",
 		RequestUser: reqUser,
-		DataInfo:    []map[string]string{userSecret1},
+		DataInfo:    []map[string]interface{}{userSecret1},
 	}
 	dataInfo1, err1 := tapAPI(http.MethodGet, jsonData1, baseURL+"check")
 	// receiveInfo := mapInterfaceToString(dataInfo1)

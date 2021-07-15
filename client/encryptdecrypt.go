@@ -92,7 +92,7 @@ func decryptFromFile(filename string) []byte {
 	return decrypt(data1)
 }
 
-func insertSort(arr []float32, arrSort []int) ([]float32, []int) {
+func insertSort(arr []float64, arrSort []int) ([]float64, []int) {
 	len1 := len(arr)
 	for i := 1; i < len1; i++ {
 		temp1 := arr[i]
@@ -110,7 +110,7 @@ func insertSort(arr []float32, arrSort []int) ([]float32, []int) {
 	return arr, arrSort
 }
 
-func mergeSort(arr []float32, arrSort []int) ([]float32, []int) {
+func mergeSort(arr []float64, arrSort []int) ([]float64, []int) {
 	len1 := int(len(arr))
 	len2 := int(len1 / 2)
 	if len1 <= 5 {
@@ -118,7 +118,7 @@ func mergeSort(arr []float32, arrSort []int) ([]float32, []int) {
 	} else {
 		arr1, arrSort1 := mergeSort(arr[len2:], arrSort[len2:])
 		arr2, arrSort2 := mergeSort(arr[:len2], arrSort[:len2])
-		tempArr := make([]float32, len1)
+		tempArr := make([]float64, len1)
 		tempArrSort := make([]int, len1)
 		i := 0
 		for len(arr1) > 0 && len(arr2) > 0 {

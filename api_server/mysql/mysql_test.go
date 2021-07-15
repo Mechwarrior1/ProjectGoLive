@@ -21,7 +21,7 @@ func NewMock() (*sql.DB, sqlmock.Sqlmock) {
 //tested getting item with ID
 func TestGetSingleRecord(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db}
+	dbHandler1 := DBHandler{db, ""}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -66,7 +66,7 @@ func TestGetSingleRecord(t *testing.T) {
 
 func TestInsertRecord1(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db}
+	dbHandler1 := DBHandler{db, ""}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -78,7 +78,7 @@ func TestInsertRecord1(t *testing.T) {
 	prep := mock.ExpectPrepare(query)
 	prep.ExpectExec().WithArgs("000001", "john", "20-7-2021", "20-7-2021", "nil").WillReturnResult(sqlmock.NewResult(0, 1))
 
-	newMap := make(map[string]interface{})
+	newMap := make(map[string]string)
 
 	newMap["Username"] = "john"
 	newMap["LastLogin"] = "20-7-2021"
@@ -91,7 +91,7 @@ func TestInsertRecord1(t *testing.T) {
 
 func TestInsertRecord2(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db}
+	dbHandler1 := DBHandler{db, ""}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -103,7 +103,7 @@ func TestInsertRecord2(t *testing.T) {
 	prep := mock.ExpectPrepare(query)
 	prep.ExpectExec().WithArgs("000001", "john", "20-7-2021", "20-7-2021", "nil").WillReturnResult(sqlmock.NewResult(0, 1))
 
-	newMap := make(map[string]interface{})
+	newMap := make(map[string]string)
 
 	newMap["Username"] = "john"
 	newMap["Password"] = "20-7-2021"
@@ -116,7 +116,7 @@ func TestInsertRecord2(t *testing.T) {
 
 func TestInsertRecord3(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db}
+	dbHandler1 := DBHandler{db, ""}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -128,7 +128,7 @@ func TestInsertRecord3(t *testing.T) {
 	prep := mock.ExpectPrepare(query)
 	prep.ExpectExec().WithArgs("000001", "john", "johnee", "nil", "nil", "nil", "nil", "nil", "nil", "nil").WillReturnResult(sqlmock.NewResult(0, 1))
 
-	newMap := make(map[string]interface{})
+	newMap := make(map[string]string)
 
 	newMap["Username"] = "john"
 	newMap["Name"] = "johnee"
@@ -146,7 +146,7 @@ func TestInsertRecord3(t *testing.T) {
 
 func TestInsertRecord4(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db}
+	dbHandler1 := DBHandler{db, ""}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -158,7 +158,7 @@ func TestInsertRecord4(t *testing.T) {
 	prep := mock.ExpectPrepare(query)
 	prep.ExpectExec().WithArgs("000001", "john", "johnee", "20-7-2021", "nil").WillReturnResult(sqlmock.NewResult(0, 1))
 
-	newMap := make(map[string]interface{})
+	newMap := make(map[string]string)
 
 	newMap["Username"] = "john"
 	newMap["ForUsername"] = "johnee"
@@ -171,7 +171,7 @@ func TestInsertRecord4(t *testing.T) {
 
 func TestInsertRecord5(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db}
+	dbHandler1 := DBHandler{db, ""}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -183,7 +183,7 @@ func TestInsertRecord5(t *testing.T) {
 	prep := mock.ExpectPrepare(query)
 	prep.ExpectExec().WithArgs("000001", "john", "cartoon", "20-7-2021", "nil").WillReturnResult(sqlmock.NewResult(0, 1))
 
-	newMap := make(map[string]interface{})
+	newMap := make(map[string]string)
 
 	newMap["Username"] = "john"
 	newMap["ForItem"] = "cartoon"
@@ -196,7 +196,7 @@ func TestInsertRecord5(t *testing.T) {
 
 func TestEditRecord1(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db}
+	dbHandler1 := DBHandler{db, ""}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -208,7 +208,7 @@ func TestEditRecord1(t *testing.T) {
 	prep := mock.ExpectPrepare(query)
 	prep.ExpectExec().WithArgs("20-7-2021", "nil", "000001").WillReturnResult(sqlmock.NewResult(0, 1))
 
-	newMap := make(map[string]interface{})
+	newMap := make(map[string]string)
 
 	newMap["LastLogin"] = "20-7-2021"
 	newMap["ID"] = "000001"
@@ -220,7 +220,7 @@ func TestEditRecord1(t *testing.T) {
 
 func TestEditRecord2(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db}
+	dbHandler1 := DBHandler{db, ""}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -232,7 +232,7 @@ func TestEditRecord2(t *testing.T) {
 	prep := mock.ExpectPrepare(query)
 	prep.ExpectExec().WithArgs("image", "comment", "condition", "cat", "contact", "complete", "000001").WillReturnResult(sqlmock.NewResult(0, 1))
 
-	newMap := make(map[string]interface{})
+	newMap := make(map[string]string)
 
 	newMap["ImageLink"] = "image"
 	newMap["CommentItem"] = "comment"
@@ -248,7 +248,7 @@ func TestEditRecord2(t *testing.T) {
 
 func TestEditRecord3(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db}
+	dbHandler1 := DBHandler{db, ""}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -260,7 +260,7 @@ func TestEditRecord3(t *testing.T) {
 	prep := mock.ExpectPrepare(query)
 	prep.ExpectExec().WithArgs("comment", "000001").WillReturnResult(sqlmock.NewResult(0, 1))
 
-	newMap := make(map[string]interface{})
+	newMap := make(map[string]string)
 
 	newMap["ID"] = "000001"
 	newMap["CommentItem"] = "comment"
@@ -271,7 +271,7 @@ func TestEditRecord3(t *testing.T) {
 
 func TestEditRecord4(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db}
+	dbHandler1 := DBHandler{db, ""}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -283,7 +283,7 @@ func TestEditRecord4(t *testing.T) {
 	prep := mock.ExpectPrepare(query)
 	prep.ExpectExec().WithArgs("comment", "000001").WillReturnResult(sqlmock.NewResult(0, 1))
 
-	newMap := make(map[string]interface{})
+	newMap := make(map[string]string)
 
 	newMap["ID"] = "000001"
 	newMap["CommentItem"] = "comment"
@@ -294,7 +294,7 @@ func TestEditRecord4(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db}
+	dbHandler1 := DBHandler{db, ""}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
