@@ -116,12 +116,20 @@ func mapInterfaceToString(dataPacket1 map[string]interface{}) map[string]string 
 // checks if the username in the sent info is currently in DB
 // returns false if username is not taken
 func UsernameCheck(c echo.Context, dbHandler1 *mysql.DBHandler) error {
+
 	dataPacket1, err1 := readJSONBody(c, dbHandler1) // read response JSON
 	if err1 != nil {                                 //err means username not found, ok to proceed
 		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
 	}
 
 	receiveInfo := mapInterfaceToString(dataPacket1)
+
+	//check received input
+	_, ok := receiveInfo["Username"]
+	if !ok || receiveInfo["Username"] == "" {
+		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
+	}
+
 	allData, err := dbHandler1.GetSingleRecord("UserInfo", " WHERE Username = ?", receiveInfo["Username"])
 
 	if err != nil || len(allData) == 0 { //err means username not found, ok to proceed
@@ -222,13 +230,13 @@ func GenInfoPost(c echo.Context, dbHandler1 *mysql.DBHandler) error {
 	tarDB := dataPacket1["InfoType"].(string)
 
 	err2 := dbHandler1.InsertRecord(tarDB, receiveInfoRaw, "") // deletes if target is found
-	if err2 == nil {
 
-		return newResponse(c, []interface{}{}, "nil", "userInfo", "true", "", http.StatusOK)
+	if err2 == nil {
+		return newResponse(c, []interface{}{}, "nil", tarDB, "true", "", http.StatusOK)
 
 	}
 
-	fmt.Println("logger: insert, " + tarDB + ": " + tarDB + " db not found") //reach here only if it is not returned by the switch
+	fmt.Println("logger: insert " + tarDB + " db not found") //reach here only if it is not returned by the switch
 
 	return newErrorResponse(c, "Bad Request , item not found", http.StatusBadRequest)
 
@@ -261,15 +269,14 @@ func GenInfoGet(c echo.Context, dbHandler1 *mysql.DBHandler) error {
 		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
 	}
 
-	receiveInfoRaw := mapInterfaceToString(dataPacket1) // convert received data into map[string]string
+	receiveInfo := mapInterfaceToString(dataPacket1) // convert received data into map[string]string
 
-	tarItemID := receiveInfoRaw["ID"]
+	tarItemID := receiveInfo["ID"]
 	tarDB := dataPacket1["InfoType"].(string)
 
 	dbInfoSlice, err3 := getItem(c, tarDB, tarItemID, dbHandler1)
 
 	// for userinfo, itemlisting, commentitem and commentuser only
-
 	if tarDB != "UserSecret" && err3 == nil { //prevents any requeset to ask for user secrets
 		return newResponse(c, dbInfoSlice, "nil", tarDB, "true", "", http.StatusCreated)
 	}
@@ -290,12 +297,12 @@ func GenInfoDelete(c echo.Context, dbHandler1 *mysql.DBHandler) error {
 	tarItemID := receiveInfoRaw["ID"]
 	tarDB := dataPacket1["InfoType"].(string)
 
-	dbInfoSlice, err3 := getItem(c, tarDB, tarItemID, dbHandler1)
+	// dbInfoSlice, err3 := getItem(c, tarDB, tarItemID, dbHandler1)
 
-	if !checkUser(tarDB, dataPacket1["RequestUser"].(string), dbInfoSlice) || err3 != nil {
+	// if !checkUser(tarDB, dataPacket1["RequestUser"].(string), dbInfoSlice) || err3 != nil {
 
-		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
-	}
+	// 	return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
+	// }
 
 	// for deleting an entry
 

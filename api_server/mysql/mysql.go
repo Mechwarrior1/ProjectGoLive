@@ -339,7 +339,7 @@ func (dbHandler DBHandler) GetMaxID(dbTable string) (int, error) {
 	results.Next()
 	var maxID int
 	results.Scan(&maxID)
-	defer recover() //recover if error from no entry
+	// defer recover() //recover if error from no entry
 	return maxID, err
 }
 
