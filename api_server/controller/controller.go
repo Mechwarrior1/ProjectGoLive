@@ -337,7 +337,6 @@ func GenInfoPut(c echo.Context, dbHandler1 *mysql.DBHandler) error {
 	err2 := dbHandler1.EditRecord(tarDB, receiveInfoRaw) // deletes if target is found
 
 	if err2 == nil {
-
 		return newResponse(c, []interface{}{}, "nil", "CommentUser", "true", "", http.StatusCreated)
 	}
 

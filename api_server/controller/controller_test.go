@@ -95,61 +95,63 @@ func TestGetPwCheck(t *testing.T) {
 	}
 }
 
-func TestGetAllInfoItemListing(t *testing.T) {
-	// load variables
-	embed := word2vec.GetWord2Vec()
-	db, mock := NewMock()
-	dbHandler1 := mysql.DBHandler{
-		db,
-		""}
-	defer dbHandler1.DB.Close()
+/// this test requires a word2vec binary file
+/// to be updated along with the yml file for a w2v file
+// func TestGetAllInfoItemListing(t *testing.T) {
+// 	// load variables
+// 	embed := word2vec.GetWord2Vec()
+// 	db, mock := NewMock()
+// 	dbHandler1 := mysql.DBHandler{
+// 		db,
+// 		""}
+// 	defer dbHandler1.DB.Close()
 
-	e := echo.New()
-	e.GET("/api/v0/allinfo", func(c echo.Context) error {
-		return GetAllInfo(c, &dbHandler1, embed)
-	})
+// 	e := echo.New()
+// 	e.GET("/api/v0/allinfo", func(c echo.Context) error {
+// 		return GetAllInfo(c, &dbHandler1, embed)
+// 	})
 
-	// mock for querying
-	rows := sqlmock.NewRows([]string{"ID", "Username", "Name", "ImageLink", "DatePosted", "CommentItem", "ConditionItem", "Cat", "ContactMeetInfo", "Completion"}).
-		AddRow("000001", "john", "plastic", "1", "2", "3", "4", "5", "6", "7").
-		AddRow("000002", "darren", "PET", "1", "2", "3", "4", "5", "6", "7")
-	query := "Select \\* FROM my_db.ItemListing"
-	mock.ExpectQuery(query).WillReturnRows(rows)
+// 	// mock for querying
+// 	rows := sqlmock.NewRows([]string{"ID", "Username", "Name", "ImageLink", "DatePosted", "CommentItem", "ConditionItem", "Cat", "ContactMeetInfo", "Completion"}).
+// 		AddRow("000001", "john", "plastic", "1", "2", "3", "4", "5", "6", "7").
+// 		AddRow("000002", "darren", "PET", "1", "2", "3", "4", "5", "6", "7")
+// 	query := "Select \\* FROM my_db.ItemListing"
+// 	mock.ExpectQuery(query).WillReturnRows(rows)
 
-	// json payload to api
-	newMap := make(map[string]interface{})
-	newMap["Name"] = "plastics" //
-	dataPacket1 := mysql.DataPacket{
-		dbHandler1.ApiKey,
-		"",
-		"ItemListing",
-		"",
-		"",
-		[]interface{}{newMap},
-	}
+// 	// json payload to api
+// 	newMap := make(map[string]interface{})
+// 	newMap["Name"] = "plastics" //
+// 	dataPacket1 := mysql.DataPacket{
+// 		dbHandler1.ApiKey,
+// 		"",
+// 		"ItemListing",
+// 		"",
+// 		"",
+// 		[]interface{}{newMap},
+// 	}
 
-	payloadJson, _ := json.Marshal(dataPacket1)
+// 	payloadJson, _ := json.Marshal(dataPacket1)
 
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/api/v0/allinfo", strings.NewReader(string(payloadJson)))
-	c := e.NewContext(req, rec)
-	e.ServeHTTP(rec, req)
-	if assert.NoError(t, GetAllInfo(c, &dbHandler1, embed)) {
-		assert.Equal(t, http.StatusOK, rec.Code)
+// 	rec := httptest.NewRecorder()
+// 	req := httptest.NewRequest(http.MethodGet, "/api/v0/allinfo", strings.NewReader(string(payloadJson)))
+// 	c := e.NewContext(req, rec)
+// 	e.ServeHTTP(rec, req)
+// 	if assert.NoError(t, GetAllInfo(c, &dbHandler1, embed)) {
+// 		assert.Equal(t, http.StatusOK, rec.Code)
 
-		//check response
-		json_map := make(map[string]interface{})
-		json.NewDecoder(rec.Body).Decode(&json_map)
-		json_map2 := json_map["DataInfo"].([]interface{})
+// 		//check response
+// 		json_map := make(map[string]interface{})
+// 		json.NewDecoder(rec.Body).Decode(&json_map)
+// 		json_map2 := json_map["DataInfo"].([]interface{})
 
-		// fmt.Println(json_map2)
-		assert.Equal(t, json_map2[0].(map[string]interface{})["ID"], "000001")
+// 		// fmt.Println(json_map2)
+// 		assert.Equal(t, json_map2[0].(map[string]interface{})["ID"], "000001")
 
-		//test word2vec as well
-		assert.Equal(t, json_map2[0].(map[string]interface{})["Similarity"], float64(0.59042674))
-		assert.Equal(t, json_map2[1].(map[string]interface{})["Similarity"], float64(0.38560766))
-	}
-}
+// 		//test word2vec as well
+// 		assert.Equal(t, json_map2[0].(map[string]interface{})["Similarity"], float64(0.59042674))
+// 		assert.Equal(t, json_map2[1].(map[string]interface{})["Similarity"], float64(0.38560766))
+// 	}
+// }
 
 func TestGetAllInfoCommentItem(t *testing.T) {
 	// load variables
@@ -467,6 +469,65 @@ func TestGenInfoDelete(t *testing.T) {
 	}
 }
 
+func TestGenInfoEdit(t *testing.T) {
+	// load variables
+	db, mock := NewMock()
+	dbHandler1 := mysql.DBHandler{
+		db,
+		""}
+	defer dbHandler1.DB.Close()
+
+	e := echo.New()
+	e.PUT("/api/v0/db/info", func(c echo.Context) error {
+		return GenInfoPut(c, &dbHandler1)
+	})
+
+	// mock for querying
+	query := "UPDATE ItemListing SET ImageLink=\\?, CommentItem=\\?, ConditionItem=\\?, Cat=\\?, ContactMeetInfo=\\?, Completion=\\? WHERE ID=\\?"
+
+	prep := mock.ExpectPrepare(query)
+	prep.ExpectExec().WithArgs("image", "comment", "condition", "cat", "contact", "complete", "000001").WillReturnResult(sqlmock.NewResult(0, 1))
+
+	// json payload
+	newMap := make(map[string]interface{})
+	newMap["ImageLink"] = "image"
+	newMap["CommentItem"] = "comment"
+	newMap["ConditionItem"] = "condition"
+	newMap["Cat"] = "cat"
+	newMap["ContactMeetInfo"] = "contact"
+	newMap["Completion"] = "complete"
+	newMap["ID"] = "000001"
+
+	dataPacket1 := mysql.DataPacket{
+		dbHandler1.ApiKey,
+		"",
+		"ItemListing",
+		"",
+		"",
+		[]interface{}{newMap},
+	}
+	payloadJson, _ := json.Marshal(dataPacket1)
+
+	// test api
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPut, "/api/v0/db/info", strings.NewReader(string(payloadJson)))
+	c := e.NewContext(req, rec)
+	e.ServeHTTP(rec, req)
+	fmt.Println(rec.Body)
+
+	if assert.NoError(t, GenInfoPut(c, &dbHandler1)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		//check response
+		json_map := make(map[string]interface{})
+		json.NewDecoder(rec.Body).Decode(&json_map)
+
+		//check some of the returned inputs
+		assert.Equal(t, json_map["ResBool"], "true")
+
+	}
+}
+
 // func main() {
 // 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
@@ -475,13 +536,6 @@ func TestGenInfoDelete(t *testing.T) {
 // 	defer dbHandler1.DB.Close()
 
 // 	e := echo.New()
-
-// 	e.DELETE("/api/v0/db/info", func(c echo.Context) error {
-// 		return controller.GenInfoDelete(c, &dbHandler1)
-// 	})
-// 	e.PUT("/api/v0/db/info", func(c echo.Context) error {
-// 		return controller.GenInfoPut(c, &dbHandler1)
-// 	})
 
 // 	port := "5555"
 // 	fmt.Println("listening at port " + port)
