@@ -24,8 +24,11 @@ func main() {
 	e.GET("/api/v0/check", func(c echo.Context) error {
 		return controller.PwCheck(c, &dbHandler1)
 	})
-	e.GET("/api/v0/allinfo", func(c echo.Context) error {
-		return controller.GetAllInfo(c, &dbHandler1, embed)
+	e.GET("/api/v0/comment", func(c echo.Context) error {
+		return controller.GetAllComment(c, &dbHandler1, embed)
+	})
+	e.GET("/api/v0/listing", func(c echo.Context) error {
+		return controller.GetAllListing(c, &dbHandler1, embed)
 	})
 	e.GET("/api/v0/username", func(c echo.Context) error {
 		return controller.UsernameCheck(c, &dbHandler1)

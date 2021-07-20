@@ -45,8 +45,6 @@ jobs: #job to execute on event
         cd ..
         cd client
         go test -v ./...
-        go test -v ./... | go2xunit > report2.xml #run test again and output as report.xml
-        ls #verify report is created
         
     - name: Publish unit test result
       uses: EnricoMi/publish-unit-test-result-action@v1 #checkout unit test reporting 
