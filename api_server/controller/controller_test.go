@@ -6,10 +6,10 @@ import (
 	"apiserver/word2vec"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -78,7 +78,7 @@ func TestGetPwCheck(t *testing.T) {
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/api/v0/check", strings.NewReader(string(payloadJson)))
 	c := e.NewContext(req, rec)
-	e.ServeHTTP(rec, req)
+
 	if assert.NoError(t, PwCheck(c, &dbHandler1)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 
@@ -97,7 +97,7 @@ func TestGetPwCheck(t *testing.T) {
 
 /// this test requires a word2vec binary file
 /// to be updated along with the yml file for a w2v file
-// func TestGetAllInfoItemListing(t *testing.T) {
+// func TestGetAllListing(t *testing.T) {
 // 	// load variables
 // 	embed := word2vec.GetWord2Vec()
 // 	db, mock := NewMock()
@@ -107,8 +107,8 @@ func TestGetPwCheck(t *testing.T) {
 // 	defer dbHandler1.DB.Close()
 
 // 	e := echo.New()
-// 	e.GET("/api/v0/allinfo", func(c echo.Context) error {
-// 		return GetAllInfo(c, &dbHandler1, embed)
+// 	e.GET("/api/v0/listing", func(c echo.Context) error {
+// 		return GetAllListing(c, &dbHandler1, embed)
 // 	})
 
 // 	// mock for querying
@@ -118,25 +118,16 @@ func TestGetPwCheck(t *testing.T) {
 // 	query := "Select \\* FROM my_db.ItemListing"
 // 	mock.ExpectQuery(query).WillReturnRows(rows)
 
-// 	// json payload to api
-// 	newMap := make(map[string]interface{})
-// 	newMap["Name"] = "plastics" //
-// 	dataPacket1 := mysql.DataPacket{
-// 		dbHandler1.ApiKey,
-// 		"",
-// 		"ItemListing",
-// 		"",
-// 		"",
-// 		[]interface{}{newMap},
-// 	}
-
-// 	payloadJson, _ := json.Marshal(dataPacket1)
+// 	q := make(url.Values)
+// 	q.Set("name", "Plastic")
+// 	q.Set("filter", "")
 
 // 	rec := httptest.NewRecorder()
-// 	req := httptest.NewRequest(http.MethodGet, "/api/v0/allinfo", strings.NewReader(string(payloadJson)))
+// 	req := httptest.NewRequest(http.MethodGet, "/api/v0/listing/?"+q.Encode(), nil)
+// 	fmt.Println("/api/v0/listing/?" + q.Encode())
 // 	c := e.NewContext(req, rec)
-// 	e.ServeHTTP(rec, req)
-// 	if assert.NoError(t, GetAllInfo(c, &dbHandler1, embed)) {
+
+// 	if assert.NoError(t, GetAllListing(c, &dbHandler1, embed)) {
 // 		assert.Equal(t, http.StatusOK, rec.Code)
 
 // 		//check response
@@ -148,12 +139,12 @@ func TestGetPwCheck(t *testing.T) {
 // 		assert.Equal(t, json_map2[0].(map[string]interface{})["ID"], "000001")
 
 // 		//test word2vec as well
-// 		assert.Equal(t, json_map2[0].(map[string]interface{})["Similarity"], float64(0.59042674))
-// 		assert.Equal(t, json_map2[1].(map[string]interface{})["Similarity"], float64(0.38560766))
+// 		assert.Equal(t, json_map2[0].(map[string]interface{})["Similarity"], float64(0.65796596))
+// 		assert.Equal(t, json_map2[1].(map[string]interface{})["Similarity"], float64(0.34202674))
 // 	}
 // }
 
-func TestGetAllInfoCommentItem(t *testing.T) {
+func TestGetAllComment(t *testing.T) {
 	// load variables
 	var embed word2vec.Embeddings
 	db, mock := NewMock()
@@ -163,8 +154,8 @@ func TestGetAllInfoCommentItem(t *testing.T) {
 	defer dbHandler1.DB.Close()
 
 	e := echo.New()
-	e.GET("/api/v0/allinfo", func(c echo.Context) error {
-		return GetAllInfo(c, &dbHandler1, &embed)
+	e.GET("/api/v0/comment", func(c echo.Context) error {
+		return GetAllComment(c, &dbHandler1, &embed)
 	})
 
 	// mock for querying
@@ -175,34 +166,24 @@ func TestGetAllInfoCommentItem(t *testing.T) {
 	query := "Select \\* FROM my_db.CommentItem"
 	mock.ExpectQuery(query).WillReturnRows(rows)
 
-	// json payload to api
-	newMap := make(map[string]interface{})
-	newMap["ID"] = "000001" //
-	dataPacket1 := mysql.DataPacket{
-		dbHandler1.ApiKey,
-		"",
-		"CommentItem",
-		"",
-		"",
-		[]interface{}{newMap},
-	}
-
-	payloadJson, _ := json.Marshal(dataPacket1)
-
+	//query parameters
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/api/v0/allinfo", strings.NewReader(string(payloadJson)))
+	req := httptest.NewRequest(http.MethodGet, "/api/v0/comment", nil)
 	c := e.NewContext(req, rec)
-	e.ServeHTTP(rec, req)
-	if assert.NoError(t, GetAllInfo(c, &dbHandler1, &embed)) {
+
+	c.SetPath("/api/v0/comment/:id")
+	c.SetParamNames("id")
+	c.SetParamValues("000001")
+
+	if assert.NoError(t, GetAllComment(c, &dbHandler1, &embed)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 
 		//check response
 		json_map := make(map[string]interface{})
 		json.NewDecoder(rec.Body).Decode(&json_map)
 		json_map2 := json_map["DataInfo"].([]interface{})
-		// fmt.Println(json_map2)
 
-		//check if it returns only 1st and 3rd
+		// check if it returns only 1st and 3rd
 		assert.Equal(t, json_map2[0].(map[string]interface{})["ID"], "000001")
 		assert.Equal(t, json_map2[1].(map[string]interface{})["ID"], "000003")
 	}
@@ -227,25 +208,15 @@ func TestUsernameCheckTrue(t *testing.T) {
 	query := "Select \\* FROM my_db.UserInfo WHERE Username = \\?"
 	mock.ExpectQuery(query).WillReturnRows(rows)
 
-	// json payload to api
-	newMap := make(map[string]interface{})
-	newMap["Username"] = "john" //
-	dataPacket1 := mysql.DataPacket{
-		dbHandler1.ApiKey,
-		"",
-		"UserInfo",
-		"",
-		"",
-		[]interface{}{newMap},
-	}
-
-	payloadJson, _ := json.Marshal(dataPacket1)
-
 	// test api
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/api/v0/username", strings.NewReader(string(payloadJson)))
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+
 	c := e.NewContext(req, rec)
-	e.ServeHTTP(rec, req)
+	c.SetPath("/api/v0/username/:username")
+	c.SetParamNames("username")
+	c.SetParamValues("john")
+
 	// fmt.Println(rec.Body)
 
 	if assert.NoError(t, UsernameCheck(c, &dbHandler1)) {
@@ -277,17 +248,15 @@ func TestUsernameCheckFalse(t *testing.T) {
 	query := "Select \\* FROM my_db.UserInfo WHERE Username = \\?"
 	mock.ExpectQuery(query)
 
-	// json payload to api
-	newMap := make(map[string]interface{})
-	var dataPacket1 mysql.DataPacket
-	dataPacket1.DataInfo = []interface{}{newMap}
-	payloadJson, _ := json.Marshal(dataPacket1)
-
 	// test api
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/api/v0/username", strings.NewReader(string(payloadJson)))
+	req := httptest.NewRequest(http.MethodGet, "/api/v0/username", nil)
+
 	c := e.NewContext(req, rec)
-	e.ServeHTTP(rec, req)
+	c.SetPath("/api/v0/username/:username")
+	c.SetParamNames("username")
+	c.SetParamValues("")
+
 	// fmt.Println(rec.Body)
 
 	if assert.NoError(t, UsernameCheck(c, &dbHandler1)) {
@@ -346,7 +315,6 @@ func TestGenInfoPost(t *testing.T) {
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/api/v0/db/info", strings.NewReader(string(payloadJson)))
 	c := e.NewContext(req, rec)
-	e.ServeHTTP(rec, req)
 
 	if assert.NoError(t, GenInfoPost(c, &dbHandler1)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
@@ -381,25 +349,14 @@ func TestGenInfoGet(t *testing.T) {
 	query := "Select \\* FROM my_db.ItemListing WHERE ID = \\?"
 	mock.ExpectQuery(query).WithArgs("000001").WillReturnRows(rows)
 
-	newMap := make(map[string]interface{})
-	newMap["ID"] = "000001"
-
-	dataPacket1 := mysql.DataPacket{
-		dbHandler1.ApiKey,
-		"",
-		"ItemListing",
-		"",
-		"",
-		[]interface{}{newMap},
-	}
-	payloadJson, _ := json.Marshal(dataPacket1)
-
 	// test api
+	q := make(url.Values)
+	q.Set("id", "000001")
+	q.Set("db", "ItemListing")
+
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/api/v0/db/info", strings.NewReader(string(payloadJson)))
+	req := httptest.NewRequest(http.MethodGet, "/api/v0/db/info?"+q.Encode(), nil)
 	c := e.NewContext(req, rec)
-	e.ServeHTTP(rec, req)
-	// fmt.Println(rec.Body)
 
 	if assert.NoError(t, GenInfoGet(c, &dbHandler1)) {
 		assert.Equal(t, http.StatusCreated, rec.Code)
@@ -417,57 +374,56 @@ func TestGenInfoGet(t *testing.T) {
 	}
 }
 
-func TestGenInfoDelete(t *testing.T) {
-	// load variables
-	db, mock := NewMock()
-	dbHandler1 := mysql.DBHandler{
-		db,
-		""}
-	defer dbHandler1.DB.Close()
+// func TestGenInfoDelete(t *testing.T) {
+// 	// load variables
+// 	db, mock := NewMock()
+// 	dbHandler1 := mysql.DBHandler{
+// 		db,
+// 		""}
+// 	defer dbHandler1.DB.Close()
 
-	e := echo.New()
-	e.DELETE("/api/v0/db/info", func(c echo.Context) error {
-		return GenInfoDelete(c, &dbHandler1)
-	})
+// 	e := echo.New()
+// 	e.DELETE("/api/v0/db/info", func(c echo.Context) error {
+// 		return GenInfoDelete(c, &dbHandler1)
+// 	})
 
-	// mock for querying
-	query := "DELETE FROM ItemListing WHERE id = \\?"
-	prep := mock.ExpectPrepare(query)
-	prep.ExpectExec().WithArgs("00001").WillReturnResult(sqlmock.NewResult(0, 1))
+// 	// mock for querying
+// 	query := "DELETE FROM ItemListing WHERE id = \\?"
+// 	prep := mock.ExpectPrepare(query)
+// 	prep.ExpectExec().WithArgs("00001").WillReturnResult(sqlmock.NewResult(0, 1))
 
-	// json payload
-	newMap := make(map[string]interface{})
-	newMap["ID"] = "000001"
+// 	// json payload
+// 	newMap := make(map[string]interface{})
+// 	newMap["ID"] = "000001"
 
-	dataPacket1 := mysql.DataPacket{
-		dbHandler1.ApiKey,
-		"",
-		"ItemListing",
-		"",
-		"",
-		[]interface{}{newMap},
-	}
-	payloadJson, _ := json.Marshal(dataPacket1)
+// 	dataPacket1 := mysql.DataPacket{
+// 		dbHandler1.ApiKey,
+// 		"",
+// 		"ItemListing",
+// 		"",
+// 		"",
+// 		[]interface{}{newMap},
+// 	}
+// 	payloadJson, _ := json.Marshal(dataPacket1)
 
-	// test api
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodDelete, "/api/v0/db/info", strings.NewReader(string(payloadJson)))
-	c := e.NewContext(req, rec)
-	e.ServeHTTP(rec, req)
-	fmt.Println(rec.Body)
+// 	// test api
+// 	rec := httptest.NewRecorder()
+// 	req := httptest.NewRequest(http.MethodDelete, "/api/v0/db/info", strings.NewReader(string(payloadJson)))
+// 	c := e.NewContext(req, rec)
+// 	fmt.Println(rec.Body)
 
-	if assert.NoError(t, GenInfoDelete(c, &dbHandler1)) {
-		assert.Equal(t, http.StatusOK, rec.Code)
+// 	if assert.NoError(t, GenInfoDelete(c, &dbHandler1)) {
+// 		assert.Equal(t, http.StatusOK, rec.Code)
 
-		//check response
-		json_map := make(map[string]interface{})
-		json.NewDecoder(rec.Body).Decode(&json_map)
+// 		//check response
+// 		json_map := make(map[string]interface{})
+// 		json.NewDecoder(rec.Body).Decode(&json_map)
 
-		//check some of the returned inputs
-		assert.Equal(t, json_map["ResBool"], "true")
+// 		//check some of the returned inputs
+// 		assert.Equal(t, json_map["ResBool"], "true")
 
-	}
-}
+// 	}
+// }
 
 func TestGenInfoEdit(t *testing.T) {
 	// load variables
@@ -512,11 +468,11 @@ func TestGenInfoEdit(t *testing.T) {
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPut, "/api/v0/db/info", strings.NewReader(string(payloadJson)))
 	c := e.NewContext(req, rec)
-	e.ServeHTTP(rec, req)
-	fmt.Println(rec.Body)
+
+	// fmt.Println(rec.Body)
 
 	if assert.NoError(t, GenInfoPut(c, &dbHandler1)) {
-		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, http.StatusCreated, rec.Code)
 
 		//check response
 		json_map := make(map[string]interface{})

@@ -33,12 +33,12 @@ func main() {
 	e.POST("/api/v0/db/info", func(c echo.Context) error {
 		return controller.GenInfoPost(c, &dbHandler1)
 	})
-	e.GET("/api/v0/db/info", func(c echo.Context) error {
+	e.GET("/api/v0/db/info/", func(c echo.Context) error { //attach query parameters
 		return controller.GenInfoGet(c, &dbHandler1)
 	})
-	e.DELETE("/api/v0/db/info", func(c echo.Context) error {
-		return controller.GenInfoDelete(c, &dbHandler1)
-	})
+	// e.DELETE("/api/v0/db/info", func(c echo.Context) error {
+	// 	return controller.GenInfoDelete(c, &dbHandler1)
+	// })
 	e.PUT("/api/v0/db/info", func(c echo.Context) error {
 		return controller.GenInfoPut(c, &dbHandler1)
 	})

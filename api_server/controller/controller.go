@@ -13,62 +13,32 @@ import (
 )
 
 // function for the rest api, respond with the slice of all courses
-func GetAllInfo(c echo.Context, dbHandler1 *mysql.DBHandler, embed *word2vec.Embeddings) error {
+func GetAllListing(c echo.Context, dbHandler1 *mysql.DBHandler, embed *word2vec.Embeddings) error {
 	// can only return listing results, commentUser and commentItem
-	dataPacket1, err1 := readJSONBody(c, dbHandler1) // read response JSON
+	itemName := c.QueryParam("name")
+	itemFilter := c.QueryParam("filter")
+	fmt.Println("1, ", itemName, c.Path())
+	fmt.Println(itemName, itemFilter)
+	sendInfo, _ := dbHandler1.GetRecordlisting("ItemListing", itemName, itemFilter, embed)
+	return newResponse(c, sendInfo, "nil", "ItemListing", "true", "", http.StatusOK)
+}
 
-	if err1 != nil {
-		fmt.Println(err1)
-		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
-	}
+func GetAllComment(c echo.Context, dbHandler1 *mysql.DBHandler, embed *word2vec.Embeddings) error {
+	// gets all comments regarding a particular item id
+	itemID := c.Param("id")
+	sendInfo, _ := dbHandler1.GetRecord("CommentItem")
+	newSendInfo := []interface{}{}
 
-	receiveInfo := mapInterfaceToString(dataPacket1)
+	for i := range sendInfo {
+		temp1 := sendInfo[i].(mysql.CommentItem)
 
-	tarDB := dataPacket1["InfoType"].(string)
-	tarID := receiveInfo["ID"]
-
-	switch tarDB { // gets all post
-
-	case "ItemListing":
-
-		sendInfo, _ := dbHandler1.GetRecordlisting(tarDB, receiveInfo["Name"], receiveInfo["filterUsername"], embed)
-		return newResponse(c, sendInfo, "nil", "ItemListing", "true", "", http.StatusOK)
-
-	// case "CommentUser": // gets all comments regarding a particular user id
-	// 	sendInfo, _ := dbHandler1.GetRecord(tarDB)
-	// 	newSendInfo := []interface{}{}
-
-	// 	for i := range sendInfo {
-	// 		temp1 := sendInfo[i].(mysql.CommentUser)
-
-	// 		if temp1.ForUsername == tarID {
-	// 			newSendInfo = append(newSendInfo, sendInfo[i])
-	// 		}
-	// 	}
-
-	// 	w.WriteHeader(http.StatusCreated)
-	// 	newResponse(c, newSendInfo, "nil", "ItemListing", "true", "")
-	// 	return
-
-	case "CommentItem": // gets all comments regarding a particular item id
-		sendInfo, _ := dbHandler1.GetRecord(tarDB)
-		newSendInfo := []interface{}{}
-
-		for i := range sendInfo {
-			temp1 := sendInfo[i].(mysql.CommentItem)
-
-			if temp1.ForItem == tarID {
-				// fmt.Println(sendInfo[i])
-				newSendInfo = append(newSendInfo, sendInfo[i])
-			}
+		if temp1.ForItem == itemID {
+			// fmt.Println(sendInfo[i])
+			newSendInfo = append(newSendInfo, sendInfo[i])
 		}
-
-		return newResponse(c, newSendInfo, "nil", "ItemListing", "true", "", http.StatusOK)
-
-	default:
-
-		return newErrorResponse(c, "404", http.StatusNotFound)
 	}
+
+	return newResponse(c, newSendInfo, "nil", "ItemListing", "true", "", http.StatusOK)
 }
 
 func PwCheck(c echo.Context, dbHandler1 *mysql.DBHandler) error { //works
@@ -116,49 +86,44 @@ func mapInterfaceToString(dataPacket1 map[string]interface{}) map[string]string 
 // checks if the username in the sent info is currently in DB
 // returns false if username is not taken
 func UsernameCheck(c echo.Context, dbHandler1 *mysql.DBHandler) error {
-
-	dataPacket1, err1 := readJSONBody(c, dbHandler1) // read response JSON
-	if err1 != nil {                                 //err means username not found, ok to proceed
-		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
-	}
-
-	receiveInfo := mapInterfaceToString(dataPacket1)
+	username := c.Param("username")
 
 	//check received input
-	_, ok := receiveInfo["Username"]
-	if !ok || receiveInfo["Username"] == "" {
+	if username == "" {
 		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
 	}
 
-	allData, err := dbHandler1.GetSingleRecord("UserInfo", " WHERE Username = ?", receiveInfo["Username"])
+	allData, err := dbHandler1.GetSingleRecord("UserInfo", " WHERE Username = ?", username)
 
 	if err != nil || len(allData) == 0 { //err means username not found, ok to proceed
-
-		return newResponse(c, []interface{}{}, "username not found", "UserInfo", "false", "", http.StatusOK)
+		return newResponseSimple(c, "username not found", "false", http.StatusOK)
 	}
 
-	return newResponse(c, []interface{}{}, "nil", "UserInfo", "true", "", http.StatusOK)
+	return newResponseSimple(c, "username found", "true", http.StatusOK)
 }
 
 // the function that writes the response back
+// for when you need to return arrays of entries
 func newResponse(c echo.Context, dataInfo []interface{}, errorMsg string, infoType string, resBool string, requestUser string, httpStatus int) error {
-	//StatusOK 200
-	//StatusAccepted 202
-	//StatusCreated 201
-	//StatusFound 302
-	//StatusBadRequest 400
-	//StatusForbidden 403
-	//StatusInternalServerError 500
+	var responseJson mysql.DataPacket
+	responseJson.DataInfo = dataInfo
+	responseJson.ErrorMsg = errorMsg       // error msg if any
+	responseJson.InfoType = infoType       // to access which db
+	responseJson.ResBool = resBool         //
+	responseJson.RequestUser = requestUser //request coming from which user
 
-	var dataPacket1 mysql.DataPacket
-	dataPacket1.DataInfo = dataInfo
-	dataPacket1.ErrorMsg = errorMsg       // error msg if any
-	dataPacket1.InfoType = infoType       // to access which db
-	dataPacket1.ResBool = resBool         //
-	dataPacket1.RequestUser = requestUser //request coming from which user
+	// fmt.Println(responseJson)
+	return c.JSON(httpStatus, responseJson) // encode to json and send
+}
 
-	// fmt.Println(dataPacket1)
-	return c.JSON(httpStatus, dataPacket1) // encode to json and send
+// the function that writes the response back
+func newResponseSimple(c echo.Context, msg string, resBool string, httpStatus int) error {
+	responseJson := mysql.DataPacketSimple{
+		msg,
+		resBool,
+	}
+
+	return c.JSON(httpStatus, responseJson) // encode to json and send
 }
 
 // Response writer for when returning an error to a query
@@ -263,62 +228,51 @@ func getItem(c echo.Context, tarDB string, tarItemID string, dbHandler1 *mysql.D
 }
 
 func GenInfoGet(c echo.Context, dbHandler1 *mysql.DBHandler) error {
-	dataPacket1, err1 := readJSONBody(c, dbHandler1) // read response JSON
-	if err1 != nil {
-		fmt.Println(err1)
-		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
-	}
+	itemID := c.QueryParam("id")
+	itemDB := c.QueryParam("db")
 
-	receiveInfo := mapInterfaceToString(dataPacket1) // convert received data into map[string]string
-
-	tarItemID := receiveInfo["ID"]
-	tarDB := dataPacket1["InfoType"].(string)
-
-	dbInfoSlice, err3 := getItem(c, tarDB, tarItemID, dbHandler1)
+	dbInfoSlice, err3 := getItem(c, itemDB, itemID, dbHandler1)
 
 	// for userinfo, itemlisting, commentitem and commentuser only
-	if tarDB != "UserSecret" && err3 == nil { //prevents any requeset to ask for user secrets
-		return newResponse(c, dbInfoSlice, "nil", tarDB, "true", "", http.StatusCreated)
+	if itemDB != "UserSecret" && err3 == nil { //prevents any requeset to ask for user secrets
+		return newResponse(c, dbInfoSlice, "nil", itemDB, "true", "", http.StatusCreated)
 	}
 
 	return newErrorResponse(c, "Bad Request , item not found", http.StatusBadRequest)
 }
 
-func GenInfoDelete(c echo.Context, dbHandler1 *mysql.DBHandler) error {
+/// delete is not implemented currently, might change to soft delete instead
+// func GenInfoDelete(c echo.Context, dbHandler1 *mysql.DBHandler) error {
 
-	dataPacket1, err1 := readJSONBody(c, dbHandler1) // read response JSON
-	if err1 != nil {
-		fmt.Println(err1)
-		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
-	}
+// 	itemID := c.QueryParam("id")
+// 	itemDB := c.QueryParam("db")
+// 	apiKey := c.QueryParam("key")
+// 	if dbHandler1.Apikey != apiKey{
+// 				return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
+// 	}
 
-	receiveInfoRaw := mapInterfaceToString(dataPacket1) // convert received data into map[string]string
+// dbInfoSlice, err3 := getItem(c, tarDB, tarItemID, dbHandler1)
 
-	tarItemID := receiveInfoRaw["ID"]
-	tarDB := dataPacket1["InfoType"].(string)
+// if !checkUser(tarDB, dataPacket1["RequestUser"].(string), dbInfoSlice) || err3 != nil {
 
-	// dbInfoSlice, err3 := getItem(c, tarDB, tarItemID, dbHandler1)
+// 	return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
+// }
 
-	// if !checkUser(tarDB, dataPacket1["RequestUser"].(string), dbInfoSlice) || err3 != nil {
+// for deleting an entry
 
-	// 	return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
-	// }
+// 	if tarDB == "ItemListing" || tarDB == "CommentUser" || tarDB == "CommentItem" { //only delete records for 3 items
+// 		err2 := dbHandler1.DeleteRecord(tarDB, tarItemID) // attempt to delete record
+// 		if err2 != nil {
 
-	// for deleting an entry
+// 			return newResponse(c, []interface{}{}, "nil", "userInfo", "true", "", http.StatusOK)
+// 		}
 
-	if tarDB == "ItemListing" || tarDB == "CommentUser" || tarDB == "CommentItem" { //only delete records for 3 items
-		err2 := dbHandler1.DeleteRecord(tarDB, tarItemID) // attempt to delete record
-		if err2 != nil {
+// 	}
+// 	//if delete did not occur
+// 	fmt.Println("logger:  " + ": " + tarDB + " db not found or not in use for Delete func, err:")
+// 	return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
 
-			return newResponse(c, []interface{}{}, "nil", "userInfo", "true", "", http.StatusOK)
-		}
-
-	}
-	//if delete did not occur
-	fmt.Println("logger:  " + ": " + tarDB + " db not found or not in use for Delete func, err:")
-	return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
-
-}
+// }
 
 // PUT is for updating existing course
 func GenInfoPut(c echo.Context, dbHandler1 *mysql.DBHandler) error {

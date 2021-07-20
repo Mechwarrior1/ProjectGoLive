@@ -7,7 +7,6 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/xml"
-	"fmt"
 	"io/ioutil"
 	"os"
 )
@@ -85,7 +84,7 @@ func EncryptToFile(filename string, string1 string, loc string) {
 func DecryptFromFile(filename string, loc string) []byte {
 	data1, err := ioutil.ReadFile(filename)
 	if err != nil {
-		fmt.Println("error when reading file: ", err.Error())
+		// fmt.Println("error when reading file: ", err.Error())
 		return nil
 	}
 	// logger1.logTrace("TRACE", "Successfully loaded key from file")

@@ -266,7 +266,7 @@ func (e *Embeddings) GetWordEmbeddingCombine(wordsAdd []string, wordsSubtract []
 	for _, word := range wordsSubtract { //subtracting vector
 		idx2, ok2 := e.indices[word]
 		if ok2 {
-			fmt.Println("subtract word: " + word)
+			// fmt.Println("subtract word: " + word)
 			combined_vec = e.subtractEmbedding(combined_vec, e.GetEmbedding(idx2), 1.0)
 		} else {
 			fmt.Println("logger: word not in embedding, " + word) // for futuer logger

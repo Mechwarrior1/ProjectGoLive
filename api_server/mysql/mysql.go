@@ -72,6 +72,11 @@ type (
 		DataInfo    []interface{} `json:"DataInfo"`
 	}
 
+	DataPacketSimple struct {
+		Msg     string `json:"Msg"`
+		ResBool string `json:"ResBool"`
+	}
+
 	DBHandler struct {
 		DB     *sql.DB
 		ApiKey string
@@ -152,7 +157,7 @@ func CleanWord(input1 string, splitText *regexp.Regexp, stopWords *regexp.Regexp
 
 	for _, word1 := range splitText.Split(input1, -1) {
 		aa := stopWords.Match([]byte(word1))
-		fmt.Println(word1, aa)
+		// fmt.Println(word1, aa)
 
 		if !aa {
 			newArr = append(newArr, word1)
@@ -170,7 +175,6 @@ func (dbHandler DBHandler) GetRecordlisting(dbTable string, requestWords string,
 	requestWords2 := CleanWord(requestWords, splitText, stopWords2)               //clean and split the words for embeding
 	requestWordsEmbed := embed.GetWordEmbeddingCombine(requestWords2, []string{}) //get combined word embedding
 	results, err := dbHandler.DB.Query("Select * FROM my_db." + dbTable)
-
 	if err != nil {
 		return allData, err
 	}
