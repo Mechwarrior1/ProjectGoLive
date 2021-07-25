@@ -1,4 +1,4 @@
-package main
+package encrypt
 
 import (
 	"testing"
@@ -14,10 +14,10 @@ type MySuite struct{}
 
 var _ = Suite(&MySuite{})
 
-func (s *MySuite) TestCos(c *C) {
-	testString := "teststring"
-	encryptToFile("secure/testkey.txt", testString)
-	result := decryptFromFile("secure/testkey.txt")
+func (s *MySuite) TestEncrypt(c *C) {
+	testString := "test"
+	encryptToFile("testkey.txt", testString)
+	result := DecryptFromFile("testkey.txt")
 	c.Assert(string(result), Equals, testString)
 
 }

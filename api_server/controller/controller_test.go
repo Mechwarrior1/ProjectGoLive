@@ -50,6 +50,11 @@ func TestGetPwCheck(t *testing.T) {
 	query := "Select \\* FROM my_db." + "UserSecret" + " WHERE Username = \\?"
 	mock.ExpectQuery(query).WillReturnRows(rows)
 
+	rows2 := sqlmock.NewRows([]string{"ID", "Username", "LastLogin", "DateJoin", "CommentItem"}).
+		AddRow("000001", "john", "11-7-2021", "2", "3")
+	query2 := "Select \\* FROM my_db." + "UserInfo" + " WHERE Username = \\?"
+	mock.ExpectQuery(query2).WillReturnRows(rows2)
+
 	//mock for editing entry (UserInfo data)
 	queryEdit := "UPDATE " + "UserInfo" + " SET LastLogin=\\?, CommentItem=\\? WHERE ID=\\?"
 	prep := mock.ExpectPrepare(queryEdit)
@@ -57,11 +62,9 @@ func TestGetPwCheck(t *testing.T) {
 
 	// json payload to api
 	newMap := make(map[string]interface{})
-	newMap["ID"] = "000001"
 	newMap["Username"] = "john"
 	newMap["Password"] = "john"
 	newMap["LastLogin"] = "20-7-2021"
-	newMap["CommentItem"] = "nil"
 
 	dataPacket1 := mysql.DataPacket{
 		dbHandler1.ApiKey,
@@ -198,8 +201,8 @@ func TestUsernameCheckTrue(t *testing.T) {
 	defer dbHandler1.DB.Close()
 
 	e := echo.New()
-	e.GET("/api/v0/username", func(c echo.Context) error {
-		return UsernameCheck(c, &dbHandler1)
+	e.GET("/api/v0/username/:username", func(c echo.Context) error {
+		return CheckUsername(c, &dbHandler1)
 	})
 
 	// mock for querying
@@ -219,7 +222,7 @@ func TestUsernameCheckTrue(t *testing.T) {
 
 	// fmt.Println(rec.Body)
 
-	if assert.NoError(t, UsernameCheck(c, &dbHandler1)) {
+	if assert.NoError(t, CheckUsername(c, &dbHandler1)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 
 		//check response
@@ -241,7 +244,7 @@ func TestUsernameCheckFalse(t *testing.T) {
 
 	e := echo.New()
 	e.GET("/api/v0/username", func(c echo.Context) error {
-		return UsernameCheck(c, &dbHandler1)
+		return CheckUsername(c, &dbHandler1)
 	})
 
 	// mock for querying
@@ -259,7 +262,7 @@ func TestUsernameCheckFalse(t *testing.T) {
 
 	// fmt.Println(rec.Body)
 
-	if assert.NoError(t, UsernameCheck(c, &dbHandler1)) {
+	if assert.NoError(t, CheckUsername(c, &dbHandler1)) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code) //bad request
 	}
 }
@@ -505,3 +508,140 @@ func TestGenInfoEdit(t *testing.T) {
 // 	}
 
 // }
+
+func TestSignup(t *testing.T) {
+	// load variables
+	db, mock := NewMock()
+	dbHandler1 := mysql.DBHandler{
+		db,
+		""}
+	defer dbHandler1.DB.Close()
+
+	e := echo.New()
+	e.GET("/api/v0/signup", func(c echo.Context) error {
+		return Signup(c, &dbHandler1)
+	})
+
+	// mock for querying
+	query := "SELECT MAX\\(ID\\) FROM my_db.UserSecret" //for MaxID query
+	rows := mock.NewRows([]string{"ID"}).
+		AddRow("000001")
+	mock.ExpectQuery(query).WillReturnRows(rows)
+
+	mock.ExpectBegin()
+
+	//mock for usersecret
+	query2 := "INSERT INTO my_db." + "UserSecret" + " VALUES \\(\\?, \\?, \\?, \\?, \\?\\)"
+	prep2 := mock.ExpectPrepare(query2)
+	prep2.ExpectExec().WithArgs("000002", "john", "john", "", "nil").WillReturnResult(sqlmock.NewResult(0, 1))
+
+	//mock for userinfo
+	query3 := "INSERT INTO my_db." + "UserInfo" + " VALUES \\(\\?, \\?, \\?, \\?, \\?\\)"
+	prep3 := mock.ExpectPrepare(query3)
+	prep3.ExpectExec().WithArgs("000002", "john", "20-7-2021", "20-7-2021", "nil").WillReturnResult(sqlmock.NewResult(0, 1))
+
+	mock.ExpectCommit()
+
+	// test api
+
+	userSecret1 := make(map[string]interface{})
+	userSecret1["Username"] = "john"
+	userSecret1["Password"] = "john"
+	userSecret1["CommentItem"] = "nil"
+	userSecret1["DateJoin"] = "20-7-2021"
+	userSecret1["LastLogin"] = "20-7-2021"
+
+	jsonData1 := mysql.DataPacket{
+		// key to access rest api
+		Key:         dbHandler1.ApiKey,
+		ErrorMsg:    "",
+		InfoType:    "UserSecret",
+		ResBool:     "",
+		RequestUser: "",
+		DataInfo:    []interface{}{userSecret1},
+	}
+
+	payloadJson, _ := json.Marshal(jsonData1)
+
+	// making the call to api
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/api/v0/signup", strings.NewReader(string(payloadJson)))
+
+	c := e.NewContext(req, rec)
+
+	// fmt.Println(rec.Body)
+
+	if assert.NoError(t, Signup(c, &dbHandler1)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		//check response
+		json_map := make(map[string]interface{})
+		json.NewDecoder(rec.Body).Decode(&json_map)
+
+		assert.Equal(t, json_map["ResBool"], "true")
+
+	}
+}
+
+func TestCompleted(t *testing.T) {
+	// load variables
+	db, mock := NewMock()
+	dbHandler1 := mysql.DBHandler{
+		db,
+		""}
+	defer dbHandler1.DB.Close()
+
+	e := echo.New()
+	e.GET("/api/v0/completed/:id", func(c echo.Context) error {
+		return Completed(c, &dbHandler1)
+	})
+
+	// mock for querying
+	query := "SELECT Username FROM my_db.ItemListing WHERE ID=000001"
+	rows := mock.NewRows([]string{"Username"}).
+		AddRow("john") //apparently there is no logic and does not check for largest, willreturnrows directly just returns
+	mock.ExpectQuery(query).WillReturnRows(rows)
+
+	//mock for update completed
+	mock.ExpectBegin()
+	query2 := "UPDATE my_db.ItemListing SET Completion =\\? WHERE ID=\\?"
+	prep2 := mock.ExpectPrepare(query2)
+	prep2.ExpectExec().WithArgs("true", "000001").WillReturnResult(sqlmock.NewResult(0, 1))
+
+	mock.ExpectCommit()
+
+	// test api
+
+	jsonData1 := mysql.DataPacket{
+		// key to access rest api
+		Key:         dbHandler1.ApiKey,
+		ErrorMsg:    "",
+		InfoType:    "ItemListing",
+		ResBool:     "",
+		RequestUser: "john",
+		DataInfo:    []interface{}{},
+	}
+
+	payloadJson, _ := json.Marshal(jsonData1)
+
+	// making the call to api
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPut, "/api/v0/completed/", strings.NewReader(string(payloadJson)))
+
+	c := e.NewContext(req, rec)
+	c.SetPath("/api/v0/completed/:id")
+	c.SetParamNames("id")
+	c.SetParamValues("000001")
+	// fmt.Println(rec.Body)
+
+	if assert.NoError(t, Completed(c, &dbHandler1)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		//check response
+		json_map := make(map[string]interface{})
+		json.NewDecoder(rec.Body).Decode(&json_map)
+
+		assert.Equal(t, json_map["ResBool"], "true")
+
+	}
+}

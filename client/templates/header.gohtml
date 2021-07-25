@@ -371,19 +371,12 @@
               <a href="/signup" class="navbar-brand">Sign Up</a>
             </div>
           {{else}}
-            {{if eq .Username "None"}}
+            {{if .Username}}
               <div class="rightbox">
-                <a href="/login" class="navbar-brand">Login</a>
-                <a href="/signup" class="navbar-brand">Sign Up</a>
+                <h5>Welcome <a class="navbar-brand" href="/user?id={{.Username}}&edit=false">{{.Username}}</a>,  <a href="/logout" class="navbar-brand">Log Out</a></h5>
+                <p>Last Login: {{.LastLogin}}</p>
+                
               </div>
-            {{else}}
-              {{if .Username}}
-                <div class="rightbox">
-                  <h5>Welcome <a class="navbar-brand" href="/user?id={{.Username}}&edit=false">{{.Username}}</a>,  <a href="/logout" class="navbar-brand">Log Out</a></h5>
-                  <p>Last Login: {{.LastLogin}}</p>
-                  
-                </div>
-              {{end}}
             {{end}}
           {{end}}
         {{end}}
@@ -392,13 +385,13 @@
   <body>
     <div class="container postsContainer">
       <div class="card card-body card-form product-form2">
-        {{if eq .Success "true"}}
-          <span class="alert success success1"> {{.SuccessMsg}}
+        {{if eq .Success "ok"}}
+          <span class="alert success success1"> {{.Msg}}
           </span>
           <br>
         {{end}}
-        {{if eq .Error "true"}}
-          <span class="alert error error1"> {{.ErrorMsg}}
+        {{if eq .Success "error"}}
+          <span class="alert error error1"> {{.Msg}}
           </span>
           <br>
         {{end}}

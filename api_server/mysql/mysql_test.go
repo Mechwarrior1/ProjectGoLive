@@ -308,3 +308,42 @@ func TestDelete(t *testing.T) {
 	err := dbHandler1.DeleteRecord(dbTable, "000001")
 	assert.Error(t, err)
 }
+
+func TestGetMaxID(t *testing.T) {
+	// load variables
+	db, mock := NewMock()
+	dbHandler1 := DBHandler{db, ""}
+	defer func() {
+		dbHandler1.DB.Close()
+	}()
+
+	// mock for querying
+	query := "SELECT MAX\\(ID\\) FROM my_db.UserSecret" //for MaxID query
+	rows := mock.NewRows([]string{"ID"}).
+		AddRow("000001") //apparently there is no logic and does not check for largest, willreturnrows directly just returns
+	mock.ExpectQuery(query).WillReturnRows(rows)
+
+	num, err := dbHandler1.GetMaxID("UserSecret")
+	assert.Equal(t, num, 1, "should be the same")
+	assert.NoError(t, err)
+}
+
+func TestGetUsername(t *testing.T) {
+	// load variables
+	db, mock := NewMock()
+	dbHandler1 := DBHandler{db, ""}
+	defer func() {
+		dbHandler1.DB.Close()
+	}()
+
+	// mock for querying
+
+	query := "SELECT Username FROM my_db.UserSecret WHERE ID=000001"
+	rows := mock.NewRows([]string{"Username"}).
+		AddRow("john") //apparently there is no logic and does not check for largest, willreturnrows directly just returns
+	mock.ExpectQuery(query).WillReturnRows(rows)
+
+	result, err := dbHandler1.GetUsername("UserSecret", "000001")
+	assert.Equal(t, result, "john", "should be the same")
+	assert.NoError(t, err)
+}

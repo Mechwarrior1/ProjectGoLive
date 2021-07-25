@@ -1,74 +1,147 @@
 package main
 
 import (
+	"client/controller"
+	"client/encrypt"
+	"client/jwtsession"
+	"client/session"
 	"crypto/tls"
-	"log"
+	"fmt"
+	"io"
 	"net/http"
 	"text/template"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 )
 
-var (
-	logger1 logger //logs activities
-	s       http.Server
-	key1    func() string //get key from encrypted file
+// var (
+// 	logger1 logger //logs activities
+// 	s       http.Server
 
-	tplIndex         = template.Must(template.New("").ParseFiles("templates/header.gohtml", "templates/index.gohtml"))
-	tplSeePostAll    = template.Must(template.New("").ParseFiles("templates/seepostall.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
-	tplLogin         = template.Must(template.New("").ParseFiles("templates/login.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
-	tplSignup        = template.Must(template.New("").ParseFiles("templates/signup.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
-	tplGetPostDetail = template.Must(template.New("").ParseFiles("templates/getpostdetail.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
-	tplCreatePost    = template.Must(template.New("").ParseFiles("templates/createpost.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
-	tplEditPost      = template.Must(template.New("").ParseFiles("templates/editpost.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
-	tplUpdateUser    = template.Must(template.New("").ParseFiles("templates/updateuser.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
-	tplSeePostUser   = template.Must(template.New("").ParseFiles("templates/seepostuser.gohtml", "templates/header.gohtml", "templates/footer.gohtml"))
+// 	// a struct to handle all the server session and user information.
 
-	// a struct to handle all the server session and user information.
-	sessionMgr = &sessionManager{
-		mapPersistInfo: &map[string]*userPersistInfo{},
-		mapSession:     &map[string]*sessionStruct{},
-	}
-)
+// )
 
 // Init initiates the handler functions, server and logger.
-func init() {
-	// logger function
-	c1, c2 := loggerGo()
-	logger1 = logger{c1, c2}
-	logger1.logTrace("TRACE", "Server started")
-	key1 = anonFunc() //decrypt api key from file
+type Template struct {
+	templates *template.Template
+}
 
-	router := mux.NewRouter()
-	router.HandleFunc("/logout", logout)
-	router.Handle("/favicon.ico", http.NotFoundHandler())
-	router.HandleFunc("/seepost", seePostAll)
-	router.HandleFunc("/login", login)
-	router.HandleFunc("/signup", signup)
-	router.HandleFunc("/getpost/{id}", getPostDetail)
-	router.HandleFunc("/complete/{id}", postComplete)
-	router.HandleFunc("/createpost", createPost)
-	router.HandleFunc("/editpost/{id}", editPost)
-	router.HandleFunc("/seepostuser/{id}", seePostUser)
-	router.HandleFunc("/user", getUser)
-	router.HandleFunc("/", index)
-
-	s = http.Server{Addr: ":5221", Handler: router}
-
-	go sessionMgr.pruneOldSessions()
+func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	return t.templates.ExecuteTemplate(w, name, data)
 }
 
 func main() {
+	e := echo.New()
+	t := &Template{
+		templates: template.Must(template.ParseGlob("templates/*.gohtml")),
+	}
+	e.Renderer = t
+	sessionMgr := &session.Session{
+		MapSession: &map[string]session.SessionStruct{},
+		ApiKey:     string(encrypt.DecryptFromFile("secure/apikey")),
+	}
+
+	// c1, c2 := loggerGo()
+	// logger1 = logger{c1, c2}
+
+	// logger1.logTrace("TRACE", "Server started")
+	// key1 = anonFunc() //decrypt api key from file
+
+	jwtWrapper := &jwtsession.JwtWrapper{
+		string(encrypt.DecryptFromFile("secure/secretkey.txt")),
+		"GoRecycle",
+		10,
+	}
+
+	e.GET("/logout", func(c echo.Context) error {
+		return controller.Logout(c, jwtWrapper, sessionMgr)
+	})
+	e.GET("/seepost", func(c echo.Context) error {
+		return controller.SeePostAll_GET(c, jwtWrapper, sessionMgr)
+	})
+
+	e.POST("/seepost", func(c echo.Context) error {
+		return controller.SeePostAll_POST(c)
+	})
+
+	e.POST("/login", func(c echo.Context) error {
+		return controller.Login_POST(c, jwtWrapper, sessionMgr)
+	})
+
+	e.GET("/login", func(c echo.Context) error {
+		return controller.Login_GET(c, jwtWrapper, sessionMgr)
+	})
+
+	e.POST("/signup", func(c echo.Context) error {
+		return controller.Signup_POST(c, jwtWrapper, sessionMgr)
+	})
+
+	e.GET("/signup", func(c echo.Context) error {
+		return controller.Signup_GET(c, jwtWrapper, sessionMgr)
+	})
+
+	e.POST("/getpost/:id", func(c echo.Context) error {
+		return controller.GetPostDetail_POST(c, jwtWrapper, sessionMgr)
+	})
+
+	e.GET("/getpost/:id", func(c echo.Context) error {
+		return controller.GetPostDetail_GET(c, jwtWrapper, sessionMgr)
+	})
+
+	e.GET("/complete/:id", func(c echo.Context) error {
+		return controller.PostComplete(c, jwtWrapper, sessionMgr)
+	})
+
+	e.GET("/createpost", func(c echo.Context) error {
+		return controller.CreatePost_GET(c, jwtWrapper, sessionMgr)
+	})
+
+	e.POST("/createpost", func(c echo.Context) error {
+		return controller.CreatePost_POST(c, jwtWrapper, sessionMgr)
+	})
+
+	e.GET("/editpost/:id", func(c echo.Context) error {
+		return controller.EditPost_GET(c, jwtWrapper, sessionMgr)
+	})
+
+	e.POST("/editpost/:id", func(c echo.Context) error {
+		return controller.EditPost_POST(c, jwtWrapper, sessionMgr)
+	})
+
+	e.GET("/seepostuser/:id", func(c echo.Context) error {
+		return controller.SeePostUser(c, jwtWrapper, sessionMgr)
+	})
+
+	e.GET("/user", func(c echo.Context) error {
+		return controller.GetUser_GET(c, jwtWrapper, sessionMgr)
+	})
+
+	e.POST("/user", func(c echo.Context) error {
+		return controller.GetUser_POST(c, jwtWrapper, sessionMgr)
+	})
+
+	e.POST("/", func(c echo.Context) error {
+		return controller.Index_POST(c, jwtWrapper, sessionMgr)
+	})
+
+	e.GET("/", func(c echo.Context) error {
+		return controller.Index_GET(c, jwtWrapper, sessionMgr)
+	})
+
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format: "method=${method}, uri=${uri}, status=${status}, err=${error}, path=${path}, time=${time_unix}\n",
+	}))
+
+	port := "5221"
+	fmt.Println("listening at port " + port)
+	s := http.Server{Addr: ":" + port, Handler: e}
+
+	go sessionMgr.PruneOldSessions()
+
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	if err := s.ListenAndServeTLS("secure//cert.pem", "secure//key.pem"); err != nil && err != http.ErrServerClosed {
-		log.Fatal(err)
-	}
-}
-
-// a function to decrypt api key and return the value when it is called
-func anonFunc() func() string {
-	key1 := string(decryptFromFile("secure/apikey"))
-	return func() string {
-		return key1
+		e.Logger.Fatal(err)
 	}
 }

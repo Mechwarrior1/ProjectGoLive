@@ -16,10 +16,9 @@ import (
 func GetAllListing(c echo.Context, dbHandler1 *mysql.DBHandler, embed *word2vec.Embeddings) error {
 	// can only return listing results, commentUser and commentItem
 	itemName := c.QueryParam("name")
-	itemFilter := c.QueryParam("filter")
-	fmt.Println("1, ", itemName, c.Path())
-	fmt.Println(itemName, itemFilter)
-	sendInfo, _ := dbHandler1.GetRecordlisting("ItemListing", itemName, itemFilter, embed)
+	filterUsername := c.QueryParam("filter")
+	fmt.Println(itemName, filterUsername)
+	sendInfo, _ := dbHandler1.GetRecordlisting("ItemListing", itemName, filterUsername, embed)
 	return newResponse(c, sendInfo, "nil", "ItemListing", "true", "", http.StatusOK)
 }
 
@@ -43,31 +42,44 @@ func GetAllComment(c echo.Context, dbHandler1 *mysql.DBHandler, embed *word2vec.
 
 func PwCheck(c echo.Context, dbHandler1 *mysql.DBHandler) error { //works
 	dataPacket1, err := readJSONBody(c, dbHandler1) // read response JSON
+	fmt.Println(dataPacket1)
 
 	if err != nil { //err means username not found, ok to proceed
-		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
+		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
 	}
 
 	receiveInfo := mapInterfaceToString(dataPacket1) // convert received data into map[string]string
 	dbData, err1 := dbHandler1.GetSingleRecord("UserSecret", "WHERE Username = ?", receiveInfo["Username"])
-	if err1 != nil || len(dbData) == 0 { //err means username not found, ok to proceed
+	dbData2, err2 := dbHandler1.GetSingleRecord("UserInfo", "WHERE Username = ?", receiveInfo["Username"])
 
-		return newErrorResponse(c, "", http.StatusBadRequest)
+	if err1 != nil || err2 != nil || len(dbData) == 0 {
+		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
 	}
 
 	// update last login
 	dbData1 := dbData[0].(mysql.UserSecret)
+	dbData3 := dbData2[0].(mysql.UserInfo)
 	err3 := bcrypt.CompareHashAndPassword([]byte(dbData1.Password), []byte(receiveInfo["Password"]))
-
+	fmt.Println(err3)
 	if err3 == nil {
 		//update lastLogin if there is no issues
+
+		receiveInfo["CommentItem"] = dbData3.CommentItem
 		dbHandler1.EditRecord("UserInfo", receiveInfo)
 
+		payload := make(map[string]string)
+		payload["LastLogin"] = dbData3.LastLogin
+		payload["IsAdmin"] = dbData1.IsAdmin
+		if dbData1.IsAdmin == "" {
+			fmt.Println("there seems to be an error with the sql request for user admin and lastlogin info")
+			fmt.Println(dbData1, dbData3)
+		}
+
 		//return response with true if no issues
-		return newResponse(c, []interface{}{}, "nil", "UserInfo", "true", "", http.StatusOK)
+		return newResponse(c, []interface{}{payload}, "nil", "ItemListing", "true", "", http.StatusOK)
 	}
 
-	return newErrorResponse(c, "", http.StatusBadRequest)
+	return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
 }
 
 // change map[string]interface to map[string]string
@@ -85,12 +97,13 @@ func mapInterfaceToString(dataPacket1 map[string]interface{}) map[string]string 
 
 // checks if the username in the sent info is currently in DB
 // returns false if username is not taken
-func UsernameCheck(c echo.Context, dbHandler1 *mysql.DBHandler) error {
+func CheckUsername(c echo.Context, dbHandler1 *mysql.DBHandler) error {
 	username := c.Param("username")
+	fmt.Println(c.Path())
 
 	//check received input
 	if username == "" {
-		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
+		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
 	}
 
 	allData, err := dbHandler1.GetSingleRecord("UserInfo", " WHERE Username = ?", username)
@@ -113,6 +126,7 @@ func newResponse(c echo.Context, dataInfo []interface{}, errorMsg string, infoTy
 	responseJson.RequestUser = requestUser //request coming from which user
 
 	// fmt.Println(responseJson)
+	fmt.Println(responseJson)
 	return c.JSON(httpStatus, responseJson) // encode to json and send
 }
 
@@ -122,25 +136,20 @@ func newResponseSimple(c echo.Context, msg string, resBool string, httpStatus in
 		msg,
 		resBool,
 	}
-
+	fmt.Println(responseJson)
 	return c.JSON(httpStatus, responseJson) // encode to json and send
-}
-
-// Response writer for when returning an error to a query
-func newErrorResponse(c echo.Context, errorMsg string, httpStatus int) error {
-	var DataInfo1 []interface{}
-	return newResponse(c, DataInfo1, errorMsg, "error", "false", "", httpStatus)
 }
 
 // function to read the JSON on a request
 func readJSONBody(c echo.Context, dbHandler1 *mysql.DBHandler) (map[string]interface{}, error) {
 	// decode JSON body
+	fmt.Println("1, \n", c.Request())
 	json_map := make(map[string]interface{})
 	err1 := json.NewDecoder(c.Request().Body).Decode(&json_map)
 	if err1 == nil {
 
 		if json_map["Key"] != dbHandler1.ApiKey {
-			newErrorResponse(c, "403", http.StatusForbidden)
+			newResponseSimple(c, "Forbidden", "false", http.StatusForbidden)
 			return json_map, errors.New("incorrect api key supplied")
 		}
 		return json_map, nil
@@ -180,6 +189,69 @@ func checkUser(tarDB string, requestUser string, dataInfo []interface{}) bool {
 
 }
 
+// post sign up
+func Signup(c echo.Context, dbHandler *mysql.DBHandler) error {
+	dataPacket1, err1 := readJSONBody(c, dbHandler) // read response JSON
+	if err1 != nil {
+		fmt.Println(err1)
+		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
+	}
+
+	receiveInfo := mapInterfaceToString(dataPacket1) // convert received data into map[string]string
+	fmt.Println(receiveInfo)
+
+	// get current max number
+	maxIDString := "0"
+	maxID, err1 := dbHandler.GetMaxID("UserSecret")
+
+	if err1 == nil {
+		maxIDString = fmt.Sprintf("%06d", maxID+1)
+	}
+
+	// begin ticket
+	tx, err := dbHandler.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		switch err {
+		case nil:
+			err = tx.Commit()
+		default:
+			tx.Rollback()
+		}
+	}()
+
+	//first statement
+	stmt, err1 := tx.Prepare("INSERT INTO my_db.UserSecret VALUES (?, ?, ?, ?, ?)")
+	if err1 != nil {
+		err = err1
+		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
+	}
+
+	_, err = stmt.Exec(maxIDString, receiveInfo["Username"], receiveInfo["Password"], receiveInfo["IsAdmin"], receiveInfo["CommentItem"])
+	stmt.Close()
+
+	//2nd statement
+	stmt, err2 := tx.Prepare("INSERT INTO my_db.UserInfo VALUES (?, ?, ?, ?, ?)")
+	if err2 != nil {
+		err = err2
+		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
+	}
+	fmt.Println(err)
+	_, err = stmt.Exec(maxIDString, receiveInfo["Username"], receiveInfo["LastLogin"], receiveInfo["DateJoin"], receiveInfo["CommentItem"])
+	stmt.Close()
+
+	//check error
+	if err != nil {
+		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
+	}
+
+	return newResponseSimple(c, "nil", "true", http.StatusOK)
+
+}
+
 // main function for the rest api.
 // GET request returns the specified post/user/comments.
 // POST request will post the post/user/comments into the DB.
@@ -188,7 +260,7 @@ func GenInfoPost(c echo.Context, dbHandler1 *mysql.DBHandler) error {
 	dataPacket1, err1 := readJSONBody(c, dbHandler1) // read response JSON
 	if err1 != nil {
 		fmt.Println(err1)
-		return newErrorResponse(c, "Bad Request", http.StatusBadRequest)
+		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
 	}
 
 	receiveInfoRaw := mapInterfaceToString(dataPacket1) // convert received data into map[string]string
@@ -197,13 +269,12 @@ func GenInfoPost(c echo.Context, dbHandler1 *mysql.DBHandler) error {
 	err2 := dbHandler1.InsertRecord(tarDB, receiveInfoRaw, "") // deletes if target is found
 
 	if err2 == nil {
-		return newResponse(c, []interface{}{}, "nil", tarDB, "true", "", http.StatusOK)
-
+		return newResponseSimple(c, "nil", "true", http.StatusBadRequest)
 	}
 
 	fmt.Println("logger: insert " + tarDB + " db not found") //reach here only if it is not returned by the switch
 
-	return newErrorResponse(c, "Bad Request , item not found", http.StatusBadRequest)
+	return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
 
 }
 
@@ -217,9 +288,9 @@ func getItem(c echo.Context, tarDB string, tarItemID string, dbHandler1 *mysql.D
 		}
 
 		if err3 != nil || len(dbInfoSlice) == 0 {
+			// fmt.Println("logger: error when looking up id " + tarItemID + " for DB " + tarDB + ", err:" + err3.Error())
 
-			fmt.Println("logger: error when looking up id " + tarItemID + " for DB " + tarDB + ", err:" + err3.Error())
-			newErrorResponse(c, "Bad Request , item not found", http.StatusBadRequest)
+			newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
 			return []interface{}{}, errors.New("403")
 		}
 
@@ -235,10 +306,53 @@ func GenInfoGet(c echo.Context, dbHandler1 *mysql.DBHandler) error {
 
 	// for userinfo, itemlisting, commentitem and commentuser only
 	if itemDB != "UserSecret" && err3 == nil { //prevents any requeset to ask for user secrets
-		return newResponse(c, dbInfoSlice, "nil", itemDB, "true", "", http.StatusCreated)
+		return newResponse(c, dbInfoSlice, "nil", itemDB, "true", "false", http.StatusCreated)
 	}
 
-	return newErrorResponse(c, "Bad Request , item not found", http.StatusBadRequest)
+	return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
+}
+
+func Completed(c echo.Context, dbHandler *mysql.DBHandler) error {
+	itemID := c.Param("id")
+	dataPacket1, err1 := readJSONBody(c, dbHandler)
+
+	username, err := dbHandler.GetUsername("ItemListing", itemID)
+
+	// check if the username is the same
+	if username != dataPacket1["RequestUser"] && err1 != nil {
+		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
+	}
+
+	tx, err := dbHandler.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		switch err {
+		case nil:
+			err = tx.Commit()
+		default:
+			tx.Rollback()
+		}
+	}()
+
+	//first statement
+	stmt, err1 := tx.Prepare("UPDATE my_db.ItemListing SET Completion =? WHERE ID=?")
+	if err1 != nil {
+		err = err1
+		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
+	}
+
+	_, err = stmt.Exec("true", itemID)
+	stmt.Close()
+
+	//check error
+	if err != nil {
+		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
+	}
+
+	return newResponseSimple(c, "nil", "true", http.StatusOK)
 }
 
 /// delete is not implemented currently, might change to soft delete instead
@@ -280,22 +394,17 @@ func GenInfoPut(c echo.Context, dbHandler1 *mysql.DBHandler) error {
 	dataPacket1, err1 := readJSONBody(c, dbHandler1) // read response JSON
 	if err1 != nil {
 		fmt.Println(err1)
-		return newErrorResponse(c, "Bad Request , item not found", http.StatusBadRequest)
+		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
 	}
 
 	receiveInfoRaw := mapInterfaceToString(dataPacket1) // convert received data into map[string]string
-	tarDB := dataPacket1["InfoType"].(string)
 
-	// dbInfoSlice, err3 := getItem(c, tarDB, tarItemID)
-
-	err2 := dbHandler1.EditRecord(tarDB, receiveInfoRaw) // deletes if target is found
+	err2 := dbHandler1.EditRecord(dataPacket1["InfoType"].(string), receiveInfoRaw) // deletes if target is found
 
 	if err2 == nil {
-		return newResponse(c, []interface{}{}, "nil", "CommentUser", "true", "", http.StatusCreated)
+		return newResponseSimple(c, "nil", "true", http.StatusBadRequest)
 	}
 
-	fmt.Println("logger: edit, " + tarDB + ": " + tarDB + " db not found") //reach here only if it is not returned by the switch
-
-	return newErrorResponse(c, "Bad Request , item not found", http.StatusBadRequest)
+	return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
 
 }

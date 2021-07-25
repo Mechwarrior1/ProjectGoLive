@@ -73,8 +73,8 @@ type (
 	}
 
 	DataPacketSimple struct {
-		Msg     string `json:"Msg"`
-		ResBool string `json:"ResBool"`
+		ErrorMsg string `json:"ErrorMsg"`
+		ResBool  string `json:"ResBool"`
 	}
 
 	DBHandler struct {
@@ -260,6 +260,7 @@ func (dbHandler DBHandler) InsertRecord(dbTable string, receiveInfo map[string]s
 		maxID, err1 := dbHandler.GetMaxID(dbTable)
 
 		if err1 == nil {
+
 			maxIDString = fmt.Sprintf("%06d", maxID+1)
 		}
 
@@ -347,6 +348,15 @@ func (dbHandler DBHandler) GetMaxID(dbTable string) (int, error) {
 	return maxID, err
 }
 
+// get the current max ID in the server
+func (dbHandler DBHandler) GetUsername(dbTable string, id string) (string, error) {
+	results, err := dbHandler.DB.Query("SELECT Username FROM my_db." + dbTable + " WHERE ID=" + id)
+	results.Next()
+	var username string
+	results.Scan(&username)
+	return username, err
+}
+
 // edit a single record on DB, chosen record based on ID
 // based on requested database, it will be marshalled into the respective struct
 func (dbHandler DBHandler) EditRecord(dbTable string, receiveInfo map[string]string) error {
@@ -390,7 +400,7 @@ func (dbHandler DBHandler) EditRecord(dbTable string, receiveInfo map[string]str
 		}
 		defer stmt.Close()
 
-		_, err = stmt.ExecContext(ctx, receiveInfo["ImageLink"], receiveInfo["CommentItem"], receiveInfo["ConditionItem"], receiveInfo["Cat"], receiveInfo["ContactMeetInfo"], receiveInfo["Completion"], receiveInfo["ID"])
+		_, err = stmt.ExecContext(ctx, receiveInfo["ImageLink"], receiveInfo["CommentItem"], receiveInfo["ConditionItem"], receiveInfo["Cat"], receiveInfo["ContactMeetInfo"], "false", receiveInfo["ID"])
 		return err
 
 	case "CommentUser":
