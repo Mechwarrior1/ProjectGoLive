@@ -380,7 +380,6 @@ func (dbHandler DBHandler) EditRecord(dbTable string, receiveInfo map[string]str
 			_, err = stmt.ExecContext(ctx, receiveInfo["LastLogin"], receiveInfo["CommentItem"], receiveInfo["Username"])
 			return err
 		}
-
 		stmt, err := dbHandler.DB.PrepareContext(ctx, "UPDATE "+dbTable+" SET LastLogin=?, CommentItem=? WHERE ID=?")
 
 		if err != nil {

@@ -56,9 +56,9 @@ func TestGetPwCheck(t *testing.T) {
 	mock.ExpectQuery(query2).WillReturnRows(rows2)
 
 	//mock for editing entry (UserInfo data)
-	queryEdit := "UPDATE " + "UserInfo" + " SET LastLogin=\\?, CommentItem=\\? WHERE ID=\\?"
+	queryEdit := "UPDATE " + "UserInfo" + " SET LastLogin=\\?, CommentItem=\\? WHERE Username=\\?"
 	prep := mock.ExpectPrepare(queryEdit)
-	prep.ExpectExec().WithArgs("20-7-2021", "nil", "000001").WillReturnResult(sqlmock.NewResult(0, 1))
+	prep.ExpectExec().WithArgs("20-7-2021", "3", "john").WillReturnResult(sqlmock.NewResult(0, 1))
 
 	// json payload to api
 	newMap := make(map[string]interface{})
@@ -445,7 +445,7 @@ func TestGenInfoEdit(t *testing.T) {
 	query := "UPDATE ItemListing SET ImageLink=\\?, CommentItem=\\?, ConditionItem=\\?, Cat=\\?, ContactMeetInfo=\\?, Completion=\\? WHERE ID=\\?"
 
 	prep := mock.ExpectPrepare(query)
-	prep.ExpectExec().WithArgs("image", "comment", "condition", "cat", "contact", "complete", "000001").WillReturnResult(sqlmock.NewResult(0, 1))
+	prep.ExpectExec().WithArgs("image", "comment", "condition", "cat", "contact", "false", "000001").WillReturnResult(sqlmock.NewResult(0, 1))
 
 	// json payload
 	newMap := make(map[string]interface{})
@@ -454,7 +454,7 @@ func TestGenInfoEdit(t *testing.T) {
 	newMap["ConditionItem"] = "condition"
 	newMap["Cat"] = "cat"
 	newMap["ContactMeetInfo"] = "contact"
-	newMap["Completion"] = "complete"
+	newMap["Completion"] = "false"
 	newMap["ID"] = "000001"
 
 	dataPacket1 := mysql.DataPacket{
