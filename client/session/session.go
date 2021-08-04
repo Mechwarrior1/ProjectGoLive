@@ -5,9 +5,7 @@ import (
 	"client/jwtsession"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/labstack/echo"
@@ -57,47 +55,47 @@ type (
 )
 
 // function attached to logger struct, uses the saved channel variables and pass values to the channels
-func (logger logger) LogTrace(logType string, msg string) {
-	logger.c1 <- logType
-	logger.c2 <- msg
-}
+// func (logger logger) LogTrace(logType string, msg string) {
+// 	logger.c1 <- logType
+// 	logger.c2 <- msg
+// }
 
 // the actual function incharge of logging
 // opens 2 channels and returns both channels
 // starts a goroutine that takes any string output from both channels and logs them into the logger file
 // goroutine opens the logger file and defer the closure, waits for any input in a for loop
 // for loop closes when it receives "close_goRoutine" on c1 channel
-func LoggerGo() (chan string, chan string) {
-	c1 := make(chan string)
-	c2 := make(chan string)
-	var logType string
-	var msg string
-	go func(c1 chan string, c2 chan string) {
-		f, err := os.OpenFile("secure//logger.log",
-			os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			log.Println(err)
-		}
-		defer f.Close()
-		for {
-			logType = <-c1
-			msg = <-c2
-			Trace := log.New(f,
-				logType+": ",
-				log.Ldate|log.Ltime|log.Lshortfile)
-			if logType == "close_goRoutine" {
-				Trace := log.New(f,
-					"TRACE: ",
-					log.Ldate|log.Ltime|log.Lshortfile)
-				Trace.Println("Closing logger go routine")
-				break
-			}
-			Trace.Println(msg)
-		}
-	}(c1, c2)
+// func LoggerGo() (chan string, chan string) {
+// 	c1 := make(chan string)
+// 	c2 := make(chan string)
+// 	var logType string
+// 	var msg string
+// 	go func(c1 chan string, c2 chan string) {
+// 		f, err := os.OpenFile("secure//logger.log",
+// 			os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+// 		if err != nil {
+// 			log.Println(err)
+// 		}
+// 		defer f.Close()
+// 		for {
+// 			logType = <-c1
+// 			msg = <-c2
+// 			Trace := log.New(f,
+// 				logType+": ",
+// 				log.Ldate|log.Ltime|log.Lshortfile)
+// 			if logType == "close_goRoutine" {
+// 				Trace := log.New(f,
+// 					"TRACE: ",
+// 					log.Ldate|log.Ltime|log.Lshortfile)
+// 				Trace.Println("Closing logger go routine")
+// 				break
+// 			}
+// 			Trace.Println(msg)
+// 		}
+// 	}(c1, c2)
 
-	return c1, c2
-}
+// 	return c1, c2
+// }
 
 // // a function to update a user's last login.
 // func (u *userPersistInfo) updateLastLogin() *userPersistInfo {
@@ -117,8 +115,7 @@ func (s *Session) CheckSession(c echo.Context, jwtClaim *jwtsession.JwtClaim, jw
 
 	if sessionStruct.Uuid != jwtClaim.Context.Uuid { //if the jwt uuid id different from stored uuid, immediately invalidates current jwt
 
-		fmt.Println(*s.MapSession)
-		fmt.Println(jwtClaim.Context.Username, ",old uuid: ", sessionStruct.Uuid, ", your uuid: ", jwtClaim.Context.Uuid)
+		fmt.Println("logging out user:", jwtClaim.Context.Username, ",old uuid: ", sessionStruct.Uuid, ", your uuid: ", jwtClaim.Context.Uuid)
 
 		newJwt, claims, _ := jwtWrapper.GenerateToken("error", "you have been logged out", "false", "", "", uuid.NewV4().String())
 
@@ -129,7 +126,6 @@ func (s *Session) CheckSession(c echo.Context, jwtClaim *jwtsession.JwtClaim, jw
 	}
 
 	(*s.MapSession)[jwtClaim.Context.Username] = SessionStruct{jwtClaim.Context.Uuid, jwtClaim.StandardClaims.ExpiresAt}
-	fmt.Println("new mapsession, ", (*s.MapSession))
 	return jwtClaim
 }
 
@@ -159,7 +155,6 @@ func (s *Session) PruneOldSessions() { // intended to run concurrently, go prune
 // a function that gets Jwt from cookie.
 func (s *Session) GetCookieJwt(c echo.Context, jwtWrapper *jwtsession.JwtWrapper) (*jwtsession.JwtClaim, error) { //set new cookie if cookie is not found.
 	goRecycleCookie, err := c.Cookie("goRecycleCookie")
-
 	if err != nil {
 		//success string, msg string, admin string, lastLogin string, username string, uuid string
 		newJwt, claims, err := jwtWrapper.GenerateToken("", "", "false", "", "", uuid.NewV4().String())

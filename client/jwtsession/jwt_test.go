@@ -8,13 +8,13 @@ import (
 )
 
 func TestGenerateToken(t *testing.T) {
-	jwtWrapper := JwtWrapper{
-		SecretKey:       "verysecretkey",
-		Issuer:          "AuthService",
-		ExpirationHours: 24,
+	jwtWrapper := &JwtWrapper{
+		"key",
+		"GoRecycle",
+		10,
 	}
 
-	generatedToken, err := jwtWrapper.GenerateToken("jwt@email.com")
+	generatedToken, _, err := jwtWrapper.GenerateToken("success", "msg", "false", "lastlogin", "username", "uuid")
 	assert.NoError(t, err)
 
 	os.Setenv("testToken", generatedToken)
@@ -23,14 +23,19 @@ func TestGenerateToken(t *testing.T) {
 func TestValidateToken(t *testing.T) {
 	encodedToken := os.Getenv("testToken")
 
-	jwtWrapper := JwtWrapper{
-		SecretKey: "verysecretkey",
-		Issuer:    "AuthService",
+	jwtWrapper := &JwtWrapper{
+		"key",
+		"GoRecycle",
+		10,
 	}
 
 	claims, err := jwtWrapper.ValidateToken(encodedToken)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "jwt@email.com", claims.Email)
-	assert.Equal(t, "AuthService", claims.Issuer)
+	assert.Equal(t, "success", claims.Context.Success)
+	assert.Equal(t, "msg", claims.Context.Msg)
+	assert.Equal(t, "lastlogin", claims.Context.LastLogin)
+	assert.Equal(t, "username", claims.Context.Username)
+	assert.Equal(t, "uuid", claims.Context.Uuid)
+	assert.Equal(t, "GoRecycle", claims.StandardClaims.Issuer)
 }

@@ -230,7 +230,7 @@ func TestEditRecord2(t *testing.T) {
 	query := "UPDATE " + dbTable + " SET ImageLink=\\?, CommentItem=\\?, ConditionItem=\\?, Cat=\\?, ContactMeetInfo=\\?, Completion=\\? WHERE ID=\\?"
 
 	prep := mock.ExpectPrepare(query)
-	prep.ExpectExec().WithArgs("image", "comment", "condition", "cat", "contact", "complete", "000001").WillReturnResult(sqlmock.NewResult(0, 1))
+	prep.ExpectExec().WithArgs("image", "comment", "condition", "cat", "contact", "false", "000001").WillReturnResult(sqlmock.NewResult(0, 1))
 
 	newMap := make(map[string]string)
 
@@ -239,7 +239,7 @@ func TestEditRecord2(t *testing.T) {
 	newMap["ConditionItem"] = "condition"
 	newMap["Cat"] = "cat"
 	newMap["ContactMeetInfo"] = "contact"
-	newMap["Completion"] = "complete"
+	newMap["Completion"] = "false"
 	newMap["ID"] = "000001"
 
 	err := dbHandler1.EditRecord(dbTable, newMap)
