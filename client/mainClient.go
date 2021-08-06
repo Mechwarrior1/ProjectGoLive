@@ -38,9 +38,11 @@ func main() {
 		templates: template.Must(template.ParseGlob("templates/*.gohtml")),
 	}
 	e.Renderer = t
+	client := &http.Client{}
 	sessionMgr := &session.Session{
 		MapSession: &map[string]session.SessionStruct{},
 		ApiKey:     string(encrypt.DecryptFromFile("secure/apikey")),
+		Client:     &client,
 	}
 
 	// c1, c2 := loggerGo()

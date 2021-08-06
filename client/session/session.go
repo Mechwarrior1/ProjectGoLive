@@ -13,34 +13,11 @@ import (
 )
 
 type (
-
-	// // persistInfo is mainly to let the server give user feedback, based on their input in different pages.
-	// // keeps tracks of the activity of the session.
-	// userPersistInfo struct {
-
-	// 	// gives a green highlighted msg on html if "true".
-	// 	Success string
-
-	// 	//the msg to be printed if Success is "true".
-	// 	Msg string
-
-	// 	// the username for the session, None if not logged in.
-	// 	Username string
-
-	// 	// a string of the date and time of user's last login, to be printed on html.
-	// 	LastLogin string
-
-	// 	// a variable to keep tract of user's last active time.
-	// 	LastActive int64
-
-	// 	// boolean, true of this user is an admin.
-	// 	IsAdmin bool
-	// }
-
 	// a struct to manage jwt blacklist
 	Session struct {
 		MapSession *map[string]SessionStruct // maps UUID to date (int64)
 		ApiKey     string
+		Client     ClientDo
 	}
 
 	SessionStruct struct {
@@ -48,9 +25,13 @@ type (
 		LastActive int64
 	}
 
-	logger struct {
-		c1 chan string
-		c2 chan string
+	// logger struct {
+	// 	c1 chan string
+	// 	c2 chan string
+	// }
+
+	ClientDo interface {
+		Do(req *http.Request) (*http.Response, error)
 	}
 )
 
@@ -119,7 +100,7 @@ func (s *Session) CheckSession(c echo.Context, jwtClaim *jwtsession.JwtClaim, jw
 
 		newJwt, claims, _ := jwtWrapper.GenerateToken("error", "you have been logged out", "false", "", "", uuid.NewV4().String())
 
-		fmt.Println("new mapsession2, ", claims.Context.Username, (*s.MapSession))
+		// fmt.Println("new mapsession2, ", claims.Context.Username, (*s.MapSession))
 		NewCookie(c, 3, newJwt)
 
 		return claims // return new claims for user, since old session got terminated
@@ -155,7 +136,7 @@ func (s *Session) PruneOldSessions() { // intended to run concurrently, go prune
 // a function that gets Jwt from cookie.
 func (s *Session) GetCookieJwt(c echo.Context, jwtWrapper *jwtsession.JwtWrapper) (*jwtsession.JwtClaim, error) { //set new cookie if cookie is not found.
 	goRecycleCookie, err := c.Cookie("goRecycleCookie")
-	if err != nil {
+	if err != nil { //no cookie found, create new token and set as cookie value
 		//success string, msg string, admin string, lastLogin string, username string, uuid string
 		newJwt, claims, err := jwtWrapper.GenerateToken("", "", "false", "", "", uuid.NewV4().String())
 		if err != nil {
@@ -192,6 +173,8 @@ func ExpCookie(c echo.Context) { //make a new cookie.
 	NewCookie(c, -1, "")
 }
 
+//updates jwt token in cookie
+//also updates the sessions for user, used for when users login
 func UpdateJwtLong(success string, msg string, admin string, lastLogin string, username string, jwtContext *jwtsession.JwtContext, c echo.Context, jwtWrapper *jwtsession.JwtWrapper, session *Session) {
 	//success string, msg string, admin string, lastLogin string, username string, uuid string
 	newJwt, jwtClaim, err := jwtWrapper.GenerateToken(success, msg, admin, lastLogin, username, jwtContext.Uuid)
@@ -205,6 +188,8 @@ func UpdateJwtLong(success string, msg string, admin string, lastLogin string, u
 	NewCookie(c, 10*60, newJwt)
 }
 
+//updates jwt token in cookie with messages
+//main method of displaying feedbacks to users throughout the site
 func UpdateJwt(success string, msg string, jwtContext *jwtsession.JwtContext, c echo.Context, jwtWrapper *jwtsession.JwtWrapper) {
 	//success string, msg string, admin string, lastLogin string, username string, uuid string
 	newJwt, _, _ := jwtWrapper.GenerateToken(success, msg, jwtContext.Admin, jwtContext.LastLogin, jwtContext.Username, jwtContext.Uuid)

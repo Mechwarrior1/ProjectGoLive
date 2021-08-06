@@ -38,14 +38,14 @@ jobs: #job to execute on event
         go get github.com/satori/go.uuid
         go get github.com/tebeka/go2xunit
         cd api_server
-        go test -v ./...
-        go test -v ./... | go2xunit > report.xml #run test again and output as report.xml
+        go test -v ./... -coverpkg ./... -coverprofile cover.out
+        go test -v ./... -coverpkg ./... -coverprofile cover.out | go2xunit > report.xml 
         ls #verify report is created
         
         cd ..
         cd client
-        go test -v ./...
-        go test -v ./... | go2xunit > report2.xml #run test again and output as report.xml
+        go test -v ./... -coverpkg ./... -coverprofile cover.out
+        go test -v ./... -coverpkg ./... -coverprofile cover.out | go2xunit > report2.xml #run test again and output as report.xml
         
     - name: Publish unit test result
       uses: EnricoMi/publish-unit-test-result-action@v1 #checkout unit test reporting 

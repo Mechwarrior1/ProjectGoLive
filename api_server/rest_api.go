@@ -43,7 +43,7 @@ func main() {
 		return controller.Completed(c, &dbHandler1)
 	})
 
-	e.GET("/api/v0/db/info/", func(c echo.Context) error { //attach query parameters
+	e.GET("/api/v0/db/info", func(c echo.Context) error { //attach query parameters
 		return controller.GenInfoGet(c, &dbHandler1)
 	})
 	// e.DELETE("/api/v0/db/info", func(c echo.Context) error {

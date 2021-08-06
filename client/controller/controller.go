@@ -12,6 +12,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -37,8 +38,13 @@ type (
 		Msg     string `json:"Msg"`
 		ResBool string `json:"ResBool"`
 	}
+
 	Template struct {
 		templates *template.Template
+	}
+
+	HTTPClient interface {
+		Do(req *http.Request) (*http.Response, error)
 	}
 )
 
@@ -63,7 +69,7 @@ func replaceAllString(string1 string) string {
 // requires the method and datapacket
 // returns any courseinfo and error
 
-func tapApi(httpMethod string, jsonData interface{}, url string) (*map[string]interface{}, error) {
+func tapApi(httpMethod string, jsonData interface{}, url string, sessionMgr *session.Session) (*map[string]interface{}, error) {
 	url = baseURL + url
 	var request *http.Request
 	if jsonData != nil {
@@ -75,10 +81,9 @@ func tapApi(httpMethod string, jsonData interface{}, url string) (*map[string]in
 	}
 
 	request.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
-	response, err := client.Do(request)
+	// client := &http.Client{}
+	response, err := sessionMgr.Client.Do(request)
 	mapInterface := make(map[string]interface{})
-	fmt.Println(url, ", ", mapInterface)
 	if err != nil {
 		fmt.Println("tapapi failed with error:", err.Error())
 		return &mapInterface, errors.New("https request failed with " + err.Error())
@@ -118,6 +123,10 @@ func CreatePost_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionM
 
 	// get form values and check
 	form, _ := c.FormParams()
+	if len(form["PostName"]) == 0 {
+		session.UpdateJwt("error", "an error has occurred", jwtContext, c, jwtWrapper)
+		return c.Redirect(http.StatusSeeOther, "/")
+	}
 
 	if strings.Contains(form["PostImg2"][0], "script") {
 		session.UpdateJwt("error", "Please fill in the form correctly, without special characters for the name and title", jwtContext, c, jwtWrapper)
@@ -126,6 +135,7 @@ func CreatePost_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionM
 
 	// take inputs and put into map for api/server
 	newPost := make(map[string]interface{})
+
 	newPost["Name"] = form["PostName"][0]
 	newPost["CommentItem"] = form["PostComment"][0]
 	newPost["ConditionItem"] = form["PostCondition"][0]
@@ -155,8 +165,8 @@ func CreatePost_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionM
 		DataInfo:    []map[string]interface{}{newPost},
 	}
 
-	fmt.Println("##post: ", jsonData1)
-	_, err5 := tapApi("POST", jsonData1, "db/info")
+	// communicate with api, with json payload
+	_, err5 := tapApi("POST", jsonData1, "db/info", sessionMgr)
 
 	if err5 != nil {
 
@@ -166,7 +176,7 @@ func CreatePost_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionM
 		// logger1.logTrace("TRACE", "Created item: '"+postName+"', by user: '"+jwtContext.Username+""+"' desc: '"+postComment+"'")
 
 		session.UpdateJwt("ok", "You have created item: '"+newPost["Name"].(string)+"'", jwtContext, c, jwtWrapper)
-		return c.Redirect(http.StatusSeeOther, "/createpost")
+		return c.Redirect(http.StatusFound, "/createpost")
 	}
 
 	session.UpdateJwt("", "", jwtContext, c, jwtWrapper)
@@ -235,7 +245,7 @@ func EditPost_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr
 		DataInfo:    []map[string]interface{}{newPost},
 	}
 
-	_, err5 := tapApi(http.MethodPut, jsonData1, "db/info") //communicate with api
+	_, err5 := tapApi(http.MethodPut, jsonData1, "db/info", sessionMgr) //communicate with api
 	// if error feedback to user
 	if err5 != nil {
 		session.UpdateJwt("error", "An error has occurred, please try again later", jwtContext, c, jwtWrapper)
@@ -244,7 +254,7 @@ func EditPost_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr
 
 		// logger1.logTrace("TRACE", "Created item: '"+postName+"', by user: '"+jwtContext.Username+""+"' desc: '"+postComment+"'")
 		session.UpdateJwt("ok", "You have edited item: '"+newPost["Name"].(string)+"'", jwtContext, c, jwtWrapper)
-		return c.Redirect(http.StatusSeeOther, "/editpost/"+c.Param("id"))
+		return c.Redirect(http.StatusFound, "/editpost/"+c.Param("id"))
 	}
 
 	session.UpdateJwt("", "", jwtContext, c, jwtWrapper)
@@ -253,7 +263,6 @@ func EditPost_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr
 
 //  takes information from rest api and populate the rendered html form
 func EditPost_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session) error {
-
 	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
 	jwtContext := &jwtClaim.Context
 
@@ -264,9 +273,15 @@ func EditPost_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr 
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 
-	dataPacket1, err1 := tapApi(http.MethodGet, "", "db/info/?id="+c.Param("id")+"&db=ItemListing")
+	//create url string with query
+	q := make(url.Values)
+	q.Set("id", c.Param("id"))
+	q.Set("db", "ItemListing")
+
+	dataPacket1, err1 := tapApi(http.MethodGet, "", "api/v0/db/info?"+q.Encode(), sessionMgr)
+
 	if jwtContext.Username != (*dataPacket1)["DataInfo"].([]interface{})[0].(map[string]interface{})["Username"].(string) {
-		session.UpdateJwt("error", "You have to be logged in to use this service", jwtContext, c, jwtWrapper)
+		session.UpdateJwt("error", "you cannot edit a post by others", jwtContext, c, jwtWrapper)
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 
@@ -375,7 +390,7 @@ func SeePostAll_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMg
 		}
 	}
 
-	dataPacket1, err1 := tapApi("GET", "", "listing/?name="+searchParam)
+	dataPacket1, err1 := tapApi("GET", "", "listing/?name="+searchParam, sessionMgr)
 	dataInfoSorted := []interface{}{}
 	if err1 != nil {
 		session.UpdateJwt("error", "An error has occurred, please try again later", jwtContext, c, jwtWrapper)
@@ -410,7 +425,7 @@ func GetPostDetail_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessio
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 
-	dataPacket1, err1 := tapApi(http.MethodGet, "", "db/info/?id="+c.Param("id")+"&db=ItemListing")
+	dataPacket1, err1 := tapApi(http.MethodGet, "", "db/info/?id="+c.Param("id")+"&db=ItemListing", sessionMgr)
 
 	if err1 != nil || (*dataPacket1)["ResBool"] == "false" || len((*dataPacket1)["DataInfo"].([]interface{})) == 0 {
 		//if post id does not exist return to search page
@@ -421,7 +436,7 @@ func GetPostDetail_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessio
 
 	// request for Comments for the post, sending the post id to api, if id cannot be found, redirect
 
-	dataPacket2, _ := tapApi(http.MethodGet, "", "comment/"+c.Param("id"))
+	dataPacket2, _ := tapApi(http.MethodGet, "", "comment/"+c.Param("id"), sessionMgr)
 
 	// send data of post and its comments to the template for rendering
 	postData := (*dataPacket1)["DataInfo"].([]interface{})[0].(map[string]interface{})
@@ -471,7 +486,7 @@ func GetPostDetail_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessi
 	}
 
 	jsonData1.DataInfo = []map[string]interface{}{mapComment}
-	dataPacket3, err3 := tapApi(http.MethodPost, jsonData1, "db/info")
+	dataPacket3, err3 := tapApi(http.MethodPost, jsonData1, "db/info", sessionMgr)
 
 	// if response is an error
 	if err3 == nil && (*dataPacket3)["ResBool"].(string) == "true" {
@@ -497,7 +512,7 @@ func SeePostUser(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *
 
 	postUsername := c.Param("id") // get post id
 
-	dataPacket1, err1 := tapApi("GET", "", "listing/?name=&filter="+postUsername)
+	dataPacket1, err1 := tapApi("GET", "", "listing/?name=&filter="+postUsername, sessionMgr)
 	// dataInfoSorted, _ := sortPost(dataPacket1.DataInfo, "All", "All", "desc")
 
 	if err1 != nil || (*dataPacket1)["ErrorMsg"] == "false" {
@@ -540,7 +555,7 @@ func PostComplete(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr 
 	}
 
 	//if error feedback to user and
-	_, err5 := tapApi("PUT", jsonData1, "db/completed/"+c.Param("id"))
+	_, err5 := tapApi("PUT", jsonData1, "db/completed/"+c.Param("id"), sessionMgr)
 
 	if err5 != nil {
 		// logger1.logTrace("TRACE", "error encountered while changing status of '"+mapListing2["Name"].(string)+"' to completed ")
@@ -590,7 +605,7 @@ func GetUser_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *
 
 	// reuqesting the information for the user, using the post id
 
-	dataPacket1, err1 := tapApi(http.MethodGet, "", "db/info/?id="+idParam+"&db=UserInfo")
+	dataPacket1, err1 := tapApi(http.MethodGet, "", "db/info/?id="+idParam+"&db=UserInfo", sessionMgr)
 	// if error in fetching data
 	if err1 != nil || (*dataPacket1)["ResBool"] == "false" || len((*dataPacket1)["DataInfo"].([]interface{})) == 0 {
 		//if user id does not exist return to index page
@@ -643,7 +658,7 @@ func GetUser_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr 
 		DataInfo:    []map[string]interface{}{mapComment},
 	}
 
-	dataPacket3, err3 := tapApi(http.MethodPut, jsonData1, "db/info")
+	dataPacket3, err3 := tapApi(http.MethodPut, jsonData1, "db/info", sessionMgr)
 
 	// if error in posting a comment
 	if err3 == nil && (*dataPacket3)["ResBool"].(string) == "true" {
@@ -657,9 +672,9 @@ func GetUser_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr 
 }
 
 // a function that checks if username is taken
-func CheckUsername(c echo.Context, username string) bool { //u
+func CheckUsername(c echo.Context, username string, sessionMgr *session.Session) bool { //u
 
-	dataInfo1, _ := tapApi(http.MethodGet, nil, "username/"+username)
+	dataInfo1, _ := tapApi(http.MethodGet, nil, "username/"+username, sessionMgr)
 	// fmt.Println("checkUser: ", err1, dataInfo1)
 
 	return (*dataInfo1)["ResBool"].(string) == "true"
@@ -682,7 +697,7 @@ func CheckPW(username string, password string, sessionMgr *session.Session) (boo
 		RequestUser: "",
 		DataInfo:    []map[string]interface{}{userSecret1},
 	}
-	dataInfo1, err1 := tapApi(http.MethodGet, jsonData1, "check")
+	dataInfo1, err1 := tapApi(http.MethodGet, jsonData1, "check", sessionMgr)
 	// receiveInfo := mapInterfaceToString(dataInfo1)
 	if err1 != nil {
 		return false, false, "error"
@@ -733,7 +748,7 @@ func Signup_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *
 	if username != "" {
 
 		// check if username exist/ taken.
-		if ok := CheckUsername(c, username); ok {
+		if ok := CheckUsername(c, username, sessionMgr); ok {
 
 			// logger1.logTrace("TRACE", "someone tried to use "+username+" to sign up, but it was used")
 			session.UpdateJwt("error", "Username already taken", jwtContext, c, jwtWrapper)
@@ -778,7 +793,7 @@ func AddUser(username string, pwString string, commentItem string, lastLogin str
 		RequestUser: username,
 		DataInfo:    []map[string]interface{}{userSecret1},
 	}
-	res, err1 := tapApi(http.MethodPost, jsonData1, "db/signup")
+	res, err1 := tapApi(http.MethodPost, jsonData1, "db/signup", sessionMgr)
 	fmt.Println("adduser1", err1)
 	if err1 != nil {
 		return err1
