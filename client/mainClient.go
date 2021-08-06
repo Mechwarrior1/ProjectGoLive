@@ -42,7 +42,7 @@ func main() {
 	sessionMgr := &session.Session{
 		MapSession: &map[string]session.SessionStruct{},
 		ApiKey:     string(encrypt.DecryptFromFile("secure/apikey")),
-		Client:     &client,
+		Client:     client,
 	}
 
 	// c1, c2 := loggerGo()
