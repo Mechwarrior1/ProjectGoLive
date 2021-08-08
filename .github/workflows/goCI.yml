@@ -40,9 +40,8 @@ jobs: #job to execute on event
         cd api_server
         go test -v ./... -coverpkg ./... -coverprofile=profile.cov ./...
         go test -v ./... -coverpkg ./... -coverprofile=profile.cov ./... | go2xunit > report_api_test.xml
+        ls
         go tool cover -html=profile.cov -o cover.html | go2xunit > report_api_coverage.html
-
-        ls #verify report is created
         
         cd ..
         cd client
@@ -86,15 +85,15 @@ jobs: #job to execute on event
       with:
         name: assetDocument
       
-    - if: ${{ failure() }}
-      name: Create issues notifications
-      uses: nashmaniac/create-issue-action@v1.1
-      with:
-        title: Build Failed
-        token: ${{secrets.GITHUB_TOKEN}}
-        assignees: ${{github.actor}}
-        labels: worflow-failed
-        body: Workflow failed for commit ${{github.sha}}
+    # - if: ${{ failure() }}
+    #   name: Create issues notifications
+    #   uses: nashmaniac/create-issue-action@v1.1
+    #   with:
+    #     title: Build Failed
+    #     token: ${{secrets.GITHUB_TOKEN}}
+    #     assignees: ${{github.actor}}
+    #     labels: worflow-failed
+    #     body: Workflow failed for commit ${{github.sha}}
       
     - name: Notify on Discord.
       uses: fateyan/action-discord-notifier@v1
