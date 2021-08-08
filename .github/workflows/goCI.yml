@@ -54,10 +54,11 @@ jobs: #job to execute on event
       uses: EnricoMi/publish-unit-test-result-action@v1 #checkout unit test reporting 
       if: always() #always happen
       with: 
-        files: api_server/report_api_test.xml #uses a file created earlier
-        files: api_server/report_api_coverage.html #uses a file created earlier
-        files: client/report_client_test.xml #uses a file created earlier
-        files: client/report_client_coverage.html #uses a file created earlier
+        files: |
+          api_server/report_api_test.xml #uses a file created earlier
+          api_server/report_api_coverage.html #uses a file created earlier
+          client/report_client_test.xml #uses a file created earlier
+          client/report_client_coverage.html #uses a file created earlier
         
     # - name: Publish unit test result
     #   uses: EnricoMi/publish-unit-test-result-action@v1 #checkout unit test reporting 
