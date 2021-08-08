@@ -71,8 +71,10 @@ jobs: #job to execute on event
       
     - name: Prepare documents
       run: |
-        mv api_server/report.xml ./upload #move file to upload folder
-        mv client/report2.xml ./upload #move file to upload folder
+        mv api_server/report_api_test.xml ./upload 
+        mv api_server/report_api_coverage.html ./upload 
+        mv client/report_client_test.xml ./upload 
+        mv client/report_client_coverage.html ./upload 
       
     - name: Prepare artifacts
       uses: actions/upload-artifact@v2
