@@ -38,12 +38,15 @@ func main() {
 		templates: template.Must(template.ParseGlob("controller/templates/*.gohtml")),
 	}
 	e.Renderer = t
+
 	client := &http.Client{}
 	sessionMgr := &session.Session{
 		MapSession: &map[string]session.SessionStruct{},
 		ApiKey:     string(encrypt.DecryptFromFile("secure/apikey")),
 		Client:     client,
 	}
+
+	searchSession := make(map[string][]string)
 
 	// c1, c2 := loggerGo()
 	// logger1 = logger{c1, c2}

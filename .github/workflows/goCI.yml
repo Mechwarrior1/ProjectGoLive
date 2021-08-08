@@ -37,29 +37,33 @@ jobs: #job to execute on event
         go get golang.org/x/crypto/bcrypt
         go get github.com/satori/go.uuid
         go get github.com/tebeka/go2xunit
-        # cd api_server
+        cd api_server
         go test -v ./... -coverpkg ./... -coverprofile=profile.cov ./...
-        go test -v ./... -coverpkg ./... -coverprofile=profile.cov ./... | go2xunit > report.xml 
-        go tool cover -func profile.cov
+        go test -v ./... -coverpkg ./... -coverprofile=profile.cov ./... | go2xunit > report_api_test.xml
+        go tool cover -html=profile.cov -o cover.html | go2xunit > report_api_coverage.html
+
         ls #verify report is created
         
-        # cd ..
-        # cd client
-        # go test -v ./... -coverpkg ./... -coverprofile=profile.cov ./...
-        # go test -v ./... -coverpkg ./... -coverprofile=profile.cov ./... | go2xunit > report2.xml #run test again and output as report.xml
-        # go tool cover -func profile.cov
+        cd ..
+        cd client
+        go test -v ./... -coverpkg ./... -coverprofile=profile.cov ./...
+        go test -v ./... -coverpkg ./... -coverprofile=profile.cov ./... | go2xunit > report_client_test.xml #run test again and output as report.xml
+        go tool cover -html=profile.cov -o cover.html | go2xunit > report_client_coverage.html
 
     - name: Publish unit test result
       uses: EnricoMi/publish-unit-test-result-action@v1 #checkout unit test reporting 
       if: always() #always happen
       with: 
-        files: api_server/report.xml #uses a file created earlier
+        files: api_server/report_api_test.xml #uses a file created earlier
+        files: api_server/report_api_coverage.html #uses a file created earlier
+        files: client/report_client_test.xml #uses a file created earlier
+        files: client/report_client_coverage.html #uses a file created earlier
         
-    - name: Publish unit test result
-      uses: EnricoMi/publish-unit-test-result-action@v1 #checkout unit test reporting 
-      if: always() #always happen
-      with: 
-        files: client/report2.xml #uses a file created earlier
+    # - name: Publish unit test result
+    #   uses: EnricoMi/publish-unit-test-result-action@v1 #checkout unit test reporting 
+    #   if: always() #always happen
+    #   with: 
+    #     files: client/report2.xml #uses a file created earlier
         
     - if: ${{ success() }}
       name: Export report
