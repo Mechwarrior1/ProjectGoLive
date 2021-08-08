@@ -32,7 +32,7 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 	return t.templates.ExecuteTemplate(w, name, data)
 }
 
-func main() {
+func StartServer() (http.Server, *echo.Echo, error) {
 	e := echo.New()
 	t := &Template{
 		templates: template.Must(template.ParseGlob("controller/templates/*.gohtml")),
@@ -46,7 +46,7 @@ func main() {
 		Client:     client,
 	}
 
-	searchSession := make(map[string][]string)
+	// searchSession := make(map[string][]string)
 
 	// c1, c2 := loggerGo()
 	// logger1 = logger{c1, c2}
@@ -146,6 +146,12 @@ func main() {
 	go sessionMgr.PruneOldSessions()
 
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	return s, e, nil
+}
+
+func main() {
+	s, e, _ := StartServer()
 	if err := s.ListenAndServeTLS("secure//cert.pem", "secure//key.pem"); err != nil && err != http.ErrServerClosed {
 		e.Logger.Fatal(err)
 	}

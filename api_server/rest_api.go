@@ -13,7 +13,7 @@ import (
 	"github.com/labstack/echo/middleware"
 )
 
-func main() {
+func StartServer() (http.Server, *echo.Echo, error) {
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	embed := word2vec.GetWord2Vec()
 	dbHandler1 := mysql.OpenDB()
@@ -59,9 +59,12 @@ func main() {
 
 	e.Use(middleware.Recover())
 	// e.Use(middleware.Logger())
+	return s, e, nil
+}
 
+func main() {
+	s, e, _ := StartServer()
 	if err := s.ListenAndServeTLS("secure//cert.pem", "secure//key.pem"); err != nil && err != http.ErrServerClosed {
 		e.Logger.Fatal(err)
 	}
-
 }
