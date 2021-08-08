@@ -65,10 +65,30 @@ func replaceAllString(string1 string) string {
 	return processedString
 }
 
+// helps to check the jwt token, see if user is logged in
+// takes in echo.context, jwtwrapper, sessionmgr and checkUsername flag
+// returns jwt claims and error if any
+func checkLoggedIn(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session, checkUsername bool) (*jwtsession.JwtClaim, *jwtsession.JwtContext, error) {
+	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
+	jwtContext := &jwtClaim.Context
+
+	//checks if username is not empty, if the flag to check is triggered
+	if jwtContext.Username == "" && checkUsername {
+		session.UpdateJwt("error", "You have to be logged in to use this service", jwtContext, c, jwtWrapper)
+		return jwtClaim, jwtContext, errors.New("you have to be logged in to use this service")
+	}
+
+	if err != nil {
+		session.UpdateJwt("error", "An error has occurred", jwtContext, c, jwtWrapper)
+		fmt.Println("jwt error: ", err.Error())
+		return jwtClaim, jwtContext, errors.New("jwt error")
+	}
+	return jwtClaim, jwtContext, err
+}
+
 // the function to access the rest api
 // requires the method and datapacket
 // returns any courseinfo and error
-
 func tapApi(httpMethod string, jsonData interface{}, url string, sessionMgr *session.Session) (*map[string]interface{}, error) {
 	url = baseURL + url
 	var request *http.Request
@@ -114,10 +134,8 @@ func tapApi(httpMethod string, jsonData interface{}, url string, sessionMgr *ses
 
 // takes inputs from forms and send them to reset api
 func CreatePost_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session) error {
-	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
-	jwtContext := &jwtClaim.Context
-	if jwtContext.Username == "" || err != nil {
-		session.UpdateJwt("error", "You have to be logged in to use this service", jwtContext, c, jwtWrapper)
+	_, jwtContext, err := checkLoggedIn(c, jwtWrapper, sessionMgr, false)
+	if err != nil {
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 
@@ -185,13 +203,10 @@ func CreatePost_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionM
 
 //renders the go html for get request, see post
 func CreatePost_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session) error {
-	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
-	jwtContext := &jwtClaim.Context
-	if jwtContext.Username == "" || err != nil {
-		session.UpdateJwt("error", "You have to be logged in to use this service", jwtContext, c, jwtWrapper)
+	_, jwtContext, err := checkLoggedIn(c, jwtWrapper, sessionMgr, true)
+	if err != nil {
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
-
 	session.UpdateJwt("", "", jwtContext, c, jwtWrapper)
 	return c.Render(http.StatusOK, "createpost.gohtml", jwtContext)
 }
@@ -261,36 +276,34 @@ func EditPost_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr
 	return c.Redirect(http.StatusSeeOther, "/getpost/"+c.Param("id"))
 }
 
-//  takes information from rest api and populate the rendered html form
+// query rest api for information and populate the rendered html form
 func EditPost_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session) error {
-	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
-	jwtContext := &jwtClaim.Context
-
-	fmt.Println("editpost get, ", jwtContext)
-
-	if jwtContext.Username == "" || err != nil {
-		session.UpdateJwt("error", "You have to be logged in to use this service", jwtContext, c, jwtWrapper)
+	_, jwtContext, err := checkLoggedIn(c, jwtWrapper, sessionMgr, true)
+	if err != nil {
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 
-	//create url string with query
+	//params from url are used in rest api query
 	q := make(url.Values)
 	q.Set("id", c.Param("id"))
 	q.Set("db", "ItemListing")
-
+	//query rest api
 	dataPacket1, err1 := tapApi(http.MethodGet, "", "api/v0/db/info?"+q.Encode(), sessionMgr)
 
+	//check returned information, redirects if error or information is nil
+	if err1 != nil || len((*dataPacket1)["DataInfo"].([]interface{})) == 0 {
+		session.UpdateJwt("error", "An error has occurred, please try again later", jwtContext, c, jwtWrapper)
+		return c.Redirect(http.StatusSeeOther, "/")
+	}
+
+	// checks if the user editing is the owner of the post
+	// redirects if not owner
 	if jwtContext.Username != (*dataPacket1)["DataInfo"].([]interface{})[0].(map[string]interface{})["Username"].(string) {
 		session.UpdateJwt("error", "you cannot edit a post by others", jwtContext, c, jwtWrapper)
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 
-	if err1 != nil {
-		session.UpdateJwt("error", "An error has occurred, please try again later", jwtContext, c, jwtWrapper)
-		return c.Redirect(http.StatusSeeOther, "/")
-	}
-
-	dataInsert := struct { //struct for inserting into go template
+	dataInsert := struct { //struct info for go template
 		DataInfo        interface{}
 		UserPersistInfo jwtsession.JwtContext
 	}{
@@ -336,17 +349,15 @@ func SortPost(dataArr []interface{}, date1 string, cat1 string, sort1 string) ([
 	maxLen := len(sortArr)
 
 	if sort1 == "asc" {
-
 		for idx := 0; idx < maxLen; idx++ { //sorts results in ascending order
 			newSorted = append(newSorted, dataArr[sortArr2[idx]])
-			// fmt.Println("data :", dataArr[sortArr2[idx]]["Name"], ", ", dataArr[sortArr2[idx]]["Similarity"])
+			// fmt.Println("data :", dataArr[sortArr2[idx]].(map[string]interface{})["ID"], ", ", dataArr[sortArr2[idx]].(map[string]interface{})["Similarity"])
 		}
 
 	} else {
-
 		for idx := maxLen - 1; idx >= 0; idx-- { //sorts results in descending order
 			newSorted = append(newSorted, dataArr[sortArr2[idx]])
-			// fmt.Println("data :", dataArr[sortArr2[idx]]["Name"], ", ", dataArr[sortArr2[idx]]["Similarity"])
+
 		}
 
 	}
@@ -355,7 +366,6 @@ func SortPost(dataArr []interface{}, date1 string, cat1 string, sort1 string) ([
 
 // takes search parameters and puts it into url to be redirected into
 func SeePostAll_POST(c echo.Context) error {
-
 	form, _ := c.FormParams()
 	postSearch := form["PostSearch"][0]
 	postDate := form["PostDate"][0]
@@ -366,10 +376,8 @@ func SeePostAll_POST(c echo.Context) error {
 
 //
 func SeePostAll_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session) error {
-	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
-	jwtContext := &jwtClaim.Context
+	_, jwtContext, err := checkLoggedIn(c, jwtWrapper, sessionMgr, false)
 	if err != nil {
-		session.UpdateJwt("error", "an error happened", jwtContext, c, jwtWrapper)
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 
@@ -418,10 +426,8 @@ func SeePostAll_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMg
 
 // a function for http handler, follow up from getCourse, zooms into the course
 func GetPostDetail_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session) error {
-	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
-	jwtContext := &jwtClaim.Context
+	_, jwtContext, err := checkLoggedIn(c, jwtWrapper, sessionMgr, false)
 	if err != nil {
-		session.UpdateJwt("error", "an error happened", jwtContext, c, jwtWrapper)
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 
@@ -442,6 +448,7 @@ func GetPostDetail_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessio
 	postData := (*dataPacket1)["DataInfo"].([]interface{})[0].(map[string]interface{})
 	dateVal, _ := strconv.Atoi(postData["DatePosted"].(string))
 	postData["DatePosted"] = time.Unix(int64(dateVal), 0).Format("02-01-2006")
+
 	dataInsert := struct {
 		PostInfo        interface{}
 		PostCommentInfo []interface{}
@@ -458,10 +465,8 @@ func GetPostDetail_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessio
 
 // post request for adding a new comment for the post
 func GetPostDetail_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session) error {
-	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
-	jwtContext := &jwtClaim.Context
+	_, jwtContext, err := checkLoggedIn(c, jwtWrapper, sessionMgr, true)
 	if err != nil {
-		session.UpdateJwt("error", "an error happened", jwtContext, c, jwtWrapper)
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 
@@ -503,10 +508,8 @@ func GetPostDetail_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessi
 // see the post for a particular user
 // filters for their post/listing
 func SeePostUser(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session) error {
-	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
-	jwtContext := &jwtClaim.Context
+	_, jwtContext, err := checkLoggedIn(c, jwtWrapper, sessionMgr, false)
 	if err != nil {
-		session.UpdateJwt("error", "an error happened", jwtContext, c, jwtWrapper)
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 
@@ -538,7 +541,6 @@ func SeePostUser(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *
 func PostComplete(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session) error {
 	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
 	jwtContext := &jwtClaim.Context
-	fmt.Println(c.Param("id"), err, jwtContext.Username)
 	if err != nil || jwtContext.Username == "" {
 		session.UpdateJwt("error", "an error happened", jwtContext, c, jwtWrapper)
 		return c.Redirect(http.StatusSeeOther, "/")
@@ -570,10 +572,8 @@ func PostComplete(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr 
 
 // a function for http handler, for the main page of the site.
 func Index_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session) error {
-	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
-	jwtContext := &jwtClaim.Context
+	_, jwtContext, err := checkLoggedIn(c, jwtWrapper, sessionMgr, false)
 	if err != nil {
-		session.UpdateJwt("error", "an error happened", jwtContext, c, jwtWrapper)
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 
@@ -593,15 +593,13 @@ func Index_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *s
 
 // a function for http handler, gives you the information on user
 func GetUser_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session) error {
-	idParam := c.QueryParam("id")
-	editParam := c.QueryParam("edit")
-
-	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
-	jwtContext := &jwtClaim.Context
+	_, jwtContext, err := checkLoggedIn(c, jwtWrapper, sessionMgr, false)
 	if err != nil {
-		session.UpdateJwt("error", "an error happened", jwtContext, c, jwtWrapper)
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
+
+	idParam := c.QueryParam("id")
+	editParam := c.QueryParam("edit")
 
 	// reuqesting the information for the user, using the post id
 
@@ -632,14 +630,12 @@ func GetUser_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *
 
 // a function for http handler, gives you the information on user
 func GetUser_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session) error {
-	idParam := c.QueryParam("id")
-
-	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
-	jwtContext := &jwtClaim.Context
+	_, jwtContext, err := checkLoggedIn(c, jwtWrapper, sessionMgr, true)
 	if err != nil {
-		session.UpdateJwt("error", "an error happened", jwtContext, c, jwtWrapper)
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
+
+	idParam := c.QueryParam("id")
 
 	// put inputs into map to be sent to api
 	form, _ := c.FormParams()
@@ -672,7 +668,7 @@ func GetUser_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr 
 }
 
 // a function that checks if username is taken
-func CheckUsername(c echo.Context, username string, sessionMgr *session.Session) bool { //u
+func CheckUsername(username string, sessionMgr *session.Session) bool { //u
 
 	dataInfo1, _ := tapApi(http.MethodGet, nil, "username/"+username, sessionMgr)
 	// fmt.Println("checkUser: ", err1, dataInfo1)
@@ -710,10 +706,8 @@ func CheckPW(username string, password string, sessionMgr *session.Session) (boo
 
 // a function for http handler, used for /signup, handles the signup portion.
 func Signup_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session) error {
-	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
-	jwtContext := &jwtClaim.Context
-	if err != nil || jwtContext.Username != "" {
-		session.UpdateJwt("error", "an error happened", jwtContext, c, jwtWrapper)
+	_, jwtContext, err := checkLoggedIn(c, jwtWrapper, sessionMgr, false)
+	if err != nil {
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 
@@ -722,10 +716,8 @@ func Signup_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *s
 
 // a function for http handler, used for /signup, handles the signup portion.
 func Signup_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session) error {
-	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
-	jwtContext := &jwtClaim.Context
-	if err != nil || jwtContext.Username != "" {
-		session.UpdateJwt("error", "an error happened", jwtContext, c, jwtWrapper)
+	_, jwtContext, err := checkLoggedIn(c, jwtWrapper, sessionMgr, false)
+	if err != nil {
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 
@@ -735,8 +727,6 @@ func Signup_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *
 	username := form["username"][0]
 	username1 := replaceAllString(username)
 	password := form["password"][0]
-
-	fmt.Println(username, password)
 
 	if username != username1 {
 		// logger1.logTrace("TRACE", "someone tried to use "+username+" to sign up, but it contained special characters")
@@ -748,7 +738,7 @@ func Signup_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *
 	if username != "" {
 
 		// check if username exist/ taken.
-		if ok := CheckUsername(c, username, sessionMgr); ok {
+		if ok := CheckUsername(username, sessionMgr); ok {
 
 			// logger1.logTrace("TRACE", "someone tried to use "+username+" to sign up, but it was used")
 			session.UpdateJwt("error", "Username already taken", jwtContext, c, jwtWrapper)
@@ -793,12 +783,11 @@ func AddUser(username string, pwString string, commentItem string, lastLogin str
 		RequestUser: username,
 		DataInfo:    []map[string]interface{}{userSecret1},
 	}
-	res, err1 := tapApi(http.MethodPost, jsonData1, "db/signup", sessionMgr)
-	fmt.Println("adduser1", err1)
+	_, err1 := tapApi(http.MethodPost, jsonData1, "db/signup", sessionMgr)
+
 	if err1 != nil {
 		return err1
 	}
-	fmt.Println(res)
 
 	// logger1.logTrace("TRACE", username+" is added/updated to system")
 	return err1
@@ -806,10 +795,8 @@ func AddUser(username string, pwString string, commentItem string, lastLogin str
 
 // a function for http handler, used for /login, handles the login portion.
 func Login_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session) error {
-	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
-	jwtContext := &jwtClaim.Context
-	if err != nil || jwtContext.Username != "" {
-		session.UpdateJwt("error", "an error happened", jwtContext, c, jwtWrapper)
+	_, jwtContext, err := checkLoggedIn(c, jwtWrapper, sessionMgr, false)
+	if err != nil {
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 
@@ -818,10 +805,8 @@ func Login_GET(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *se
 
 // a function for http handler, used for /login, handles the login portion.
 func Login_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session) error {
-	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
-	jwtContext := &jwtClaim.Context
-	if err != nil || jwtContext.Username != "" {
-		session.UpdateJwt("error", "an error happened", jwtContext, c, jwtWrapper)
+	_, jwtContext, err := checkLoggedIn(c, jwtWrapper, sessionMgr, false)
+	if err != nil {
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 
@@ -854,10 +839,8 @@ func Login_POST(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *s
 
 // a function for http handler, used for /logout, handles the logout portion.
 func Logout(c echo.Context, jwtWrapper *jwtsession.JwtWrapper, sessionMgr *session.Session) error {
-	jwtClaim, err := sessionMgr.GetCookieJwt(c, jwtWrapper)
-	jwtContext := &jwtClaim.Context
-	if jwtContext.Username == "" || err != nil {
-		session.UpdateJwt("", "", jwtContext, c, jwtWrapper)
+	_, jwtContext, err := checkLoggedIn(c, jwtWrapper, sessionMgr, true)
+	if err != nil {
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 

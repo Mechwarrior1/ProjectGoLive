@@ -6,13 +6,16 @@ import (
 	"client/session"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
+	"text/template"
+	"time"
 
 	"github.com/labstack/echo"
 	"github.com/stretchr/testify/assert"
@@ -39,7 +42,7 @@ func (m *MockClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 // provides the wrapper required by handlers
-func getWrapper() (*jwtsession.JwtWrapper, *session.Session) {
+func getDependency(address string, encode io.Reader) (*jwtsession.JwtWrapper, *session.Session, *httptest.ResponseRecorder, *http.Request, string, *echo.Echo, echo.Context) {
 	jwtWrapper := &jwtsession.JwtWrapper{
 		"key",
 		"GoRecycle",
@@ -51,7 +54,27 @@ func getWrapper() (*jwtsession.JwtWrapper, *session.Session) {
 		ApiKey:     "key",
 		Client:     &http.Client{},
 	}
-	return jwtWrapper, sessionMgr
+
+	generatedToken, _, _ := jwtWrapper.GenerateToken("success", "msg", "false", "lastlogin", "username", "uuid")
+
+	//mock form values to function post
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, address, encode)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
+
+	req.AddCookie(&http.Cookie{
+		Name:   "goRecycleCookie",
+		Value:  generatedToken,
+		MaxAge: 300,
+	})
+	e := echo.New()
+	c := e.NewContext(req, rec)
+	tem := &Template{
+		templates: template.Must(template.ParseGlob("templates/*.gohtml")),
+	}
+	e.Renderer = tem
+
+	return jwtWrapper, sessionMgr, rec, req, generatedToken, e, c
 }
 
 // the func that reads request from the perspective of the api server
@@ -74,9 +97,6 @@ func readJSONBody(r *http.Request) (map[string]interface{}, error) {
 
 func TestCreatePost_POST(t *testing.T) {
 	// create dependencies
-	jwtWrapper, sessionMgr := getWrapper()
-
-	generatedToken, _, _ := jwtWrapper.GenerateToken("success", "msg", "false", "lastlogin", "username", "uuid")
 
 	// mock client Do for handler
 	// build our response JSON
@@ -111,8 +131,6 @@ func TestCreatePost_POST(t *testing.T) {
 			}, nil
 		},
 	}
-
-	sessionMgr.Client = client
 
 	//mock form values to function post
 	f := make(url.Values)
@@ -123,18 +141,8 @@ func TestCreatePost_POST(t *testing.T) {
 	f.Set("PostContactMeetInfo", "ContactMeetInfo")
 	f.Set("PostImg2", "ImageLink.com")
 
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/createpost", strings.NewReader(f.Encode()))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
-
-	req.AddCookie(&http.Cookie{
-		Name:   "goRecycleCookie",
-		Value:  generatedToken,
-		MaxAge: 300,
-		Path:   "/",
-	})
-	e := echo.New()
-	c := e.NewContext(req, rec)
+	jwtWrapper, sessionMgr, rec, _, _, _, c := getDependency("/createpost", strings.NewReader(f.Encode()))
+	sessionMgr.Client = client
 
 	// fmt.Println(rec.Body)
 
@@ -144,15 +152,8 @@ func TestCreatePost_POST(t *testing.T) {
 }
 
 func TestCreatePost_POSTError(t *testing.T) {
-	// create dependencies
-	jwtWrapper, sessionMgr := getWrapper()
-
-	generatedToken, _, _ := jwtWrapper.GenerateToken("success", "msg", "false", "lastlogin", "username", "uuid")
-
 	// mock client Do for handler
 	// build our response JSON
-
-	// create a new reader with that JSON
 
 	client := &MockClient{
 		MockDo: func(req *http.Request) (*http.Response, error) {
@@ -183,8 +184,6 @@ func TestCreatePost_POSTError(t *testing.T) {
 		},
 	}
 
-	sessionMgr.Client = client
-
 	//mock form values to function post
 	f := make(url.Values)
 	f.Set("PostName", "john")
@@ -194,18 +193,8 @@ func TestCreatePost_POSTError(t *testing.T) {
 	f.Set("PostContactMeetInfo", "ContactMeetInfo")
 	f.Set("PostImg2", "<script>ImageLink.com")
 
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/createpost", strings.NewReader(f.Encode()))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
-
-	req.AddCookie(&http.Cookie{
-		Name:   "goRecycleCookie",
-		Value:  generatedToken,
-		MaxAge: 300,
-		Path:   "/",
-	})
-	e := echo.New()
-	c := e.NewContext(req, rec)
+	jwtWrapper, sessionMgr, rec, req, _, e, c := getDependency("/createpost", strings.NewReader(f.Encode()))
+	sessionMgr.Client = client
 
 	if assert.NoError(t, CreatePost_POST(c, jwtWrapper, sessionMgr)) {
 		assert.Equal(t, http.StatusSeeOther, rec.Code)
@@ -222,16 +211,8 @@ func TestCreatePost_POSTError(t *testing.T) {
 }
 
 func TestCreatePost_POSTError2(t *testing.T) {
-	// create dependencies
-	jwtWrapper, sessionMgr := getWrapper()
-
-	generatedToken, _, _ := jwtWrapper.GenerateToken("success", "msg", "false", "lastlogin", "username", "uuid")
-
 	// mock client Do for handler
 	// build our response JSON
-
-	// create a new reader with that JSON
-
 	client := &MockClient{
 		MockDo: func(req *http.Request) (*http.Response, error) {
 			mapResponse := make(map[string]string)
@@ -247,8 +228,6 @@ func TestCreatePost_POSTError2(t *testing.T) {
 		},
 	}
 
-	sessionMgr.Client = client
-
 	//mock form values to function post
 	f := make(url.Values)
 	f.Set("PostName", "john")
@@ -258,18 +237,8 @@ func TestCreatePost_POSTError2(t *testing.T) {
 	f.Set("PostContactMeetInfo", "ContactMeetInfo")
 	f.Set("PostImg2", "ImageLink.com")
 
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/createpost", strings.NewReader(f.Encode()))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
-
-	req.AddCookie(&http.Cookie{
-		Name:   "goRecycleCookie",
-		Value:  generatedToken,
-		MaxAge: 300,
-		Path:   "/",
-	})
-	e := echo.New()
-	c := e.NewContext(req, rec)
+	jwtWrapper, sessionMgr, rec, _, _, e, c := getDependency("/createpost", strings.NewReader(f.Encode()))
+	sessionMgr.Client = client
 
 	// fmt.Println(rec.Body)
 
@@ -277,7 +246,7 @@ func TestCreatePost_POSTError2(t *testing.T) {
 		assert.Equal(t, http.StatusSeeOther, rec.Code)
 
 		//create new req to extract cookie
-		req = &http.Request{Header: http.Header{"Cookie": rec.HeaderMap["Set-Cookie"]}}
+		req := &http.Request{Header: http.Header{"Cookie": rec.HeaderMap["Set-Cookie"]}}
 		c = e.NewContext(req, rec)
 		claims, _ := sessionMgr.GetCookieJwt(c, jwtWrapper)
 
@@ -287,17 +256,31 @@ func TestCreatePost_POSTError2(t *testing.T) {
 	}
 }
 
-func TestEditPost_POST(t *testing.T) {
+func TestCreatePost_GET(t *testing.T) {
 	// create dependencies
-	jwtWrapper, sessionMgr := getWrapper()
 
-	generatedToken, _, _ := jwtWrapper.GenerateToken("success", "msg", "false", "lastlogin", "username", "uuid")
+	jwtWrapper, sessionMgr, rec, _, _, _, c := getDependency("/createpost", nil)
 
+	if assert.NoError(t, CreatePost_GET(c, jwtWrapper, sessionMgr)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+	}
+}
+
+func TestCreatePost_GETError(t *testing.T) {
+	// create dependencies
+	jwtWrapper, sessionMgr, rec, _, _, _, c := getDependency("/createpost", nil)
+
+	//change
+	sessionMgr.MapSession = &map[string]session.SessionStruct{"user1": session.SessionStruct{"uuid", 123}}
+
+	if assert.NoError(t, CreatePost_GET(c, jwtWrapper, sessionMgr)) {
+		assert.Equal(t, http.StatusSeeOther, rec.Code)
+	}
+}
+
+func TestEditPost_POST(t *testing.T) {
 	// mock client Do for handler
 	// build our response JSON
-
-	// create a new reader with that JSON
-
 	client := &MockClient{
 		MockDo: func(req *http.Request) (*http.Response, error) {
 
@@ -326,8 +309,6 @@ func TestEditPost_POST(t *testing.T) {
 			}, nil
 		},
 	}
-
-	sessionMgr.Client = client
 
 	//mock form values to function post
 	f := make(url.Values)
@@ -338,18 +319,8 @@ func TestEditPost_POST(t *testing.T) {
 	f.Set("PostContactMeetInfo", "ContactMeetInfo")
 	f.Set("PostImg2", "ImageLink.com")
 
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/createpost", strings.NewReader(f.Encode()))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
-
-	req.AddCookie(&http.Cookie{
-		Name:   "goRecycleCookie",
-		Value:  generatedToken,
-		MaxAge: 300,
-		Path:   "/",
-	})
-	e := echo.New()
-	c := e.NewContext(req, rec)
+	jwtWrapper, sessionMgr, rec, _, _, _, c := getDependency("/editpost", strings.NewReader(f.Encode()))
+	sessionMgr.Client = client
 
 	if assert.NoError(t, EditPost_POST(c, jwtWrapper, sessionMgr)) {
 		assert.Equal(t, http.StatusFound, rec.Code)
@@ -357,16 +328,8 @@ func TestEditPost_POST(t *testing.T) {
 }
 
 func TestEditPost_POSTError(t *testing.T) {
-	// create dependencies
-	jwtWrapper, sessionMgr := getWrapper()
-
-	generatedToken, _, _ := jwtWrapper.GenerateToken("success", "msg", "false", "lastlogin", "username", "uuid")
-
 	// mock client Do for handler
 	// build our response JSON
-
-	// create a new reader with that JSON
-
 	client := &MockClient{
 		MockDo: func(req *http.Request) (*http.Response, error) {
 
@@ -395,8 +358,6 @@ func TestEditPost_POSTError(t *testing.T) {
 			}, nil
 		},
 	}
-
-	sessionMgr.Client = client
 
 	//mock form values to function post
 	f := make(url.Values)
@@ -407,18 +368,8 @@ func TestEditPost_POSTError(t *testing.T) {
 	f.Set("PostContactMeetInfo", "ContactMeetInfo")
 	f.Set("PostImg2", "<script>ImageLink.com")
 
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/createpost", strings.NewReader(f.Encode()))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
-
-	req.AddCookie(&http.Cookie{
-		Name:   "goRecycleCookie",
-		Value:  generatedToken,
-		MaxAge: 300,
-		Path:   "/",
-	})
-	e := echo.New()
-	c := e.NewContext(req, rec)
+	jwtWrapper, sessionMgr, rec, req, _, e, c := getDependency("/editpost", strings.NewReader(f.Encode()))
+	sessionMgr.Client = client
 
 	if assert.NoError(t, EditPost_POST(c, jwtWrapper, sessionMgr)) {
 		assert.Equal(t, http.StatusSeeOther, rec.Code)
@@ -435,16 +386,8 @@ func TestEditPost_POSTError(t *testing.T) {
 }
 
 func TestEditPost_POSTError2(t *testing.T) {
-	// create dependencies
-	jwtWrapper, sessionMgr := getWrapper()
-
-	generatedToken, _, _ := jwtWrapper.GenerateToken("success", "msg", "false", "lastlogin", "username", "uuid")
-
 	// mock client Do for handler
 	// build our response JSON
-
-	// create a new reader with that JSON
-
 	client := &MockClient{
 		MockDo: func(req *http.Request) (*http.Response, error) {
 			mapResponse := make(map[string]string)
@@ -460,8 +403,6 @@ func TestEditPost_POSTError2(t *testing.T) {
 		},
 	}
 
-	sessionMgr.Client = client
-
 	//mock form values to function post
 	f := make(url.Values)
 	f.Set("PostName", "john")
@@ -471,18 +412,8 @@ func TestEditPost_POSTError2(t *testing.T) {
 	f.Set("PostContactMeetInfo", "ContactMeetInfo")
 	f.Set("PostImg2", "ImageLink.com")
 
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/createpost", strings.NewReader(f.Encode()))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
-
-	req.AddCookie(&http.Cookie{
-		Name:   "goRecycleCookie",
-		Value:  generatedToken,
-		MaxAge: 300,
-		Path:   "/",
-	})
-	e := echo.New()
-	c := e.NewContext(req, rec)
+	jwtWrapper, sessionMgr, rec, req, _, e, c := getDependency("/editpost", strings.NewReader(f.Encode()))
+	sessionMgr.Client = client
 
 	// fmt.Println(rec.Body)
 
@@ -501,13 +432,13 @@ func TestEditPost_POSTError2(t *testing.T) {
 }
 
 // provide dummy data for mock api reply
-func getDummy(db string) (newMap map[string]string) {
-	newMap = make(map[string]string)
+func getDummy(db string) (newMap map[string]interface{}) {
+	newMap = make(map[string]interface{})
 	switch db {
 	case "ItemListing":
 		newMap["ID"] = "000001"
-		newMap["Username"] = "user"
-		newMap["Name"] = "user"
+		newMap["Username"] = "username"
+		newMap["Name"] = "username"
 		newMap["ImageLink"] = "nil"
 		newMap["DatePosted"] = "nil"
 		newMap["CommentItem"] = "nil"
@@ -516,20 +447,20 @@ func getDummy(db string) (newMap map[string]string) {
 		newMap["ContactMeetInfo"] = "nil"
 		newMap["Completion"] = "nil"
 	case "UserSecret":
-		newMap["Username"] = "user"
-		newMap["Password"] = "user"
+		newMap["Username"] = "username"
+		newMap["Password"] = "username"
 		newMap["IsAdmin"] = "false"
 		newMap["ID"] = "000001"
 		newMap["CommentItem"] = "nil"
 	case "UserInfo":
 		newMap["ID"] = "000001"
-		newMap["Username"] = "user"
+		newMap["Username"] = "username"
 		newMap["LastLogin"] = "20-7-2021"
 		newMap["CommentItem"] = "nil"
 		newMap["DateJoin"] = "20-7-2021"
 	case "CommentItem":
 		newMap["ID"] = "000001"
-		newMap["Username"] = "user"
+		newMap["Username"] = "username"
 		newMap["ForItem"] = "000001"
 		newMap["CommentItem"] = "nil"
 		newMap["Date"] = "20-7-2021"
@@ -538,21 +469,13 @@ func getDummy(db string) (newMap map[string]string) {
 }
 
 func TestEditPost_GET(t *testing.T) {
-	// create dependencies
-	jwtWrapper, sessionMgr := getWrapper()
-
-	generatedToken, _, _ := jwtWrapper.GenerateToken("success", "msg", "false", "lastlogin", "username", "uuid")
-
 	// mock client Do for handler
 	// build our response JSON
-
-	// create a new reader with that JSON
 
 	client := &MockClient{
 		MockDo: func(req *http.Request) (*http.Response, error) {
 			id := req.URL.Query().Get("id")
 			db := req.URL.Query().Get("db")
-			fmt.Println(req.URL, req.URL.Query(), id, db)
 
 			assert.Equal(t, "ItemListing", db)
 
@@ -565,7 +488,7 @@ func TestEditPost_GET(t *testing.T) {
 				mapResponse["ErrorMsg"] = "nil"
 			} else {
 				statusCode = 401
-				mapResponse["ErrorMsg"] = "information not equal"
+				mapResponse["ErrorMsg"] = "assert not equal"
 			}
 
 			jsonResponse, _ := json.Marshal(mapResponse)
@@ -578,25 +501,107 @@ func TestEditPost_GET(t *testing.T) {
 		},
 	}
 
+	jwtWrapper, sessionMgr, rec, _, _, _, c := getDependency("/editpost/000001", nil)
 	sessionMgr.Client = client
 
-	//mock form values to function post
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/editpost/000001", nil)
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
+	c.SetPath("/editpost/000001")
+	c.SetParamNames("id")
+	c.SetParamValues("000001")
 
-	req.AddCookie(&http.Cookie{
-		Name:   "goRecycleCookie",
-		Value:  generatedToken,
-		MaxAge: 300,
-	})
-	e := echo.New()
-	c := e.NewContext(req, rec)
+	if assert.NoError(t, EditPost_GET(c, jwtWrapper, sessionMgr)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+	}
+}
+
+// test for error, different user
+func TestEditPost_GETError(t *testing.T) {
+	// mock client Do for handler
+	// build our response JSON
+	client := &MockClient{
+		MockDo: func(req *http.Request) (*http.Response, error) {
+			id := req.URL.Query().Get("id")
+			db := req.URL.Query().Get("db")
+
+			assert.Equal(t, "ItemListing", db)
+
+			mapResponse := make(map[string]interface{})
+			dummyMap := getDummy("ItemListing")
+			dummyMap["Username"] = "user1"
+			mapResponse["DataInfo"] = []interface{}{dummyMap}
+			var statusCode int
+
+			if assert.Equal(t, "000001", id) {
+				statusCode = 201
+				mapResponse["ErrorMsg"] = "nil"
+			} else {
+				statusCode = 401
+				mapResponse["ErrorMsg"] = "assert not equal"
+			}
+
+			jsonResponse, _ := json.Marshal(mapResponse)
+			r := ioutil.NopCloser(bytes.NewReader([]byte(jsonResponse)))
+
+			return &http.Response{
+				StatusCode: statusCode,
+				Body:       r,
+			}, nil
+		},
+	}
+
+	jwtWrapper, sessionMgr, rec, _, _, _, c := getDependency("/editpost/000001", nil)
+	sessionMgr.Client = client
+
 	c.SetPath("/editpost/000001")
 	c.SetParamNames("id")
 	c.SetParamValues("000001")
 
 	if assert.NoError(t, EditPost_GET(c, jwtWrapper, sessionMgr)) {
 		assert.Equal(t, http.StatusSeeOther, rec.Code)
+	}
+}
+
+// test sorting functions like ascending, 7days and similarity
+func TestSortPostAsc(t *testing.T) {
+	dummyInfoArray := []interface{}{}
+	for i := 1; i < 30; i++ {
+		dummyInfo := getDummy("ItemListing")
+		dummyInfo["ID"] = i
+		dummyInfo["DatePosted"] = strconv.FormatInt(time.Now().Unix()-int64(i*24*60*60/3), 10)
+		dummyInfo["Similarity"] = float64(1 / float64(i)) // or (7-i)/7
+		dummyInfoArray = append(dummyInfoArray, dummyInfo)
+	}
+	dummyInfoArraySorted, _ := SortPost(dummyInfoArray, "7days", "All", "asc")
+	if assert.Equal(t, 20, len(dummyInfoArraySorted)) {
+		assert.Equal(t, dummyInfoArraySorted[0].(map[string]interface{})["ID"], 20)
+	}
+}
+
+// test other sorting functions like descending, 30days, similarity and category
+func TestSortPostDesc(t *testing.T) {
+	dummyInfoArray := []interface{}{}
+	for i := 1; i < 100; i++ {
+		dummyInfo := getDummy("ItemListing")
+		if i%2 == 0 {
+			dummyInfo["Cat"] = "Cat1"
+		}
+		dummyInfo["ID"] = i
+		dummyInfo["DatePosted"] = strconv.FormatInt(time.Now().Unix()-int64(i*24*60*60), 10)
+		dummyInfo["Similarity"] = float64(1 / float64(i)) // or (7-i)/7
+		dummyInfoArray = append(dummyInfoArray, dummyInfo)
+	}
+	dummyInfoArraySorted, _ := SortPost(dummyInfoArray, "30days", "Cat1", "desc")
+	if assert.Equal(t, 14, len(dummyInfoArraySorted)) {
+		assert.Equal(t, dummyInfoArraySorted[0].(map[string]interface{})["ID"], 2)
+		assert.Equal(t, dummyInfoArraySorted[0].(map[string]interface{})["Cat"], "Cat1")
+	}
+}
+
+func TestIndex_GET(t *testing.T) {
+	jwtWrapper, sessionMgr, rec, _, _, _, c := getDependency("/", nil)
+
+	c.SetPath("/")
+
+	if assert.NoError(t, Index_GET(c, jwtWrapper, sessionMgr)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
 	}
 }

@@ -1,0 +1,399 @@
+{{define "header"}}
+  <!DOCTYPE html>
+
+  <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <link rel="stylesheet" href="https://bootswatch.com/4/materia/bootstrap.min.css">
+      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+      <style media="screen">
+        .success, .error {
+          color: white;
+          padding:5px;
+          margin: 5px 0 15px 0
+        }
+
+        .success {
+          background: green !important;
+          width: auto;
+          height: auto;
+          overflow: auto;
+        }
+
+        .search .centertext{
+          width: 100%;
+          text-align:center;
+        }
+
+        .error {
+          background: red;
+        }
+
+        /* #means id */
+        #loading {
+          display: none;}
+        
+      
+        /* Change background color of buttons on hover */
+        .tab button:hover {
+          background-color: #ddd;
+        }
+      
+        .table tr:hover {
+          background-color: #ddd;
+        }
+
+        .tabs {
+          position: relative;   
+          min-height: 800px; /* This part sucks */
+          clear: both;
+          margin: 25px 0;      
+        }
+        .tab {
+          float: left;      
+        }
+        .tab label {
+          background: #eee; 
+          padding: 10px; 
+          border: 1px solid #ccc; 
+          margin-left: -1px; 
+          position: relative;
+          left: 1px;             
+        }
+        .tab [type=radio] {
+          display: none;   
+        }
+        .content {
+          position: absolute;
+          top: 40px;
+          left: 0;
+          background: white;
+          right: 0;
+          bottom: 0;
+          padding: 20px;
+          border: 1px solid #ccc;       
+        }
+        [type=radio]:checked ~ label {
+          background: white;
+          border-bottom: 1px solid white;
+          z-index: 2;
+        }
+        [type=radio]:checked ~ label ~ .content {
+          z-index: 1;
+        }
+
+        /* Style the tab */
+        .tab {
+          overflow: hidden;
+          border: 1px solid #ccc;
+          background-color: #f1f1f1;
+        }
+      
+        /* Style the buttons inside the tab */
+        .tab button {
+          background-color: inherit;
+          float: left;
+          border: none;
+          outline: none;
+          cursor: pointer;
+          padding: 14px 16px;
+          transition: 0.3s;
+          font-size: 17px;
+        }
+
+        /* taken from  https://www.bootdey.com/snippets/view/General-Search-Results#css*/
+               body{
+            background:#dcdcdc;
+            margin-top:20px;}
+
+        .widget-26 {
+          color: #3c4142;
+          font-weight: 400;
+        }
+
+        .widget-26 tr:first-child td {
+          border: 0;
+        }
+
+        .widget-26 .widget-26-emp-img img {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+        }
+
+
+
+        .widget-26 .widget-26-title {
+          min-width: 230px;
+        }
+
+        .widget-26 .widget-26-title a {
+          font-weight: 400;
+          font-size: 1.7rem;
+          color: #3c4142;
+          line-height: 1.5;
+        }
+
+        .widget-26 .widget-26-title a:hover {
+          color: #68CBD7;
+          text-decoration: none;
+        }
+
+        .widget-26 .widget-26-title .item-name {
+          margin: 0;
+          line-height: 1.5;
+          font-weight: 400;
+          font-size: 1.7125rem;
+          color: #3c4142;
+        }
+        .widget-26 .widget-26-titlename .item-name {
+          margin: 0;
+          line-height: 1.5;
+          font-weight: 400;
+          font-size: 12px;
+          font-size: 1.7125rem;
+          color: #3c4142;
+        }
+        .widget-26 .widget-26-title .item-name:hover {
+          color: #68CBD7;
+          text-decoration: none;
+        }
+
+        .widget-26 .widget-26-title .time {
+          font-size: 10px;
+          font-weight: 400;
+        }
+
+        .widget-26 .widget-26-info {
+          min-width: 140px;
+          font-weight: 400;
+        }
+
+        .widget-26 .widget-26-info p {
+          line-height: 1.5;
+          color: #3c4142;
+          font-size: 1.1125rem;
+        }
+
+        .widget-26 .widget-26-info .location {
+          color: #3c4142;
+        }
+
+        .widget-26 .widget-26-cost {
+          min-width: 70px;
+          font-weight: 400;
+          color: #3c4142;
+          font-size: 0.8125rem;
+        }
+
+        .widget-26 .widget-26-category {
+          padding: .5rem;
+          display: inline-flex;
+          white-space: nowrap;
+          border-radius: 15px;
+        }
+
+        .widget-26 .widget-26-category .indicator {
+          width: 13px;
+          height: 13px;
+          margin-right: .5rem;
+          float: left;
+          border-radius: 50%;
+        }
+
+        .widget-26 .widget-26-category span {
+          font-size: 0.8125rem;
+          color: #3c4142;
+          font-weight: 600;
+        }
+
+        .widget-26 .widget-26-starred svg {
+          width: 20px;
+          height: 20px;
+          color: #fd8b2c;
+        }
+
+        .bg-soft-base {
+          background-color: #e1f5f7;
+        }
+
+        .bg-soft-warning {
+            background-color: #fff4e1;
+        }
+        .bg-soft-success {
+            background-color: #d1f6f2;
+        }
+        .bg-soft-danger {
+            background-color: #fedce0;
+        }
+        .bg-soft-info {
+            background-color: #d7efff;
+        }
+
+        .search-form {
+          width: 80%;
+          margin: 0 auto;
+          margin-top: 1rem;
+        }
+
+        .search-form input {
+          height: 95%;
+          background: transparent;
+          border: 0;
+          display: block;
+          width: 95%;
+          font-size: 1rem;
+        }
+
+        .search-form select {
+          background: transparent;
+          border: 0;
+          height: 95%;
+          font-size: 1rem;
+        }
+
+        .search-form select:focus {
+          border: 0;
+        }
+
+        .search-form button {
+          height: 100%;
+          width: 100%;
+          font-size: 1rem;
+        }
+
+        .search-form button svg {
+          width: 24px;
+          height: 24px;
+        }
+
+        .search-body {
+          margin-bottom: 1.5rem;
+        }
+
+        .search-body .search-filters .filter-list {
+          margin-bottom: 1.3rem;
+        }
+
+        .search-body .search-filters .filter-list .title {
+          color: #3c4142;
+          margin-bottom: 1rem;
+        }
+
+        .search-body .search-filters .filter-list .filter-text {
+          color: #727686;
+        }
+
+        .search-body .search-result .result-header {
+          margin-bottom: 2rem;
+        }
+
+        .search-body .search-result .result-header .records {
+          color: #3c4142;
+        }
+
+        .search-body .search-result .result-header .result-actions {
+          text-align: right;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .search-body .search-result .result-header .result-actions .result-sorting {
+          display: flex;
+          align-items: center;
+        }
+
+        .search-body .search-result .result-header .result-actions .result-sorting span {
+          flex-shrink: 0;
+          font-size: 0.8125rem;
+        }
+
+        .search-body .search-result .result-header .result-actions .result-sorting select {
+          color: #68CBD7;
+        }
+
+        .search-body .search-result .result-header .result-actions .result-sorting select option {
+          color: #3c4142;
+        }
+
+        @media (min-width: 768px) and (max-width: 991.98px) {
+          .search-body .search-filters {
+            display: flex;
+          }
+          .search-body .search-filters .filter-list {
+            margin-right: 1rem;
+          }
+        }
+
+        .card-margin {
+            margin-bottom: 1.875rem;
+        }
+
+        @media (min-width: 992px){
+        .col-lg-2 {
+            flex: 0 0 16.66667%;
+            max-width: 16.66667%;
+        }
+        }
+
+        .card-margin {
+            margin-bottom: 1.875rem;
+        }
+
+        .card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            word-wrap: break-word;
+            background-color: #ffffff;
+            background-clip: border-box;
+            border: 1px solid #e6e4e9;
+            border-radius: 8px;
+        }
+
+
+      </style>
+      <nav class="navbar navbar-dark bg-primary mb-3">
+        <div>
+          <a href="/" class="navbar-brand"><img src=https://i.ibb.co/gmXZkVf/gorecycle-logo-small.png alt="Company" /></a>
+        </div>
+        {{if eq .Username ""}}
+          <div class="rightbox">
+            <a href="/login" class="navbar-brand">Login</a>
+            <a href="/signup" class="navbar-brand">Sign Up</a>
+          </div>
+        {{else}}
+          {{if eq .Username "logout********"}}
+            <div class="rightbox">
+              <a href="/login" class="navbar-brand">Login</a>
+              <a href="/signup" class="navbar-brand">Sign Up</a>
+            </div>
+          {{else}}
+            {{if .Username}}
+              <div class="rightbox">
+                <h5>Welcome <a class="navbar-brand" href="/user?id={{.Username}}&edit=false">{{.Username}}</a>,  <a href="/logout" class="navbar-brand">Log Out</a></h5>
+                <p>Last Login: {{.LastLogin}}</p>
+                
+              </div>
+            {{end}}
+          {{end}}
+        {{end}}
+      </nav>
+    </head>
+  <body>
+    <div class="container postsContainer">
+      <div class="card card-body card-form product-form2">
+        {{if eq .Success "ok"}}
+          <span class="alert success success1"> {{.Msg}}
+          </span>
+          <br>
+        {{end}}
+        {{if eq .Success "error"}}
+          <span class="alert error error1"> {{.Msg}}
+          </span>
+          <br>
+        {{end}}
+{{end}}
+

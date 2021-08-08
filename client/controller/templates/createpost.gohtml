@@ -1,0 +1,74 @@
+{{template "header" .}}
+    <h1>Post a new item</h1>
+    <br>
+    <form method="post">
+        <div class="input-group">
+            <div class="input-group-prepend" style="width: 120px;">
+                <span class="input-group-text" id="basic-addon1">Name of item: </span>
+            </div>
+            <input type="text" name="PostName" class="form-control" id="PostName" placeholder=""><br>
+        </div>
+
+        <div class="input-group">
+            <div class="input-group-prepend" style="width: 120px;">
+                <span class="input-group-text" id="basic-addon2">Category: </span>
+            </div>
+            <div style="width: 200px;">
+            <select class="form-control border-0" id="PostCat" name="PostCat">
+                <option value="All">All</option>
+                <option value="Clothing">Clothing</option>
+                <option value="Toys">Toys</option>
+                <option value="Essential">Essential</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Perishables">Perishables</option>
+                <option value="Plastic">Plastic</option>
+                <option value="Glass">Glass</option>
+                <option value="Paper">Paper</option>
+                <option value="Others">Others</option>
+            </select>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <div class="input-group-prepend" style="width: 120px;">
+                <span class="input-group-text" id="basic-addon2">Condition: </span>
+            </div>
+            <div style="width: 200px;">
+            <select class="form-control border-0" id="PostCondition" name="PostCondition">
+                <option value="Like new">Like new</option>
+                <option value="Well used">Well used</option>
+                <option value="Worn out">Worn out</option>
+            </select>
+            </div>
+        </div>
+
+        <div class="input-group" >
+            <div class="input-group-prepend" style="width: 120px;">
+                <span class="input-group-text" id="basic-addon2">Link to image: </span>
+            </div>
+            <input type="text" name="PostImg2" class="form-control" id="PostImg2" placeholder=""><br>
+        </div>
+
+        <div class="input-group">
+            <div class="input-group-prepend" style="width: 120px; overflow-wrap: break-word;">
+                <span style="overflow-wrap: break-word; class="input-group-text" id="basic-addon3">Contact info Or address :</span>
+            </div>
+            <textarea style="width: 200px;" rows="2" cols="50" name="PostContactMeetInfo" class="form-control" id="PostContactMeetInfo" aria-label="With textarea" placeholder="up to 300 characters"></textarea>
+        </div>
+        <br>
+
+        <div class="input-group" >
+            <div class="input-group-prepend" style="width: 120px;">
+                <span class="input-group-text" id="basic-addon3">Desciption:</span>
+            </div>
+            
+            <textarea  rows="3" cols="50" name="PostComment" class="form-control" id="PostComment" aria-label="With textarea" placeholder="up to 300 characters"></textarea>
+
+        </div>
+        <br>
+
+        <input type="submit" class="btn btn-primary btn-sm">
+    </form>
+  </div>
+</div>
+{{template "footer"}}

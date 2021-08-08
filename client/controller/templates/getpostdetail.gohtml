@@ -1,0 +1,71 @@
+{{template "header" .UserPersistInfo}}
+    <h1>Post Details</h1>
+    
+    {{ $owner := .Owner}}
+    {{ $postInfo := .PostInfo}}
+    {{ $postCommentInfo := .PostCommentInfo}}
+        {{if $owner}}
+            <a href="/editpost/{{$postInfo.ID}}" class="button" class="btn btn-primary btn-sm"><button class="btn btn-primary btn-sm">Edit Post</button></a>
+            <br>
+            <a href="/complete/{{$postInfo.ID}}" class="button" class="btn btn-primary btn-sm"><button class="btn btn-primary btn-sm">Flag as Completed</button></a>
+        {{end}}
+        {{if eq $postInfo.Completion "true"}}
+            <h5>Note: This post is flagged as completed</h5>
+        {{end}}
+        <br>
+        <h3>{{$postInfo.Name}}</h3>
+        <br>
+        <div ">
+          <img src="{{$postInfo.ImageLink}}"  style="height:250px; max-width:500px; width:expression(this.width > 500 ? 500: true);"/>
+        </div>
+        <Hr>
+        <span>Posted on: {{$postInfo.DatePosted}}</span>
+        <span>Posted by: <a href:"/user/{{$postInfo.Username}}">{{$postInfo.Username}}</a></span>
+        <span>Category : {{$postInfo.Cat}}</span>
+        <span>Condition: {{$postInfo.ConditionItem}}</span>
+        <br>
+        <span>Contact: {{$postInfo.ContactMeetInfo}}</span>
+        <br>
+        <span>Comment: {{$postInfo.CommentItem}}</span>
+        <div class="result-body">
+            <div class="table-responsive">
+                <table class="table widget-26" border=1 frame=hsides rules=rows>
+                    <tbody>
+                        {{range $postCommentInfo}}
+                            <tr>
+                                <td>
+                                    <div class="widget-26-info">
+                                        <p class="type m-0">{{.Username}}</p>
+                                        <p class="type m-0">{{.Date}}</p>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div >
+                                        <p class="type m-0">{{.CommentItem}}</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            <br>
+                            
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <br>
+        <br>
+        <h3>Type your own comment:</h3>
+        <form method="post" >
+            <div class="input-group" >
+                <div class="input-group-prepend" style="width: 120px;">
+                    <span class="input-group-text" id="basic-addon3">Desciption:</span>
+                </div>
+                <textarea  rows="3" cols="50" name="PostComment" class="form-control" id="PostComment" aria-label="With textarea" placeholder="up to 300 characters"></textarea>
+            </div>
+            <br>
+            <center>
+                <input type="submit" class="btn btn-primary btn-sm">
+            </center>
+        <form>
+    </div>
+{{template "footer"}}

@@ -35,7 +35,7 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 func main() {
 	e := echo.New()
 	t := &Template{
-		templates: template.Must(template.ParseGlob("templates/*.gohtml")),
+		templates: template.Must(template.ParseGlob("controller/templates/*.gohtml")),
 	}
 	e.Renderer = t
 	client := &http.Client{}

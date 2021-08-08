@@ -1,0 +1,132 @@
+{{template "header" .UserPersistInfo}}
+<div class="container">
+<form id="search-form" method="post">
+<div class="row">
+    <div class="col-lg-12 card-margin">
+        <div class="card search-form">
+            <div class="card-body p-0">
+                
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="row no-gutters">
+                                <div class="col-lg-3 col-md-3 col-sm-12 p-0">
+                                    <select class="form-control" id="PostCat" name="PostCat">
+                                        <option value="All">All</option>
+                                        <option value="Clothing">Clothing</option>
+                                        <option value="Toys">Toys</option>
+                                        <option value="Essential">Essential</option>
+                                        <option value="Electronics">Electronics</option>
+                                        <option value="Perishables">Perishables</option>
+                                        <option value="Plastic">Plastic</option>
+                                        <option value="Glass">Glass</option>
+                                        <option value="Paper">Paper</option>
+                                        <option value="Others">Others</option>
+                                    </select>
+                                </div>
+                                <div class="col-lg-8 col-md-6 col-sm-12 p-0">
+                                    <input type="text" placeholder="Search..." class="form-control" id="PostSearch" name="PostSearch">
+                                </div>
+                                <div class="col-lg-1 col-md-3 col-sm-12 p-0">
+                                    <button type="submit" class="btn btn-base">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+        <div class="col-12">
+            <div class="card card-margin">
+                <div class="card-body">
+                    <div class="row search-body">
+                        <div class="col-lg-12">
+                            <div class="search-result">
+                                <div class="result-header">
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="records">Showing: <b>all</b> results</div>
+                                        </div>
+
+                                            <div class="col-lg-6">
+                                                <div class="result-actions">
+                                                    <div class="result-sorting">
+                                                        <span>Date:</span>
+                                                        <select class="form-control border-0" id="PostSort" name="PostSort">
+                                                            <option value="desc">Descending</option>
+                                                            <option value="asc">Ascending</option>
+                                                        </select>
+
+                                                    </div>
+                                                    <div class="result-sorting">
+                                                        <span>Sort:</span>
+                                                        <select class="form-control border-0" id="PostDate" name="PostDate">
+                                                            <option value="All">Show all</option>
+                                                            <option value="7days">Recent 7 days</option>
+                                                            <option value="30days">Recent 30 days</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                    </div>
+                                </div>
+                                <div class="result-body">
+                                    <div class="table-responsive">
+                                        <table class="table widget-26">
+                                            <tbody>
+
+                                                {{range .DataInfo}}
+                                                    <tr>
+                                                        <td>
+                                                            <div class="widget-26-emp-img">
+                                                                <img src={{.ImageLink}} alt="Company" />
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="widget-26-title">
+                                                            <a href="/getpost/{{.ID}}"><b>{{.Name}}</b></a>
+                                                            </div>
+                                                            <p class="m-0"><a href="/user?id={{.Username}}&edit=false" class="item-name">{{.Username}}</p>
+                                                            
+                                                        </td>
+                                                        <td>
+                                                            <div class="widget-26-info">
+                                                                <p class="type m-0">{{.Cat}}</p>
+                                                                <p class="type m-0">{{.ConditionItem}}</p>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="widget-26-info" >
+                                                                <p class="type m-0">{{.DatePosted}}</p>
+                                                                </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="widget-26-info" >
+                                                                <p class="type m-0">{{.CommentItem}}</p>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                {{end}}
+
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</form>
+
+
+{{template "footer"}}

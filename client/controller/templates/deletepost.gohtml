@@ -1,0 +1,29 @@
+{{template "header" .PersistInfo}}
+  <form method="post" >
+    <h1>Delete a Course</h1>
+      <table class ="table table-hover" id = 'data-table'><!-- makes it stretch across -->
+        <thead class="thead">
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Course Name</th>
+            <th scope="col">Course Title</th>
+            <th scope="col">Course Description</th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody id="product-list">
+          {{range $item:= .CourseInfo}}
+            <tr>
+              <td>{{$item.ID}}</td>
+              <td>{{$item.CourseName}}</td>
+              <td>{{$item.CourseTitle}}</td>
+              <td>{{$item.CourseDesc}}</td>
+              <td><button value="{{$item.CourseName}}" name="deleteCourse" class="btn btn-primary btn-sm">Delete Course</button> </td>
+            </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </form>
+  </div>
+</div>
+{{template "footer"}}

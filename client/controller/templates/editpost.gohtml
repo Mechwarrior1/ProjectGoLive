@@ -1,0 +1,75 @@
+{{template "header" .UserPersistInfo}}
+    <h1>Post a new item</h1>
+    <br>
+    {{$dataInfo := .DataInfo}}
+    <form method="post">
+        <div class="input-group">
+            <div class="input-group-prepend" style="width: 150px;">
+                <span class="input-group-text" id="basic-addon1">Name of item: </span>
+            </div>
+            <input type="text" name="PostName" class="form-control" id="PostName" value="{{$dataInfo.Name}}"><br>
+        </div>
+
+        <div class="input-group">
+            <div class="input-group-prepend" style="width: 150px;">
+                <span class="input-group-text" id="basic-addon2">Category: </span>
+            </div>
+            <div style="width: 200px;">
+            <select class="form-control border-0" id="PostCat" name="PostCat" >
+                <option value="All"         {{if eq $dataInfo.Cat "All"}} selected {{end}}>All</option>
+                <option value="Clothing"    {{if eq $dataInfo.Cat "Clothing"}} selected {{end}}>Clothing</option>
+                <option value="Toys"        {{if eq $dataInfo.Cat "Toys"}} selected {{end}}>Toys</option>
+                <option value="Essential"   {{if eq $dataInfo.Cat "Essential"}} selected {{end}}>Essential</option>
+                <option value="Electronics" {{if eq $dataInfo.Cat "Electronics"}} selected {{end}}>Electronics</option>
+                <option value="Perishables" {{if eq $dataInfo.Cat "Perishables"}} selected {{end}}>Perishables</option>
+                <option value="Plastic"     {{if eq $dataInfo.Cat "Plastic"}} selected {{end}}>Plastic</option>
+                <option value="Glass"       {{if eq $dataInfo.Cat "Glass"}} selected {{end}}>Glass</option>
+                <option value="Paper"       {{if eq $dataInfo.Cat "Paper"}} selected {{end}}>Paper</option>
+                <option value="Others"      {{if eq $dataInfo.Cat "Others"}} selected {{end}}>Others</option>
+            </select>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <div class="input-group-prepend" style="width: 150px;">
+                <span class="input-group-text" id="basic-addon2">Condition: </span>
+            </div>
+            <div style="width: 250px;">
+            <select class="form-control border-0" id="PostCondition" name="PostCondition">
+                <option value="Like new" {{if eq $dataInfo.ConditionItem "Like new"}} selected {{end}} >Like new</option>
+                <option value="Well used" {{if eq $dataInfo.ConditionItem "Well used"}} selected {{end}} >Well used</option>
+                <option value="Worn out" {{if eq $dataInfo.ConditionItem "Worn out"}} selected {{end}} >Worn out</option>
+            </select>
+            </div>
+        </div>
+        <br>
+        <div class="input-group" >
+            <div class="input-group-prepend" style="width: 150px;">
+                <span class="input-group-text" id="basic-addon2">Link to image: </span>
+            </div>
+            <input type="text" name="PostImg2" class="form-control" id="PostImg2"  value="{{$dataInfo.ImageLink}}">
+        </div>
+        <br>    
+        <div class="input-group">
+            <div class="input-group-prepend" style="width: 150px; overflow-wrap: break-word;">
+                <span style="overflow-wrap: break-word; class="input-group-text" id="basic-addon3">Contact info Or address :</span>
+            </div>
+            <textarea style="width: 250px;" rows="2" cols="50" name="PostContactMeetInfo" class="form-control" id="PostContactMeetInfo" aria-label="With textarea" placeholder="up to 300 characters">{{$dataInfo.ContactMeetInfo}}</textarea>
+        </div>
+        <br>
+
+        <div class="input-group" >
+            <div class="input-group-prepend" style="width: 150px;">
+                <span class="input-group-text" id="basic-addon3">Desciption:</span>
+            </div>
+            
+            <textarea rows="3" cols="50" name="PostComment" class="form-control" id="PostComment" aria-label="With textarea" placeholder="up to 300 characters">{{$dataInfo.CommentItem}}</textarea>
+
+        </div>
+        <br>
+
+        <input type="submit" class="btn btn-primary btn-sm">
+    </form>
+  </div>
+</div>
+{{template "footer"}}
