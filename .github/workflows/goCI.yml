@@ -41,13 +41,13 @@ jobs: #job to execute on event
         go test -v ./... -coverpkg ./... -coverprofile=profile.cov ./...
         go test -v ./... -coverpkg ./... -coverprofile=profile.cov ./... | go2xunit > report_api_test.xml
         ls
-        go tool cover -html=profile.cov -o cover.html | go2xunit > report_api_coverage.html
+        go tool cover -html=profile.cov -o cover.html
         
         cd ..
         cd client
         go test -v ./... -coverpkg ./... -coverprofile=profile.cov ./...
         go test -v ./... -coverpkg ./... -coverprofile=profile.cov ./... | go2xunit > report_client_test.xml #run test again and output as report.xml
-        go tool cover -html=profile.cov -o cover.html | go2xunit > report_client_coverage.html
+        go tool cover -html=profile.cov -o cover.html
 
     - name: Publish unit test result
       uses: EnricoMi/publish-unit-test-result-action@v1 #checkout unit test reporting 
