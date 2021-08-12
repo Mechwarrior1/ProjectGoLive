@@ -6,6 +6,7 @@ import (
 	"apiserver/word2vec"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -102,8 +103,14 @@ func TestGetPwCheck(t *testing.T) {
 /// this test requires a word2vec binary file
 /// to be updated along with the yml file for a w2v file
 func TestGetAllListingIndex(t *testing.T) {
-	// load variables
-	embed := word2vec.GetWord2Vec()
+	// load dependencies
+	embed := &word2vec.Embeddings{
+		[]float32{0.63, 0.72, 0.75, 0.61, 0.77, 0.8, 0.57, 0.73, 0.72, 0.39, 0.41, 0.5}, //[]float32
+		3, //int
+		map[string]int{"Plastic": 0, "plastic": 1, "PET": 2, "Pet": 3}, //map[string]int
+		[]string{"plastic", "PET", "pet"},                              //[]string
+	}
+
 	db, mock := NewMock()
 	dbHandler1 := mysql.DBHandler{
 		db,
@@ -112,11 +119,8 @@ func TestGetAllListingIndex(t *testing.T) {
 	defer dbHandler1.DB.Close()
 
 	e := echo.New()
-	e.GET("/api/v0/index", func(c echo.Context) error {
-		return GetAllListingIndex(c, &dbHandler1, embed)
-	})
 
-	// mock for querying
+	// mock for querying, sql payload
 	rows := sqlmock.NewRows([]string{"ID", "Username", "Name", "ImageLink", "DatePosted", "CommentItem", "ConditionItem", "Cat", "ContactMeetInfo", "Completion"}).
 		AddRow("000001", "john", "plastic", "1", "2", "3", "4", "5", "6", "7").
 		AddRow("000002", "darren", "PET", "1", "2", "3", "4", "5", "6", "7").
@@ -124,6 +128,7 @@ func TestGetAllListingIndex(t *testing.T) {
 	query := "Select \\* FROM my_db.ItemListing"
 	mock.ExpectQuery(query).WillReturnRows(rows)
 
+	//url payload
 	q := make(url.Values)
 	q.Set("name", "Plastic")
 	q.Set("cat", "5")
@@ -134,6 +139,7 @@ func TestGetAllListingIndex(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/v0/index?"+q.Encode(), nil)
 	c := e.NewContext(req, rec)
 
+	//inject dependencies and test
 	if assert.NoError(t, GetAllListingIndex(c, &dbHandler1, embed)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 
@@ -142,7 +148,7 @@ func TestGetAllListingIndex(t *testing.T) {
 		json.NewDecoder(rec.Body).Decode(&json_map)
 		json_map2 := json_map["DataInfo"].([]interface{})
 
-		// fmt.Println(json_map2)
+		fmt.Println(json_map2)
 		assert.Equal(t, json_map2[0].(string), "000001")
 		assert.Equal(t, json_map2[1].(string), "000002")
 		assert.Equal(t, json_map2[2].(string), "000003")
@@ -203,6 +209,7 @@ func TestGetAllListing(t *testing.T) {
 		//check response
 		json_map := make(map[string]interface{})
 		json.NewDecoder(rec.Body).Decode(&json_map)
+
 		json_map2 := json_map["DataInfo"].([]interface{})
 
 		// fmt.Println(json_map2)
