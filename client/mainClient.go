@@ -46,7 +46,7 @@ func StartServer() (http.Server, *echo.Echo, error) {
 		Client:     client,
 	}
 
-	// searchSession := make(map[string][]string)
+	searchSession := make(map[string]controller.SearchSession)
 
 	// c1, c2 := loggerGo()
 	// logger1 = logger{c1, c2}
@@ -64,7 +64,7 @@ func StartServer() (http.Server, *echo.Echo, error) {
 		return controller.Logout(c, jwtWrapper, sessionMgr)
 	})
 	e.GET("/seepost", func(c echo.Context) error {
-		return controller.SeePostAll_GET(c, jwtWrapper, sessionMgr)
+		return controller.SeePostAll_GET(c, jwtWrapper, sessionMgr, searchSession)
 	})
 
 	e.POST("/seepost", func(c echo.Context) error {
@@ -115,9 +115,9 @@ func StartServer() (http.Server, *echo.Echo, error) {
 		return controller.EditPost_POST(c, jwtWrapper, sessionMgr)
 	})
 
-	e.GET("/seepostuser/:id", func(c echo.Context) error {
-		return controller.SeePostUser(c, jwtWrapper, sessionMgr)
-	})
+	// e.GET("/seepostuser/:id", func(c echo.Context) error {
+	// 	return controller.SeePostUser(c, jwtWrapper, sessionMgr)
+	// })
 
 	e.GET("/user", func(c echo.Context) error {
 		return controller.GetUser_GET(c, jwtWrapper, sessionMgr)

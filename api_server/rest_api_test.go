@@ -7,7 +7,7 @@ import (
 )
 
 func TestStartServer(t *testing.T) {
-	s, _, err := StartServer()
+	s, _, _, err := StartServer()
 	// if err = s.ListenAndServeTLS("secure//cert.pem", "secure//key.pem"); err != nil && err != http.ErrServerClosed {
 	// 	e.Logger.Fatal(err)
 	// }

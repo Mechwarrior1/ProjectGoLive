@@ -9,7 +9,7 @@
         <span>Last login: {{$userData.LastLogin}}</span>
         <span>Joined  on: {{$userData.DateJoin}}</span>
         <br>
-        <a href="/seepostuser/{{$userData.Username}}"><button class="btn btn-primary btn-sm">View All Post</button></a>
+        <a href="/seepost?user={{$userData.Username}}&pg=1"><button class="btn btn-primary btn-sm">View All Post</button></a>
         <br>
         <p>Comment:</p>
         {{if $owner}}

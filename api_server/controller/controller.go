@@ -13,11 +13,62 @@ import (
 )
 
 // function for the rest api, respond with the slice of all courses
-func GetAllListing(c echo.Context, dbHandler1 *mysql.DBHandler, embed *word2vec.Embeddings) error {
+func GetAllListingIndex(c echo.Context, dbHandler *mysql.DBHandler, embed *word2vec.Embeddings) error {
 	// can only return listing results, commentUser and commentItem
 	itemName := c.QueryParam("name")
 	filterUsername := c.QueryParam("filter")
-	sendInfo, _ := dbHandler1.GetRecordlisting("ItemListing", itemName, filterUsername, embed)
+	filterDate := c.QueryParam("date")
+	filterCat := c.QueryParam("cat")
+	sortIndex, err := dbHandler.GetRecordlistingIndex(itemName, filterUsername, filterDate, filterCat, embed)
+
+	if err != nil {
+		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
+	}
+
+	return newResponse(c, sortIndex, "nil", "ItemListing", "true", "", http.StatusOK)
+}
+
+// function for the rest api, respond with the slice of all courses
+func GetAllListing(c echo.Context, dbHandler *mysql.DBHandler) error {
+	// can only return listing results, commentUser and commentItem
+	dataPacket1, err1 := readJSONBody(c, dbHandler) // read response JSON
+	if err1 != nil {
+		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
+	}
+
+	searchString := ""
+	indexArr := dataPacket1["DataInfo"].([]interface{})[0].([]interface{})
+
+	// check payload
+	if len(indexArr) == 0 {
+		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
+	}
+
+	for _, ind := range indexArr {
+		searchString = searchString + ind.(string) + ", "
+	}
+	searchString = searchString[:len(searchString)-2] //remove last ,
+
+	if err1 != nil {
+		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
+	}
+
+	results, err := dbHandler.DB.Query("Select * FROM my_db.ItemListing WHERE ID in (" + searchString + ")")
+
+	if err != nil {
+		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
+	}
+
+	sendInfo := []interface{}{}
+	for results.Next() {
+		newEntry := mysql.ItemListing{}
+		err = results.Scan(&newEntry.ID, &newEntry.Username, &newEntry.Name, &newEntry.ImageLink, &newEntry.DatePosted, &newEntry.CommentItem, &newEntry.ConditionItem, &newEntry.Cat, &newEntry.ContactMeetInfo, &newEntry.Completion)
+		if err != nil {
+			fmt.Println("logger: error at getRecordlisting:" + err.Error())
+		}
+		sendInfo = append(sendInfo, newEntry)
+	}
+
 	return newResponse(c, sendInfo, "nil", "ItemListing", "true", "", http.StatusOK)
 }
 
@@ -68,6 +119,9 @@ func PwCheck(c echo.Context, dbHandler1 *mysql.DBHandler) error { //works
 		}
 		payload := make(map[string]string)
 		payload["LastLogin"] = dbData3.LastLogin
+		if payload["LastLogin"] == "" {
+			fmt.Println("empty LastLogin, error: ", err2.Error(), ", data: ", dbData3)
+		}
 		payload["IsAdmin"] = dbData1.IsAdmin
 		// if dbData1.IsAdmin == "" {
 		// 	fmt.Println("there seems to be an error with the sql request for user admin and lastlogin info")
@@ -123,7 +177,7 @@ func newResponse(c echo.Context, dataInfo []interface{}, errorMsg string, infoTy
 	responseJson.ResBool = resBool         //
 	responseJson.RequestUser = requestUser //request coming from which user
 
-	// fmt.Println(responseJson)
+	// fmt.Println(c.Path(), ": \n", responseJson)
 	return c.JSON(httpStatus, responseJson) // encode to json and send
 }
 
@@ -154,35 +208,34 @@ func readJSONBody(c echo.Context, dbHandler1 *mysql.DBHandler) (map[string]inter
 }
 
 // checks if owner of the post is the same as the one requesting, for edits or
-func checkUser(tarDB string, requestUser string, dataInfo []interface{}) bool {
+// func checkUser(tarDB string, requestUser string, dataInfo []interface{}) bool {
 
-	switch tarDB {
-	case "UserInfo":
-		dataInfo1 := dataInfo[0].(mysql.UserInfo)
-		return dataInfo1.Username == requestUser
+// 	switch tarDB {
+// 	case "UserInfo":
+// 		dataInfo1 := dataInfo[0].(mysql.UserInfo)
+// 		return dataInfo1.Username == requestUser
 
-	case "ItemListing":
-		dataInfo1 := dataInfo[0].(mysql.ItemListing)
-		return dataInfo1.Username == requestUser
+// 	case "ItemListing":
+// 		dataInfo1 := dataInfo[0].(mysql.ItemListing)
+// 		return dataInfo1.Username == requestUser
 
-	case "CommentUser":
-		dataInfo1 := dataInfo[0].(mysql.CommentUser)
-		return dataInfo1.Username == requestUser
+// 	case "CommentUser":
+// 		dataInfo1 := dataInfo[0].(mysql.CommentUser)
+// 		return dataInfo1.Username == requestUser
 
-	case "CommentItem":
-		dataInfo1 := dataInfo[0].(mysql.CommentItem)
-		return dataInfo1.Username == requestUser
+// 	case "CommentItem":
+// 		dataInfo1 := dataInfo[0].(mysql.CommentItem)
+// 		return dataInfo1.Username == requestUser
 
-	case "UserSecret":
-		dataInfo1 := dataInfo[0].(mysql.UserSecret)
-		return dataInfo1.Username == requestUser
+// 	case "UserSecret":
+// 		dataInfo1 := dataInfo[0].(mysql.UserSecret)
+// 		return dataInfo1.Username == requestUser
 
-	default:
-		fmt.Println("logger: " + tarDB + " is not a valid db")
-		return false
-	}
-
-}
+// 	default:
+// 		fmt.Println("logger: " + tarDB + " is not a valid db")
+// 		return false
+// 	}
+// }
 
 // post sign up
 func Signup(c echo.Context, dbHandler *mysql.DBHandler) error {
@@ -290,6 +343,7 @@ func getItem(c echo.Context, tarDB string, tarItemID string, dbHandler1 *mysql.D
 }
 
 func GenInfoGet(c echo.Context, dbHandler1 *mysql.DBHandler) error {
+
 	itemID := c.QueryParam("id")
 	itemDB := c.QueryParam("db")
 
@@ -310,7 +364,10 @@ func Completed(c echo.Context, dbHandler *mysql.DBHandler) error {
 	username, err := dbHandler.GetUsername("ItemListing", itemID)
 
 	// check if the username is the same
-	if username != dataPacket1["RequestUser"] && err1 != nil {
+	if username != dataPacket1["RequestUser"] {
+		return newResponseSimple(c, "Not owner", "false", http.StatusBadRequest)
+	}
+	if err1 != nil {
 		return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
 	}
 
@@ -396,5 +453,19 @@ func GenInfoPut(c echo.Context, dbHandler1 *mysql.DBHandler) error {
 	}
 
 	return newResponseSimple(c, "Bad Request", "false", http.StatusBadRequest)
+
+}
+
+func HealthCheckLiveness(c echo.Context) error {
+	return newResponseSimple(c, "nil", "true", http.StatusOK)
+}
+
+func HealthCheckReadiness(c echo.Context, dbHandler *mysql.DBHandler) error {
+
+	if dbHandler.ReadyForTraffic {
+		return newResponseSimple(c, "ready for traffic", "true", http.StatusOK)
+	}
+
+	return newResponseSimple(c, "not ready for traffic", "false", 503)
 
 }

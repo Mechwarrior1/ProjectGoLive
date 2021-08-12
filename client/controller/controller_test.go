@@ -6,6 +6,7 @@ import (
 	"client/session"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -604,4 +605,161 @@ func TestIndex_GET(t *testing.T) {
 	if assert.NoError(t, Index_GET(c, jwtWrapper, sessionMgr)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 	}
+}
+
+func TestSeePostAll_GETIndex(t *testing.T) {
+	// mock client Do for handler
+	// build our response JSON
+
+	client := &MockClient{
+		MockDo: func(req *http.Request) (*http.Response, error) {
+
+			//get query inputs
+			itemName := req.URL.Query().Get("name")
+			filterUsername := req.URL.Query().Get("filter")
+			filterDate := req.URL.Query().Get("date")
+			filterCat := req.URL.Query().Get("cat")
+
+			//check inputs from client
+			assert.Equal(t, "PET", itemName)
+			assert.Equal(t, "", filterUsername)
+			assert.Equal(t, "7days", filterDate)
+
+			mapResponse := make(map[string]interface{})
+			var statusCode int
+			if assert.Equal(t, filterCat, "cat") {
+				statusCode = 201
+				mapResponse["ErrorMsg"] = "nil"
+			} else {
+				statusCode = 401
+				mapResponse["ErrorMsg"] = "information not equal"
+			}
+
+			//response back to client
+
+			mapResponse["DataInfo"] = []string{"000001", "000002", "000003"}
+			mapResponse["ErrorMsg"] = "nil"
+
+			jsonResponse, _ := json.Marshal(mapResponse)
+			r := ioutil.NopCloser(bytes.NewReader([]byte(jsonResponse)))
+
+			return &http.Response{
+				StatusCode: statusCode,
+				Body:       r,
+			}, nil
+
+			// } // as there are 2 api calls in handler
+			// dataPacket1, _ := readJSONBody(req)
+			// indArr := dataPacket1["DataInfo"].([]interface{})[0].([]interface{})
+
+			// //check inputs for error
+			// assert.Equal(t, "000001", indArr[0])
+			// assert.Equal(t, "000002", indArr[1])
+			// assert.Equal(t, "000003", indArr[2])
+
+			// //response back to client
+			// mapResponse := make(map[string]interface{})
+			// newDataInfo := []interface{}{}
+			// for _, ind := range indArr {
+			// 	newData := getDummy("ItemListing")
+			// 	newData["ID"] = ind
+			// 	newDataInfo = append(newDataInfo, newData)
+			// }
+
+			// mapResponse["DataInfo"] = newDataInfo
+			// mapResponse["ErrorMsg"] = "nil"
+
+			// jsonResponse, _ := json.Marshal(mapResponse)
+			// r := ioutil.NopCloser(bytes.NewReader([]byte(jsonResponse)))
+
+			// return &http.Response{
+			// 	StatusCode: 200,
+			// 	Body:       r,
+			// }, nil
+
+		},
+	}
+
+	//dependencies
+	q := make(url.Values)
+	q.Set("search", "PET")
+	q.Set("cat", "cat")
+	q.Set("date", "7days")
+	fmt.Println("/editpost?" + q.Encode())
+	searchSession := make(map[string]SearchSession)
+	jwtWrapper, sessionMgr, rec, _, _, _, c := getDependency("/editpost?"+q.Encode(), nil)
+	sessionMgr.Client = client
+
+	if assert.NoError(t, SeePostAll_GET(c, jwtWrapper, sessionMgr, searchSession)) {
+		assert.Equal(t, http.StatusFound, rec.Code)
+	}
+}
+
+// mock a search session, corresponding to the search requirement
+// should return statusOK
+func TestSeePostAll_GETRender(t *testing.T) {
+	// mock client Do for handler
+	// build our response JSON
+	clientSwitch := false
+
+	client := &MockClient{
+		MockDo: func(req *http.Request) (*http.Response, error) {
+			assert.Equal(t, clientSwitch, false) // assert client is not called twice
+
+			if !clientSwitch {
+				//get query inputs
+				dataPacket1, _ := readJSONBody(req)
+				indArr := dataPacket1["DataInfo"].([]interface{})[0].([]interface{})
+
+				//check inputs for error
+				assert.Equal(t, "000001", indArr[0])
+				assert.Equal(t, "000002", indArr[1])
+				assert.Equal(t, "000003", indArr[2])
+
+				mapResponse := make(map[string]interface{})
+				statusCode := 201
+				mapResponse["ErrorMsg"] = "nil"
+
+				//response back to client
+
+				mapResponse["DataInfo"] = []map[string]interface{}{getDummy("ItemListing"), getDummy("ItemListing")}
+				mapResponse["ErrorMsg"] = "nil"
+
+				jsonResponse, _ := json.Marshal(mapResponse)
+				r := ioutil.NopCloser(bytes.NewReader([]byte(jsonResponse)))
+
+				clientSwitch = true
+				return &http.Response{
+					StatusCode: statusCode,
+					Body:       r,
+				}, nil
+			}
+			return &http.Response{
+				StatusCode: 401,
+				Body:       nil,
+			}, errors.New("error, mockClient should not be called twice")
+		},
+	}
+
+	//dependencies
+	q := make(url.Values)
+	q.Set("sesid", "123")
+	q.Set("pg", "1")
+	// fmt.Println("/editpost?" + q.Encode())
+	searchSession := make(map[string]SearchSession)
+	searchSession["123"] = SearchSession{123, []interface{}{"000001", "000002", "000003"}}
+	jwtWrapper, sessionMgr, rec, _, _, _, c := getDependency("/editpost?"+q.Encode(), nil)
+	sessionMgr.Client = client
+
+	if assert.NoError(t, SeePostAll_GET(c, jwtWrapper, sessionMgr, searchSession)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		// assert.Equal(t, json_map["ResBool"], "true")
+
+	}
+}
+
+func TestPagination(t *testing.T) {
+	pagination1 := pagination(3, 5, "test")
+	testResult := "<li class='page-item'><a class='page-link no-border' href='seepost?sesid=test&pg=1'>1</a></li><li class='page-item'><a class='page-link no-border' href='seepost?sesid=test&pg=2'>2</a></li><li class='page-item active'><a class='page-link no-border' href=#>3</a></li><li class='page-item'><a class='page-link no-border' href='seepost?sesid=test&pg=4'>4</a></li><li class='page-item'><a class='page-link no-border' href='seepost?sesid=test&pg=5'>5</a></li>"
+	assert.Equal(t, pagination1, testResult)
 }

@@ -90,3 +90,64 @@ func DecryptFromFile(filename string, loc string) []byte {
 	// logger1.logTrace("TRACE", "Successfully loaded key from file")
 	return decrypt(data1, loc)
 }
+
+func InsertSort(arr []float32, arrSort []int) ([]float32, []int) {
+	len1 := len(arr)
+	for i := 1; i < len1; i++ {
+		temp1 := arr[i]
+		tempSort := arrSort[i]
+		i2 := i
+		for i2 > 0 && arr[i2-1] > temp1 {
+			arr[i2] = arr[i2-1]
+			arrSort[i2] = arrSort[i2-1]
+			i2--
+		}
+		arr[i2] = temp1
+		arrSort[i2] = tempSort
+	}
+	// fmt.Println(arr, arrSort)
+	return arr, arrSort
+}
+
+func MergeSort(arr []float32, arrSort []int) ([]float32, []int) {
+	len1 := int(len(arr))
+	len2 := int(len1 / 2)
+	if len1 <= 5 {
+		return InsertSort(arr, arrSort)
+	} else {
+		arr1, arrSort1 := MergeSort(arr[len2:], arrSort[len2:])
+		arr2, arrSort2 := MergeSort(arr[:len2], arrSort[:len2])
+		tempArr := make([]float32, len1)
+		tempArrSort := make([]int, len1)
+		i := 0
+		for len(arr1) > 0 && len(arr2) > 0 {
+			if arr1[0] < arr2[0] {
+				tempArr[i] = arr1[0]
+				tempArrSort[i] = arrSort1[0]
+				arr1 = arr1[1:]
+				arrSort1 = arrSort1[1:]
+			} else {
+				tempArr[i] = arr2[0]
+				tempArrSort[i] = arrSort2[0]
+				arr2 = arr2[1:]
+				arrSort2 = arrSort2[1:]
+			}
+			i++
+		}
+		if len(arr1) == 0 {
+			for j := 0; j < len(arr2); j++ {
+				// fmt.Println(j, len(arr2), arr2, arr1, tempArr)
+				tempArr[i] = arr2[j]
+				tempArrSort[i] = arrSort2[j]
+				i++
+			}
+		} else {
+			for j := 0; j < len(arr1); j++ {
+				tempArr[i] = arr1[j]
+				tempArrSort[i] = arrSort1[j]
+				i++
+			}
+		}
+		return tempArr, tempArrSort
+	}
+}

@@ -39,6 +39,7 @@
         </div>
     </div>
 </div>
+
 <div class="row">
         <div class="col-12">
             <div class="card card-margin">
@@ -80,39 +81,44 @@
                                         <table class="table widget-26">
                                             <tbody>
 
-                                                {{range .DataInfo}}
-                                                    <tr>
-                                                        <td>
-                                                            <div class="widget-26-emp-img">
-                                                                <img src={{.ImageLink}} alt="Company" />
-                                                            </div>
-                                                        </td>
-                                                        <td>
-                                                            <div class="widget-26-title">
-                                                            <a href="/getpost/{{.ID}}"><b>{{.Name}}</b></a>
-                                                            </div>
-                                                            <p class="m-0"><a href="/user?id={{.Username}}&edit=false" class="item-name">{{.Username}}</p>
-                                                            
-                                                        </td>
-                                                        <td>
-                                                            <div class="widget-26-info">
-                                                                <p class="type m-0">{{.Cat}}</p>
-                                                                <p class="type m-0">{{.ConditionItem}}</p>
-                                                            </div>
-                                                        </td>
-                                                        <td>
-                                                            <div class="widget-26-info" >
-                                                                <p class="type m-0">{{.DatePosted}}</p>
-                                                                </div>
-                                                        </td>
-                                                        <td>
-                                                            <div class="widget-26-info" >
-                                                                <p class="type m-0">{{.CommentItem}}</p>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                {{end}}
+                                                {{if .PaginationBool}}
 
+                                                    {{range .DataInfo}}
+                                                        <tr>
+                                                            <td>
+                                                                <div class="widget-26-emp-img">
+                                                                    <img src={{.ImageLink}} alt="Company" />
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <div class="widget-26-title">
+                                                                <a href="/getpost/{{.ID}}"><b>{{.Name}}</b></a>
+                                                                </div>
+                                                                <p class="m-0"><a href="/user?id={{.Username}}&edit=false" class="item-name">{{.Username}}</p>
+                                                                
+                                                            </td>
+                                                            <td>
+                                                                <div class="widget-26-info">
+                                                                    <p class="type m-0">{{.Cat}}</p>
+                                                                    <p class="type m-0">{{.ConditionItem}}</p>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <div class="widget-26-info" >
+                                                                    <p class="type m-0">{{.DatePosted}}</p>
+                                                                    </div>
+                                                            </td>
+                                                            <td>
+                                                                <div class="widget-26-info" >
+                                                                    <p class="type m-0">{{.CommentItem}}</p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    {{end}}
+
+                                                {{else}}
+                                                    <h3> There is no result to display</h3>
+                                                {{end}}
 
                                             </tbody>
                                         </table>
@@ -126,7 +132,22 @@
         </div>
     </div>
 </div>
+
+{{if .PaginationBool}}
+    <center class="footerhome">
+    	<nav class="d-flex justify-content-center">
+	        <ul class="pagination pagination-base pagination-boxed pagination-square mb-0">
+                {{.PaginationString}}
+        	</ul>
+        </nav>
+    </center>
+{{else}}
+    <center class="footerhome">
+        <p><br>1</a></p>
+    </center>
+{{end}}
 </form>
 
-
 {{template "footer"}}
+
+

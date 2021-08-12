@@ -34,7 +34,8 @@ func TestGetPwCheck(t *testing.T) {
 	db, mock := NewMock()
 	dbHandler1 := mysql.DBHandler{
 		db,
-		""}
+		"",
+		true}
 	defer dbHandler1.DB.Close()
 
 	e := echo.New()
@@ -100,52 +101,120 @@ func TestGetPwCheck(t *testing.T) {
 
 /// this test requires a word2vec binary file
 /// to be updated along with the yml file for a w2v file
-// func TestGetAllListing(t *testing.T) {
-// 	// load variables
-// 	embed := word2vec.GetWord2Vec()
-// 	db, mock := NewMock()
-// 	dbHandler1 := mysql.DBHandler{
-// 		db,
-// 		""}
-// 	defer dbHandler1.DB.Close()
+func TestGetAllListingIndex(t *testing.T) {
+	// load variables
+	embed := word2vec.GetWord2Vec()
+	db, mock := NewMock()
+	dbHandler1 := mysql.DBHandler{
+		db,
+		"",
+		true}
+	defer dbHandler1.DB.Close()
 
-// 	e := echo.New()
-// 	e.GET("/api/v0/listing", func(c echo.Context) error {
-// 		return GetAllListing(c, &dbHandler1, embed)
-// 	})
+	e := echo.New()
+	e.GET("/api/v0/index", func(c echo.Context) error {
+		return GetAllListingIndex(c, &dbHandler1, embed)
+	})
 
-// 	// mock for querying
-// 	rows := sqlmock.NewRows([]string{"ID", "Username", "Name", "ImageLink", "DatePosted", "CommentItem", "ConditionItem", "Cat", "ContactMeetInfo", "Completion"}).
-// 		AddRow("000001", "john", "plastic", "1", "2", "3", "4", "5", "6", "7").
-// 		AddRow("000002", "darren", "PET", "1", "2", "3", "4", "5", "6", "7")
-// 	query := "Select \\* FROM my_db.ItemListing"
-// 	mock.ExpectQuery(query).WillReturnRows(rows)
+	// mock for querying
+	rows := sqlmock.NewRows([]string{"ID", "Username", "Name", "ImageLink", "DatePosted", "CommentItem", "ConditionItem", "Cat", "ContactMeetInfo", "Completion"}).
+		AddRow("000001", "john", "plastic", "1", "2", "3", "4", "5", "6", "7").
+		AddRow("000002", "darren", "PET", "1", "2", "3", "4", "5", "6", "7").
+		AddRow("000003", "darren", "Pet", "1", "2", "3", "4", "5", "6", "7")
+	query := "Select \\* FROM my_db.ItemListing"
+	mock.ExpectQuery(query).WillReturnRows(rows)
 
-// 	q := make(url.Values)
-// 	q.Set("name", "Plastic")
-// 	q.Set("filter", "")
+	q := make(url.Values)
+	q.Set("name", "Plastic")
+	q.Set("cat", "5")
+	q.Set("date", "")
+	q.Set("filter", "")
 
-// 	rec := httptest.NewRecorder()
-// 	req := httptest.NewRequest(http.MethodGet, "/api/v0/listing/?"+q.Encode(), nil)
-// 	fmt.Println("/api/v0/listing/?" + q.Encode())
-// 	c := e.NewContext(req, rec)
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/api/v0/index?"+q.Encode(), nil)
+	c := e.NewContext(req, rec)
 
-// 	if assert.NoError(t, GetAllListing(c, &dbHandler1, embed)) {
-// 		assert.Equal(t, http.StatusOK, rec.Code)
+	if assert.NoError(t, GetAllListingIndex(c, &dbHandler1, embed)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
 
-// 		//check response
-// 		json_map := make(map[string]interface{})
-// 		json.NewDecoder(rec.Body).Decode(&json_map)
-// 		json_map2 := json_map["DataInfo"].([]interface{})
+		//check response
+		json_map := make(map[string]interface{})
+		json.NewDecoder(rec.Body).Decode(&json_map)
+		json_map2 := json_map["DataInfo"].([]interface{})
 
-// 		// fmt.Println(json_map2)
-// 		assert.Equal(t, json_map2[0].(map[string]interface{})["ID"], "000001")
+		// fmt.Println(json_map2)
+		assert.Equal(t, json_map2[0].(string), "000001")
+		assert.Equal(t, json_map2[1].(string), "000002")
+		assert.Equal(t, json_map2[2].(string), "000003")
 
-// 		//test word2vec as well
-// 		assert.Equal(t, json_map2[0].(map[string]interface{})["Similarity"], float64(0.65796596))
-// 		assert.Equal(t, json_map2[1].(map[string]interface{})["Similarity"], float64(0.34202674))
-// 	}
-// }
+		// //test word2vec as well
+		// assert.Equal(t, json_map2[0].(map[string]interface{})["Similarity"], float64(0.65796596))
+		// assert.Equal(t, json_map2[1].(map[string]interface{})["Similarity"], float64(0.34202674)) // 0.30163363
+	}
+}
+
+/// this test requires a word2vec binary file
+/// to be updated along with the yml file for a w2v file
+func TestGetAllListing(t *testing.T) {
+	// load variables
+	db, mock := NewMock()
+	dbHandler1 := mysql.DBHandler{
+		db,
+		"",
+		true}
+	defer dbHandler1.DB.Close()
+
+	e := echo.New()
+	e.GET("/api/v0/listing", func(c echo.Context) error {
+		return GetAllListing(c, &dbHandler1)
+	})
+
+	// mock for querying
+	rows := sqlmock.NewRows([]string{"ID", "Username", "Name", "ImageLink", "DatePosted", "CommentItem", "ConditionItem", "Cat", "ContactMeetInfo", "Completion"}).
+		AddRow("000001", "john", "plastic", "1", "2", "3", "4", "5", "6", "7").
+		AddRow("000002", "darren", "PET", "1", "2", "3", "4", "5", "6", "7").
+		AddRow("000003", "darren", "Pet", "1", "2", "3", "4", "5", "6", "7")
+	query := "Select \\* FROM my_db.ItemListing WHERE ID in \\(000001, 000002, 000003\\)"
+	mock.ExpectQuery(query).WillReturnRows(rows)
+
+	// json payload to api
+	payload := []string{"000001", "000002", "000003"}
+
+	dataPacket1 := mysql.DataPacket{
+		dbHandler1.ApiKey,
+		"",
+		"ItemListing",
+		"",
+		"",
+		[]interface{}{payload},
+	}
+
+	payloadJson, _ := json.Marshal(dataPacket1)
+
+	// test api
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/v0/listing", strings.NewReader(string(payloadJson)))
+
+	c := e.NewContext(req, rec)
+
+	if assert.NoError(t, GetAllListing(c, &dbHandler1)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		//check response
+		json_map := make(map[string]interface{})
+		json.NewDecoder(rec.Body).Decode(&json_map)
+		json_map2 := json_map["DataInfo"].([]interface{})
+
+		// fmt.Println(json_map2)
+		assert.Equal(t, json_map2[0].(map[string]interface{})["ID"], "000001")
+		assert.Equal(t, json_map2[1].(map[string]interface{})["ID"], "000002")
+		assert.Equal(t, json_map2[2].(map[string]interface{})["ID"], "000003")
+
+		// //test word2vec as well
+		// assert.Equal(t, json_map2[0].(map[string]interface{})["Similarity"], float64(0.65796596))
+		// assert.Equal(t, json_map2[1].(map[string]interface{})["Similarity"], float64(0.34202674)) // 0.30163363
+	}
+}
 
 func TestGetAllComment(t *testing.T) {
 	// load variables
@@ -153,7 +222,8 @@ func TestGetAllComment(t *testing.T) {
 	db, mock := NewMock()
 	dbHandler1 := mysql.DBHandler{
 		db,
-		string(encrypt.DecryptFromFile("secure/mysql", "secure/keys.xml"))}
+		string(encrypt.DecryptFromFile("secure/mysql", "secure/keys.xml")),
+		true}
 	defer dbHandler1.DB.Close()
 
 	e := echo.New()
@@ -197,7 +267,8 @@ func TestUsernameCheckTrue(t *testing.T) {
 	db, mock := NewMock()
 	dbHandler1 := mysql.DBHandler{
 		db,
-		""}
+		"",
+		true}
 	defer dbHandler1.DB.Close()
 
 	e := echo.New()
@@ -239,7 +310,8 @@ func TestUsernameCheckFalse(t *testing.T) {
 	db, mock := NewMock()
 	dbHandler1 := mysql.DBHandler{
 		db,
-		""}
+		"",
+		true}
 	defer dbHandler1.DB.Close()
 
 	e := echo.New()
@@ -272,7 +344,8 @@ func TestGenInfoPost(t *testing.T) {
 	db, mock := NewMock()
 	dbHandler1 := mysql.DBHandler{
 		db,
-		""}
+		"",
+		true}
 	defer dbHandler1.DB.Close()
 
 	e := echo.New()
@@ -337,7 +410,8 @@ func TestGenInfoGet(t *testing.T) {
 	db, mock := NewMock()
 	dbHandler1 := mysql.DBHandler{
 		db,
-		""}
+		"",
+		true}
 	defer dbHandler1.DB.Close()
 
 	e := echo.New()
@@ -433,7 +507,8 @@ func TestGenInfoEdit(t *testing.T) {
 	db, mock := NewMock()
 	dbHandler1 := mysql.DBHandler{
 		db,
-		""}
+		"",
+		true}
 	defer dbHandler1.DB.Close()
 
 	e := echo.New()
@@ -514,7 +589,8 @@ func TestSignup(t *testing.T) {
 	db, mock := NewMock()
 	dbHandler1 := mysql.DBHandler{
 		db,
-		""}
+		"",
+		true}
 	defer dbHandler1.DB.Close()
 
 	e := echo.New()
@@ -588,7 +664,8 @@ func TestCompleted(t *testing.T) {
 	db, mock := NewMock()
 	dbHandler1 := mysql.DBHandler{
 		db,
-		""}
+		"",
+		true}
 	defer dbHandler1.DB.Close()
 
 	e := echo.New()

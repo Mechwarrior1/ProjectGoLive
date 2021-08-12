@@ -21,7 +21,7 @@ func NewMock() (*sql.DB, sqlmock.Sqlmock) {
 //tested getting item with ID
 func TestGetSingleRecord(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db, ""}
+	dbHandler1 := DBHandler{db, "", true}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -66,7 +66,7 @@ func TestGetSingleRecord(t *testing.T) {
 
 func TestInsertRecord1(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db, ""}
+	dbHandler1 := DBHandler{db, "", true}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -91,7 +91,7 @@ func TestInsertRecord1(t *testing.T) {
 
 func TestInsertRecord2(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db, ""}
+	dbHandler1 := DBHandler{db, "", true}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -116,7 +116,7 @@ func TestInsertRecord2(t *testing.T) {
 
 func TestInsertRecord3(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db, ""}
+	dbHandler1 := DBHandler{db, "", true}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -146,7 +146,7 @@ func TestInsertRecord3(t *testing.T) {
 
 func TestInsertRecord4(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db, ""}
+	dbHandler1 := DBHandler{db, "", true}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -171,7 +171,7 @@ func TestInsertRecord4(t *testing.T) {
 
 func TestInsertRecord5(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db, ""}
+	dbHandler1 := DBHandler{db, "", true}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -196,7 +196,7 @@ func TestInsertRecord5(t *testing.T) {
 
 func TestEditRecord1(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db, ""}
+	dbHandler1 := DBHandler{db, "", true}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -220,7 +220,7 @@ func TestEditRecord1(t *testing.T) {
 
 func TestEditRecord2(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db, ""}
+	dbHandler1 := DBHandler{db, "", true}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -248,7 +248,7 @@ func TestEditRecord2(t *testing.T) {
 
 func TestEditRecord3(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db, ""}
+	dbHandler1 := DBHandler{db, "", true}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -271,7 +271,7 @@ func TestEditRecord3(t *testing.T) {
 
 func TestEditRecord4(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db, ""}
+	dbHandler1 := DBHandler{db, "", true}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -294,7 +294,7 @@ func TestEditRecord4(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db, ""}
+	dbHandler1 := DBHandler{db, "", true}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -312,7 +312,7 @@ func TestDelete(t *testing.T) {
 func TestGetMaxID(t *testing.T) {
 	// load variables
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db, ""}
+	dbHandler1 := DBHandler{db, "", true}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()
@@ -331,7 +331,7 @@ func TestGetMaxID(t *testing.T) {
 func TestGetUsername(t *testing.T) {
 	// load variables
 	db, mock := NewMock()
-	dbHandler1 := DBHandler{db, ""}
+	dbHandler1 := DBHandler{db, "", true}
 	defer func() {
 		dbHandler1.DB.Close()
 	}()

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -78,8 +79,9 @@ type (
 	}
 
 	DBHandler struct {
-		DB     *sql.DB
-		ApiKey string
+		DB              *sql.DB
+		ApiKey          string
+		ReadyForTraffic bool
 	}
 )
 
@@ -105,7 +107,7 @@ func OpenDB() DBHandler {
 		fmt.Println("no issue")
 	}
 
-	dbHandler1 := DBHandler{db, string(encrypt.DecryptFromFile("secure/apikey", "secure/apikey.xml"))}
+	dbHandler1 := DBHandler{db, string(encrypt.DecryptFromFile("secure/apikey", "secure/apikey.xml")), false}
 	return dbHandler1
 }
 
@@ -148,6 +150,7 @@ func (dbHandler DBHandler) GetRecord(dbTable string) ([]interface{}, error) {
 			return allData, errors.New(dbTable + " not found")
 		}
 	}
+	results.Close()
 	return allData, nil
 }
 
@@ -169,54 +172,116 @@ func CleanWord(input1 string, splitText *regexp.Regexp, stopWords *regexp.Regexp
 // access the DB and get all records for itemListing
 // computes similarity between vectors for each word embedding
 // puts the similarity into the struct and returns array of struct to the request
-func (dbHandler DBHandler) GetRecordlisting(dbTable string, requestWords string, filterUsername string, embed *word2vec.Embeddings) ([]interface{}, error) {
-	// allData := []genData{}
+func (dbHandler DBHandler) GetRecordlistingIndex(requestWords string, filterUsername string, filterDate string, filterCat string, embed *word2vec.Embeddings) ([]interface{}, error) {
+	// fmt.Printf("getrecordlistingindex: requestWords %v,filterUsername %v,filterDate %v,filterCat %v\n", requestWords, filterUsername, filterDate, filterCat)
+
 	allData := []interface{}{}
 	requestWords2 := CleanWord(requestWords, splitText, stopWords2)               //clean and split the words for embeding
 	requestWordsEmbed := embed.GetWordEmbeddingCombine(requestWords2, []string{}) //get combined word embedding
-	results, err := dbHandler.DB.Query("Select * FROM my_db." + dbTable)
-	if err != nil {
-		return allData, err
+	results, err := dbHandler.DB.Query("Select * FROM my_db.ItemListing")
+
+	//calculate the cut off date
+	timenow := time.Now().Unix()
+	switch filterDate {
+	case "7days":
+		timenow = timenow - (7 * 24 * 60 * 60)
+	case "30days":
+		timenow = timenow - (30 * 24 * 60 * 60)
+	default:
+		timenow = timenow - (365 * 24 * 60 * 60)
 	}
+
+	//
+	i := 0
+	sortIndex := []int{}
+	sortArr := []float32{}
+	sortInd := []interface{}{}
+
+	if err != nil {
+		return sortInd, err
+	}
+
 	for results.Next() {
 		data1 := ItemListing{} //needs a seperate call due to different output
 		err = results.Scan(&data1.ID, &data1.Username, &data1.Name, &data1.ImageLink, &data1.DatePosted, &data1.CommentItem, &data1.ConditionItem, &data1.Cat, &data1.ContactMeetInfo, &data1.Completion)
 		if err != nil {
 			fmt.Println("logger: error at getRecordlisting:" + err.Error())
 		}
-		if filterUsername == "" {
-			if data1.Completion != "true" {
-				requestWordsEmbed2 := embed.GetWordEmbeddingCombine(CleanWord(data1.Name, splitText, stopWords2), []string{})
-				addVal := float32(0)
-				addVal2 := float32(0)
 
-				for _, word := range requestWords2 { // checks for any similar words in the name string
-					if strings.Contains(data1.Name, word) {
-						addVal += 0.05
-					}
-					if strings.Contains(data1.CommentItem, word) { // checks for any similar words in the description string
-						addVal2 += 0.005
-					}
+		//convert string of numbers into int and actual date string
+		dateVal, _ := strconv.Atoi(data1.DatePosted)
+		data1.DatePosted = time.Unix(int64(dateVal), 0).Format("02-01-2006")
+
+		//checks entry with filter
+		if (timenow < int64(dateVal) || filterDate == "All" || filterDate == "") &&
+			(filterCat == data1.Cat || filterCat == "All" || filterCat == "") &&
+			(filterUsername == data1.Username || filterUsername == "All" || filterUsername == "") &&
+			(data1.Completion != "true" || filterUsername != "") {
+
+			requestWordsEmbed2 := embed.GetWordEmbeddingCombine(CleanWord(data1.Name, splitText, stopWords2), []string{})
+			addVal := float32(0)
+			addVal2 := float32(0)
+
+			for _, word := range requestWords2 { // checks for any similar words in the name string
+				if strings.Contains(data1.Name, word) {
+					addVal += 0.05
 				}
+				if strings.Contains(data1.CommentItem, word) { // checks for any similar words in the description string
+					addVal2 += 0.005
+				}
+			}
 
-				addVal3 := math.Min(0.15, math.Max(float64(addVal2), 0))
-				addVal4 := math.Min(0.2, math.Max(float64(addVal), 0))
-				cosSim := word2vec.CosineSimilarity(requestWordsEmbed, requestWordsEmbed2) // computes similarity of words using their vectors
-				data1.Similarity = cosSim + float32(addVal3+addVal4)                       // fmt.Sprintf("%f",  //puts the score into struct
-				fmt.Println(requestWords, data1.Name, cosSim+float32(addVal3+addVal4))
-				allData = append(allData, data1)
-			}
-		} else {
-			if data1.Username == filterUsername {
-				allData = append(allData, data1)
-			}
+			addVal3 := math.Min(0.15, math.Max(float64(addVal2), 0))
+			addVal4 := math.Min(0.2, math.Max(float64(addVal), 0))
+			cosSim := word2vec.CosineSimilarity(requestWordsEmbed, requestWordsEmbed2) // computes similarity of words using their vectors
+			data1.Similarity = cosSim + float32(addVal3+addVal4)                       // fmt.Sprintf("%f",  //puts the score into struct
+
+			// fmt.Println(requestWords, data1.Name, cosSim+float32(addVal3+addVal4))
+			allData = append(allData, data1)
+
+			sortArr = append(sortArr, cosSim+float32(addVal3+addVal4))
+			sortIndex = append(sortIndex, i)
+			i++
 		}
+
 	}
-	return allData, nil
+	results.Close()
+
+	// fmt.Println(i, sortIndex, sortArr, sortInd, filterUsername == "")
+
+	_, sortArr2 := encrypt.MergeSort(sortArr, sortIndex)
+	maxLen := len(sortArr)
+	newSorted := []interface{}{}
+
+	for idx := maxLen - 1; idx >= 0; idx-- { //sorts results in descending order
+		newRow := allData[sortArr2[idx]]
+		newSorted = append(newSorted, newRow)
+		sortInd = append(sortInd, newRow.(ItemListing).ID)
+	}
+
+	allData = newSorted
+
+	return sortInd, nil
 }
+
+// takes an array of ID, returns the record the id corresponds to
+// func (dbHandler DBHandler) GetRecordlisting(idArr []interface{}) ([]interface{}, error) {
+// 	// allData := []genData{}
+// 	allData := []interface{}{}
+
+// 	for _, id := range idArr {
+// 		returnData, err := dbHandler.GetSingleRecord("ItemListing", "WHERE ID = ?", id.(string))
+// 		if err != nil {
+// 			return allData, err
+// 		}
+// 		allData = append(allData, returnData)
+// 	}
+// 	return allData, nil
+// }
 
 // access the DB and get a single record, search using courseName
 // based on requested database, it will be marshalled into the struct
+
 func (dbHandler DBHandler) GetSingleRecord(dbTable string, queryString string, queryString2 string) ([]interface{}, error) {
 	//queryString examples, " WHERE ID = 1" or "WHERE Username = alvin"
 	allData := make([]interface{}, 0)
@@ -249,6 +314,7 @@ func (dbHandler DBHandler) GetSingleRecord(dbTable string, queryString string, q
 	default:
 		return allData, errors.New(dbTable + " not found in switch")
 	}
+	results.Close()
 	return allData, err
 }
 
@@ -344,6 +410,7 @@ func (dbHandler DBHandler) GetMaxID(dbTable string) (int, error) {
 	results.Next()
 	var maxID int
 	results.Scan(&maxID)
+	results.Close()
 	// defer recover() //recover if error from no entry
 	return maxID, err
 }
@@ -354,6 +421,7 @@ func (dbHandler DBHandler) GetUsername(dbTable string, id string) (string, error
 	results.Next()
 	var username string
 	results.Scan(&username)
+	results.Close()
 	return username, err
 }
 
