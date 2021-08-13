@@ -1,8 +1,9 @@
 package word2vec
 
 // credits
-// codes are mostly from:
+// Word2vec code credits to
 // https://github.com/danieldk/go2vec/blob/8029f60947ae/go2vec.go
+// Had issues getting the original to work, copied the code on loading word2vec binary files and normalizing vectors
 
 // other resources used:
 // https://github.com/eyaler/word2vec-slim
